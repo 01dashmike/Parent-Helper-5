@@ -1,5 +1,5 @@
 async function testConnection() {
-  const token = 'patM7Cd2aY4t6ICC8';
+  const token = '***REMOVED***';
   const baseId = 'app9eOTFWck1sZwTG';
   
   console.log('🔍 Testing Airtable connection...');
