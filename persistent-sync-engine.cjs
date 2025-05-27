@@ -11,6 +11,9 @@ async function persistentSyncEngine() {
   let totalSessionAdded = 0;
   let consecutiveRounds = 0;
 
+  let totalSessionAdded = 0;
+  let consecutiveRounds = 0;
+
   try {
     await client.connect();
     console.log('🚀 PERSISTENT SYNC ENGINE ACTIVATED');
