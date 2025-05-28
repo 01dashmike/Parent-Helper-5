@@ -1,53 +1,42 @@
-async function testConnection() {
-  const token = '***REMOVED***';
-  const baseId = 'app9eOTFWck1sZwTG';
-  
-  console.log('🔍 Testing Airtable connection...');
-  console.log(`Token: ${token.substring(0, 10)}...`);
-  console.log(`Base ID: ${baseId}`);
-  
+const Airtable = require('airtable');
+
+const token = '***REMOVED***';
+
+async function testAirtableConnection() {
   try {
-    // Test basic API access
-    const response = await fetch(`https://api.airtable.com/v0/meta/bases`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      }
-    });
+    console.log('Testing Airtable connection...');
     
-    console.log(`\nResponse status: ${response.status}`);
+    // Test with the base ID we've been using
+    const base = new Airtable({
+      apiKey: token
+    }).base('app9eOTFWck1sZwTG');
+
+    console.log('Attempting to list tables...');
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Successfully connected to Airtable!');
-      console.log(`Found ${data.bases.length} accessible bases`);
-      
-      // Check if our base is accessible
-      const ourBase = data.bases.find(base => base.id === baseId);
-      if (ourBase) {
-        console.log(`✅ Found your Parent Helper base: ${ourBase.name}`);
-      } else {
-        console.log('❌ Your Parent Helper base is not accessible with this token');
-        console.log('Available bases:');
-        data.bases.forEach(base => {
-          console.log(`  - ${base.name} (${base.id})`);
-        });
-      }
-    } else {
-      const error = await response.text();
-      console.log(`❌ Connection failed: ${error}`);
-      
-      if (response.status === 401) {
-        console.log('\n🔧 Token troubleshooting steps:');
-        console.log('1. Check token is active in Airtable Developer Hub');
-        console.log('2. Ensure all required scopes are enabled');
-        console.log('3. Verify base access is granted');
-        console.log('4. Try creating a new token');
-      }
-    }
+    // Try to access the table
+    const table = base('tblX8ZLilzQMN85VO');
+    
+    console.log('Attempting to fetch a small sample of records...');
+    const records = await table.select({
+      maxRecords: 3
+    }).firstPage();
+    
+    console.log(`✅ Success! Found ${records.length} records`);
+    console.log('Sample record fields:', Object.keys(records[0]?.fields || {}));
     
   } catch (error) {
-    console.log(`❌ Connection error: ${error.message}`);
+    console.log('❌ Error connecting to Airtable:');
+    console.log('Error type:', error.error);
+    console.log('Message:', error.message);
+    console.log('Status code:', error.statusCode);
+    
+    if (error.statusCode === 403) {
+      console.log('\n🔍 This suggests either:');
+      console.log('- The token needs permissions for this specific base');
+      console.log('- The base ID might be different');
+      console.log('- The table ID might be different');
+    }
   }
 }
 
-testConnection().catch(console.error);
+testAirtableConnection();
