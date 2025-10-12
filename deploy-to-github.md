@@ -5,13 +5,13 @@ Your comprehensive application is ready for deployment. Here's how to get it on 
 ## Option 1: Create New Repository (Recommended)
 
 1. Go to **github.com** and create a new repository
-2. Name: `baby-toddler-class-finder`
+2. Name: `Parent-Helper-5`
 3. Make it **Public** for easy deployment
 4. **Don't initialize** with files (you have them already)
 
 ## Option 2: Use Existing Repository
 
-Your current repository is: `https://github.com/01dashmike/parent-helper-app`
+Your current repository is: `https://github.com/01dashmike/Parent-Helper-5`
 - Visit this URL to see if your files are already there
 - If not, use the web interface to upload files
 

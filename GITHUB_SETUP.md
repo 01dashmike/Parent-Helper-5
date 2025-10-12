@@ -11,18 +11,18 @@ Your project isn't reaching GitHub because the remote repository isn't configure
 
 2. **Follow the prompts to:**
    - Authorize Replit to access your GitHub account
-   - Create a new repository named `baby-toddler-class-finder`
+   - Create a new repository named `Parent-Helper-5`
    - Choose Public or Private
 
 ## Method 2: Manual Repository Setup
 
 1. **Go to GitHub.com and create a new repository:**
-   - Repository name: `baby-toddler-class-finder`
-   - Description: `UK Baby & Toddler Class Directory - React + Supabase`
+   - Repository name: `Parent-Helper-5`
+   - Description: `Parent Helper 5 - React + Supabase`
    - Choose Public or Private
    - **Don't initialize** with README (you have files already)
 
-2. **Copy the repository URL** (looks like: `https://github.com/yourusername/baby-toddler-class-finder.git`)
+2. **Copy the repository URL** (looks like: `https://github.com/yourusername/parent-helper-5.git`)
 
 3. **Tell me the URL** and I'll help configure the connection
 

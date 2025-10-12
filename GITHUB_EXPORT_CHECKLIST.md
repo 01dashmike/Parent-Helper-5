@@ -24,7 +24,7 @@ Your baby & toddler class finder is ready for GitHub and Vercel deployment.
 ## Export Process
 
 1. **Download/Copy Files**: Use Replit's export feature or copy files manually
-2. **Create GitHub Repository**: Name it `baby-toddler-class-finder`
+2. **Create GitHub Repository**: Name it `Parent-Helper-5`
 3. **Upload and Rename**: Follow the renaming instructions above
 4. **Deploy to Vercel**: Connect repository and add environment variables
 

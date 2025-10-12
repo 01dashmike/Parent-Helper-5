@@ -22,8 +22,8 @@ Your project is now prepared for GitHub export with all necessary configuration 
 ## GitHub Upload Steps
 
 1. **Create GitHub Repository:**
-   - Name: `baby-toddler-class-finder`
-   - Description: `UK Baby & Toddler Class Directory - React + Supabase`
+   - Name: `Parent-Helper-5`
+   - Description: `Parent Helper 5 - React + Supabase`
    - Public repository
 
 2. **Upload Essential Files:**

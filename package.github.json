@@ -1,10 +1,10 @@
 {
-  "name": "baby-toddler-class-finder",
+  "name": "parent-helper-5",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
   "description": "UK Baby & Toddler Class Directory - React + Supabase",
-  "homepage": "https://github.com/01dashmike/baby-toddler-class-finder",
+  "homepage": "https://github.com/01dashmike/Parent-Helper-5",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

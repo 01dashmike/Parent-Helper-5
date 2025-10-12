@@ -18,7 +18,7 @@ Your baby & toddler class finder is now configured for Vercel deployment.
 
 ### GitHub Repository Structure
 ```
-baby-toddler-class-finder/
+Parent-Helper-5/
 ├── src/                    # React application
 │   ├── components/         # UI components
 │   ├── pages/             # Route pages
@@ -38,7 +38,7 @@ baby-toddler-class-finder/
 ## Deployment Steps
 
 1. **Upload to GitHub:**
-   - Create repository: `baby-toddler-class-finder`
+   - Create repository: `Parent-Helper-5`
    - Upload all files from the structure above
    - Rename `package-vercel.json` to `package.json`
 
