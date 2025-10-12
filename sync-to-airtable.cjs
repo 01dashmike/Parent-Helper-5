@@ -5,12 +5,16 @@ async function syncToAirtable() {
     connectionString: process.env.DATABASE_URL,
   });
 
-  const airtableToken = process.env.AIRTABLE_API_KEY || '***REMOVED***';
-  const baseId = 'app9eOTFWck1sZwTG'; // Your Parent Helper base
+  const airtableToken = process.env.AIRTABLE_API_KEY || process.env.AIRTABLE_API_TOKEN;
+  const baseId = process.env.AIRTABLE_BASE_ID; // Your Parent Helper base
   
   if (!airtableToken) {
-    console.log('❌ AIRTABLE_API_KEY not found - please add your personal access token');
+    console.log('❌ AIRTABLE_API_KEY (or AIRTABLE_API_TOKEN) not found - please add your personal access token');
     console.log('📝 I can see you created "Parent Helper Integration" token - please add it to environment');
+    return;
+  }
+  if (!baseId) {
+    console.log('❌ AIRTABLE_BASE_ID not found - please add your base ID to the environment');
     return;
   }
 

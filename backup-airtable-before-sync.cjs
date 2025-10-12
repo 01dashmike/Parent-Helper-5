@@ -1,8 +1,8 @@
 const Airtable = require('airtable');
 const fs = require('fs');
 
-const token = '***REMOVED***';
-const baseId = 'app9eOTFWck1sZwTG';
+const token = process.env.AIRTABLE_API_TOKEN;
+const baseId = process.env.AIRTABLE_BASE_ID;
 
 const base = new Airtable({
   apiKey: token

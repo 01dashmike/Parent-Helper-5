@@ -5,8 +5,8 @@ async function complete5947BusinessesSync() {
     connectionString: process.env.DATABASE_URL,
   });
 
-  const token = '***REMOVED***';
-  const baseId = 'app9eOTFWck1sZwTG';
+  const token = process.env.AIRTABLE_API_TOKEN;
+  const baseId = process.env.AIRTABLE_BASE_ID;
 
   try {
     await client.connect();

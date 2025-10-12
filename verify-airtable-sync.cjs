@@ -1,6 +1,6 @@
 async function verifyAirtableSync() {
-  const token = '***REMOVED***';
-  const baseId = 'app9eOTFWck1sZwTG';
+  const token = process.env.AIRTABLE_API_TOKEN;
+  const baseId = process.env.AIRTABLE_BASE_ID;
   
   console.log('🔍 CHECKING YOUR AIRTABLE DATA');
   console.log('📊 Verifying what\'s actually in your base...\n');
@@ -48,8 +48,8 @@ async function verifyAirtableSync() {
 }
 
 async function quickSync() {
-  const token = '***REMOVED***';
-  const baseId = 'app9eOTFWck1sZwTG';
+  const token = process.env.AIRTABLE_API_TOKEN;
+  const baseId = process.env.AIRTABLE_BASE_ID;
   
   console.log('\n🚀 QUICK SYNC - Adding sample authentic businesses to your Airtable...');
   

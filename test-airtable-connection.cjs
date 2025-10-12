@@ -1,6 +1,6 @@
 const Airtable = require('airtable');
 
-const token = '***REMOVED***';
+const token = process.env.AIRTABLE_API_TOKEN;
 
 async function testAirtableConnection() {
   try {

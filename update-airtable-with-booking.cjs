@@ -5,8 +5,18 @@ async function updateAirtableWithBooking() {
     connectionString: process.env.DATABASE_URL,
   });
 
-  const airtableToken = '***REMOVED***';
-  const baseId = 'app9eOTFWck1sZwTG';
+  const airtableToken = process.env.AIRTABLE_API_KEY || process.env.AIRTABLE_API_TOKEN;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+
+  if (!airtableToken) {
+    console.log('❌ AIRTABLE_API_KEY (or AIRTABLE_API_TOKEN) not found - please add your personal access token.');
+    return;
+  }
+
+  if (!baseId) {
+    console.log('❌ AIRTABLE_BASE_ID not found - please add your base ID to the environment.');
+    return;
+  }
 
   try {
     await client.connect();

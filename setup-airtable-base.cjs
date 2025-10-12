@@ -2,11 +2,11 @@
 
 async function setupAirtableBase() {
   const airtableToken = process.env.AIRTABLE_API_KEY;
-  const baseId = 'app9eOTFWck1sZwTG';
+  const baseId = process.env.AIRTABLE_BASE_ID;
   
   if (!airtableToken) {
     console.log('❌ Need your Airtable personal access token to set up the base');
-    console.log('📝 Please provide: ***REMOVED*** (from your screenshot)');
+    console.log('📝 Please add your Airtable personal access token to the environment (AIRTABLE_API_KEY).');
     return;
   }
 
