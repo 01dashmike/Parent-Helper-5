@@ -244,7 +244,7 @@ export const listClassSchema = z.object({
   contactName: z.string().min(1, "Contact name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(1, "Phone number is required"),
-  website: z.string().url().optional().or(z.***REMOVED***("")),
+  website: z.string().url().optional().or(z.literal("")),
   className: z.string().min(1, "Class name is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   category: z.string().min(1, "Category is required"),
@@ -419,6 +419,8 @@ export const searchSchema = z.object({
   category: z.string().optional(),
   dayOfWeek: z.string().optional(),
   radius: z.number().optional(),
+  includeInactive: z.boolean().default(false),
+  priceFilter: z.enum(["all", "free", "paid"]).optional(),
 });
 
 export const providerMetrics = pgTable("provider_metrics", {
@@ -443,12 +445,12 @@ export const providerClaimRequestSchema = z.object({
     .string()
     .url("Enter a valid URL")
     .optional()
-    .or(z.***REMOVED***("")),
+    .or(z.literal("")),
   proofUrl: z
     .string()
     .url("Enter a valid URL")
     .optional()
-    .or(z.***REMOVED***("")),
+    .or(z.literal("")),
   message: z.string().min(10, "Share some details so we can verify"),
   franchiseId: z.coerce.number().int().positive().optional(),
 });
@@ -562,12 +564,12 @@ export const claimListingSchema = z.object({
     .string()
     .url("Enter a valid URL")
     .optional()
-    .or(z.***REMOVED***("")),
+    .or(z.literal("")),
   proofUrl: z
     .string()
     .url("Enter a valid URL")
     .optional()
-    .or(z.***REMOVED***("")),
+    .or(z.literal("")),
   message: z.string().min(10, "Share a few details so we can verify"),
   contactPreference: z.enum(["email", "phone"]).default("email"),
   consentToEmail: z

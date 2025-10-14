@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
-// This file is not used as a route by Astro. See blog-weaning-guide.astro for the actual page.
 
 export default function BlogWeaningGuide() {
   return (

@@ -1,114 +1,76 @@
-# Parent Helper App (Astro Edition)
+# Parent Helper App (Express + Vite Edition)
 
-A comprehensive digital platform for discovering baby and toddler activities across the United Kingdom, with advanced search capabilities and authentic class data.
+A comprehensive platform for discovering baby and toddler activities across the United Kingdom. The stack now runs on an Express API with a Vite + React client, removing all previous Astro tooling.
 
 ## Features
 
-- Smart Search: Find classes by town name, postcode, or class type
-- Radius Filtering: Adjustable search radius from 3-20 miles
-- Real-time Results: Instant search with live data from Supabase and PostgreSQL
-- Responsive Design: Mobile-first interface with TailwindCSS
-- Authentic Data: 7,400+ verified baby and toddler classes
+- Smart search with location, category, and keyword filters
+- Real-time class data backed by Supabase/PostgreSQL and Drizzle ORM
+- Responsive UI built with React, TailwindCSS, Radix UI, and shadcn/ui
+- Provider, franchise, and admin tools for managing class listings
 
 ## Technology Stack
 
-- **Frontend**: Astro (SSG) + React Islands + TypeScript
-- **Styling**: TailwindCSS + shadcn/ui components
-- **Database**: Supabase (primary) + PostgreSQL (fallback)
-- **Backend**: Node.js + Express
-- **Deployment**: Cloudflare Pages (static hosting)
+- **Frontend**: React + Vite + TypeScript
+- **Backend**: Node.js + Express + Drizzle ORM
+- **Database**: Supabase (PostgreSQL)
+- **Styling**: TailwindCSS, Radix UI primitives, shadcn/ui
+- **Build**: `tsc` for the backend, Vite for the client bundle
 
 ## Quick Start
 
-1. **Clone the repository**
-2. **Install dependencies**: `npm install`
-3. **Start development server**: `npm run dev`
-4. **Visit**: http://localhost:4321
+```bash
+npm install
+npm run dev:both   # starts Express on 3000 and Vite on 5173
+```
+
+- API only: `npm run dev`
+- Frontend only: `npm run dev:frontend`
+- Visit http://localhost:5173 for the UI, http://localhost:3000 for the API health check
+
+## Build & Deploy
+
+```bash
+npm run build   # runs tsc and vite build
+npm start       # executes node dist/server/index.js
+```
+
+The output in `dist/` is ready for Railway, Render, or any Node hosting provider.
 
 ## Environment Setup
 
-Create `.env` file with:
+Create a `.env` file with the credentials required by the modules you use:
+
 ```
-PUBLIC_SUPABASE_URL=your_supabase_url
-PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
 DATABASE_URL=postgresql_connection_string
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_KEY=your_service_role_key
+SUPABASE_ANON_KEY=your_public_anon_key
+SESSION_SECRET=some-long-random-string
 ```
+
+Check files within `server/` for any additional variables (e.g., SendGrid, Stripe, Instagram automation).
 
 ## Project Structure
 
 ```
-├── src/
-│   ├── components/      # React & Astro UI components
-│   ├── pages/           # Astro pages (routes)
-│   ├── lib/             # Database clients
-│   └── styles/          # Tailwind CSS
-├── functions/           # Cloudflare Pages Functions
-├── public/              # Static assets
-├── .github/workflows/   # CI/CD
+├── server/            # Express server, routes, integrations, automation scripts
+├── src/               # Vite + React application (primary client)
+│   ├── components/    # Shared UI components
+│   ├── pages/         # Route components rendered via Wouter
+│   └── lib/           # Hooks, clients, utilities
+├── client/            # Alternate/lightweight client build (React + Vite)
+├── shared/            # Database schema and shared types (Drizzle + Zod)
+├── public/            # Static assets served by Vite
+├── vite.config.ts     # Vite configuration for the React client
+└── tsconfig.json      # TypeScript configuration for both client and server
 ```
 
-## Cloudflare Pages Deployment
+## Railway Deployment Tips
 
-- **Build command**: `npm run build`
-- **Output directory**: `dist`
-- **Environment variables (Production & Preview)**:
-  - `PUBLIC_SUPABASE_URL`
-  - `PUBLIC_SUPABASE_ANON_KEY`
+1. Set all required environment variables in the Railway dashboard.
+2. Run `npm run build` as a build step.
+3. Use `npm start` for the start command (`node dist/server/index.js`).
+4. Ensure `NODE_ENV=production` so Express serves the built assets.
 
-## Supabase + Cloudflare Setup
-
-In Cloudflare Pages → Settings → Environment variables:
-- PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-- PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
-- SUPABASE_SERVICE_ROLE=YOUR_SERVICE_ROLE_KEY (server only)
-
-Local development: create a .env file with the same three variables.
-- PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY are browser-safe and used in client code.
-- SUPABASE_SERVICE_ROLE is server-only and must never be exposed to the browser.
-
-For browser code, use the shared client in `src/lib/supabase.ts`:
-```ts
-import { supabase } from '@/lib/supabase';
-```
-For server code (Cloudflare Functions), use:
-```ts
-import { createClient } from '@supabase/supabase-js';
-export const onRequestGet = async (ctx) => {
-  const url = ctx.env.PUBLIC_SUPABASE_URL;
-  const serviceKey = ctx.env.SUPABASE_SERVICE_ROLE;
-  const supabase = createClient(url, serviceKey);
-  // ...
-};
-```
-Never include SUPABASE_SERVICE_ROLE in browser code.
-
-## Supabase Notes
-
-- Only PUBLIC_* env vars are exposed to the browser.
-- All Supabase calls use the helper in `src/lib/supabase.ts`.
-
-## Local Development
-
-- Run `npm run dev` for Astro local server.
-- Run `npm run build` to generate static output in `/dist`.
-- Lint and format: `npm run lint`, `npm run format`.
-
-## API Endpoints
-
-- `/api/health` (Cloudflare Pages Function): returns `{ "status": "ok" }`
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Test thoroughly
-5. Submit pull request
-
-## License
-
-MIT License - Built for families across the UK
-
----
-
-**Migrated to Astro SSG + React Islands. Ready for Cloudflare Pages!**
+The repository is now free of Astro code and configuration—only the Express + Vite setup remains.

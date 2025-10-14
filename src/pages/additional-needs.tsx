@@ -1,5 +1,3 @@
-// This file is not used as a route by Astro. See additional-needs.astro for the actual page.
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

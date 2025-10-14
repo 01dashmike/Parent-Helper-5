@@ -22,9 +22,7 @@ let stripe: any = null;
 try {
   if (stripeSecretKey) {
     const Stripe = (await import("stripe")).default;
-    stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2023-10-16",
-    });
+    stripe = new Stripe(stripeSecretKey);
   }
 } catch (error) {
   console.warn("Stripe SDK unavailable, discount creation will skip Stripe", error);

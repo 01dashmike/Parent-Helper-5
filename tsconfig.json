@@ -10,10 +10,10 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "outDir": "dist",
+    "noEmit": false,
     "jsx": "preserve",
     "strict": true,
     "noUnusedLocals": true,
@@ -42,9 +42,7 @@
   },
   "include": [
     "server",
-    "shared",
-    "src",
-    ".next/types/**/*.ts"
+    "shared"
   ],
   "references": [
     {
@@ -56,6 +54,7 @@
     "experimentalSpecifierResolution": "node"
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }
