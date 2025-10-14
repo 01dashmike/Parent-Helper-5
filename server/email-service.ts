@@ -1,5 +1,5 @@
 import { MailService } from '@sendgrid/mail';
-import type { Provider, ProviderClaim, FranchiseInvite } from "@shared/schema";
+import type { Provider, ProviderClaim, FranchiseInvite } from "../shared/schema.js";
 
 const mailService = new MailService();
 

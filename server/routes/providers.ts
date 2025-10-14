@@ -8,7 +8,7 @@ import {
   providerClaimRequestSchema,
   franchises,
   type ProviderClaimRequest,
-} from "@shared/schema";
+} from "../../shared/schema.js";
 import {
   sendProviderClaimAdminNotification,
   sendProviderClaimantConfirmation,

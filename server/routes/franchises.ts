@@ -11,7 +11,7 @@ import {
   insertFranchiseDiscountCodeSchema,
   franchiseInvites,
   type Franchise,
-} from "@shared/schema";
+} from "../../shared/schema.js";
 import {
   sendFranchiseInviteEmail,
 } from "../email-service.js";

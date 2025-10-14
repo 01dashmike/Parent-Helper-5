@@ -19,7 +19,7 @@ import {
   type Booking,
   type InsertBooking,
   type SearchParams
-} from "@shared/schema";
+} from "../shared/schema.js";
 
 export interface IStorage {
   // Classes

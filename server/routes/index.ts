@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { ClassesService } from "../classes-service.js";
-import { claimListingSchema } from "@shared/schema";
+import { claimListingSchema } from "../../shared/schema.js";
 import { sendClaimListingNotification } from "../email-service.js";
 import { storage } from "../storage.js";
 import localContextRouter from "./local-context.js";
