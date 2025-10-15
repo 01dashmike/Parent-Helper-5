@@ -22,7 +22,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./src/*"
+        "./*"
       ],
       "@shared/*": [
         "./shared/*"
@@ -41,8 +41,11 @@
     ]
   },
   "include": [
-    "server",
-    "shared"
+    "app",
+    "components",
+    "next-env.d.ts",
+    "shared",
+    ".next/types/**/*.ts"
   ],
   "references": [
     {
