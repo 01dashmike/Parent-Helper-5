@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "railway-build": "npm install && npm run build",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
