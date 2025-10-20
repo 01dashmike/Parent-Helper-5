@@ -80,4 +80,5 @@ Thumbs.db
 # *_log_*.txt
 
 # === OPTIONAL: LARGE ATTACHMENTS (comment to include) ===
-# attached_assets/
+# attached_assets/tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo

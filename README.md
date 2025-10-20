@@ -1,76 +1,89 @@
-# Parent Helper App (Express + Vite Edition)
+# Parent Helper App (Next.js App Router)
 
-A comprehensive platform for discovering baby and toddler activities across the United Kingdom. The stack now runs on an Express API with a Vite + React client, removing all previous Astro tooling.
+Parent Helper connects UK families with thousands of verified baby and toddler activities. The project now runs entirely on the Next.js App Router, pairing server-rendered React components with modern data fetching, while retaining the rich dataset, Supabase integrations, and automation tooling that power the platform.
 
 ## Features
 
-- Smart search with location, category, and keyword filters
-- Real-time class data backed by Supabase/PostgreSQL and Drizzle ORM
-- Responsive UI built with React, TailwindCSS, Radix UI, and shadcn/ui
-- Provider, franchise, and admin tools for managing class listings
+- Location-aware search with category, age range, and price filters
+- Structured data for >5,000 classes sourced from Supabase/Postgres and enrichment scripts
+- Rich editorial content (blog, guides) served through the Next.js App Router
+- Franchise and provider tooling, including Stripe checkout hooks and CRM exports
+- Automation scripts (in `/server` and `/scripts`) for syncing data, newsletters, and analytics
 
 ## Technology Stack
 
-- **Frontend**: React + Vite + TypeScript
-- **Backend**: Node.js + Express + Drizzle ORM
-- **Database**: Supabase (PostgreSQL)
-- **Styling**: TailwindCSS, Radix UI primitives, shadcn/ui
-- **Build**: `tsc` for the backend, Vite for the client bundle
+- **Framework**: Next.js 15 App Router (React 18 + TypeScript)
+- **Styling**: Tailwind CSS, Radix UI primitives, shadcn/ui design system
+- **Data**: Supabase/Postgres + Drizzle ORM schema shared via `/shared`
+- **Payments & Email**: Stripe billing flows, SendGrid transactional emails
+- **Tooling**: ESLint flat config, Prettier, Turbo/automation scripts for data ingestion
 
 ## Quick Start
 
 ```bash
 npm install
-npm run dev:both   # starts Express on 3000 and Vite on 5173
+npm run dev
 ```
 
-- API only: `npm run dev`
-- Frontend only: `npm run dev:frontend`
-- Visit http://localhost:5173 for the UI, http://localhost:3000 for the API health check
+- The app boots at http://localhost:3000 with hot reloading.
+- API routes live under `app/api/*` and share types with `/shared/schema.ts`.
 
 ## Build & Deploy
 
 ```bash
-npm run build   # runs tsc and vite build
-npm start       # executes node dist/server/index.js
+npm run build
+npm start            # serves the production build with next start
 ```
 
-The output in `dist/` is ready for Railway, Render, or any Node hosting provider.
+For Railway or other container hosts you can use the bundled helper script:
+
+```bash
+npm run railway-build  # installs dependencies and runs next build
+```
 
 ## Environment Setup
 
-Create a `.env` file with the credentials required by the modules you use:
+Create a `.env.local` (or project-level secrets in your hosting platform) with the required credentials. Common keys include:
 
 ```
 DATABASE_URL=postgresql_connection_string
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_KEY=your_service_role_key
-SUPABASE_ANON_KEY=your_public_anon_key
-SESSION_SECRET=some-long-random-string
+SUPABASE_SERVICE_ROLE=service_role_key
+SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=public_anon_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_SECRET_KEY=sk_test_xxx
+SENDGRID_API_KEY=your_sendgrid_api_key
 ```
 
-Check files within `server/` for any additional variables (e.g., SendGrid, Stripe, Instagram automation).
+> Many automation scripts under `/server` and `/scripts` expect the same variables. Review each script before running it against production data.
 
 ## Project Structure
 
 ```
-├── server/            # Express server, routes, integrations, automation scripts
-├── src/               # Vite + React application (primary client)
-│   ├── components/    # Shared UI components
-│   ├── pages/         # Route components rendered via Wouter
-│   └── lib/           # Hooks, clients, utilities
-├── client/            # Alternate/lightweight client build (React + Vite)
-├── shared/            # Database schema and shared types (Drizzle + Zod)
-├── public/            # Static assets served by Vite
-├── vite.config.ts     # Vite configuration for the React client
-└── tsconfig.json      # TypeScript configuration for both client and server
+├── app/                     # Next.js App Router routes, layouts, and API handlers
+│   ├── api/                 # Route handlers (e.g., /api/search)
+│   ├── classes/             # Dynamic class and town routes
+│   ├── lib/                 # Shared utilities and data loaders
+│   ├── layout.jsx           # Root layout
+│   └── page.jsx             # Landing experience
+├── components/              # Reusable UI (cards, dialogs, forms, maps)
+├── server/                  # Long-running tasks, Stripe hooks, newsletter jobs
+├── shared/                  # Zod/Drizzle schemas and shared type definitions
+├── public/                  # Static assets
+├── package.json             # Scripts & dependencies
+├── next.config.mjs          # Next.js configuration
+├── postcss.config.js        # Tailwind/PostCSS pipeline
+├── tailwind.config.ts       # Tailwind design tokens
+└── tsconfig.json            # TypeScript configuration
 ```
 
-## Railway Deployment Tips
+Legacy Express automation scripts remain in the repository; they can be run independently when needed, but the primary user experience now ships from Next.js.
 
-1. Set all required environment variables in the Railway dashboard.
-2. Run `npm run build` as a build step.
-3. Use `npm start` for the start command (`node dist/server/index.js`).
-4. Ensure `NODE_ENV=production` so Express serves the built assets.
+## Deployment Notes
 
-The repository is now free of Astro code and configuration—only the Express + Vite setup remains.
+1. Set environment variables in your hosting provider (Vercel, Railway, Render, etc.).
+2. Run `npm run build` during the build phase (or `npm run railway-build`).
+3. Launch with `npm start` (Next will default to port 3000; adjust with `PORT` if required).
+4. Enable connection pooling (e.g., Neon + PgBouncer) for Supabase/Postgres when running at scale.
+
+The Parent Helper Next.js implementation is production-ready and replaces the previous Express frontend stack while preserving all core features and automation workflows.

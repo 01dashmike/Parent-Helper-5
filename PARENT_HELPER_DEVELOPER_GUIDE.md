@@ -6,8 +6,8 @@ A comprehensive digital platform connecting UK parents with local baby and toddl
 **Current Status**: Production-ready with 5,684 authentic businesses across the UK
 
 ## Technology Stack
-- **Frontend**: React.js with TypeScript, Vite, TailwindCSS, Wouter routing
-- **Backend**: Node.js/Express with PostgreSQL
+- **Frontend**: Next.js 15 App Router (React + TypeScript) with TailwindCSS
+- **Backend**: Next.js route handlers and supporting Node.js automation scripts
 - **Database**: PostgreSQL with PostGIS for geospatial queries
 - **UI Components**: Radix UI with shadcn/ui styling
 - **Maps**: Leaflet for interactive mapping
@@ -17,52 +17,22 @@ A comprehensive digital platform connecting UK parents with local baby and toddl
 ## Project Structure
 
 ```
-├── client/                     # Frontend React application
-│   ├── src/
-│   │   ├── components/         # Reusable UI components
-│   │   │   ├── ui/            # shadcn/ui components
-│   │   │   ├── hero-search.tsx # Main search interface
-│   │   │   ├── search-results.tsx # Results display
-│   │   │   ├── class-card.tsx # Business card component
-│   │   │   ├── interactive-map.tsx # Map integration
-│   │   │   ├── coverage-map.tsx # Coverage visualization
-│   │   │   ├── newsletter.tsx # Email signup
-│   │   │   └── header.tsx, footer.tsx
-│   │   ├── pages/             # Page components
-│   │   │   ├── home.tsx       # Homepage
-│   │   │   ├── about.tsx      # About page
-│   │   │   ├── blog.tsx       # Blog listing
-│   │   │   ├── list-class.tsx # Class submission form
-│   │   │   └── blog-*.tsx     # Individual blog pages
-│   │   ├── hooks/             # Custom React hooks
-│   │   │   ├── use-search.ts  # Search functionality
-│   │   │   ├── use-newsletter.ts # Newsletter management
-│   │   │   └── use-toast.ts   # Toast notifications
-│   │   ├── lib/               # Utility libraries
-│   │   │   ├── queryClient.ts # React Query setup
-│   │   │   ├── town-lookup.ts # UK town/postcode data
-│   │   │   ├── postcode-lookup.ts # Postcode validation
-│   │   │   ├── image-service.ts # Location images
-│   │   │   └── utils.ts       # Common utilities
-│   │   ├── App.tsx            # Main application router
-│   │   └── main.tsx           # Application entry point
-│   └── index.html             # HTML template
-├── server/                     # Backend Express application
-│   ├── db.ts                  # Database connection
-│   ├── storage.ts             # Data access layer
-│   ├── routes.ts              # API routes
-│   ├── email-service.ts       # SendGrid integration
-│   ├── instagram-sync.ts      # Instagram integration
-│   ├── newsletter-automation.ts # Newsletter system
-│   ├── index.ts               # Server entry point
-│   └── vite.ts                # Vite integration
-├── shared/                     # Shared TypeScript schemas
-│   └── schema.ts              # Database and validation schemas
-├── package.json               # Dependencies and scripts
-├── vite.config.ts             # Vite configuration
-├── tailwind.config.ts         # TailwindCSS configuration
-├── drizzle.config.ts          # Database configuration
-└── tsconfig.json              # TypeScript configuration
+├── app/                      # Next.js App Router routes
+│   ├── api/                  # Route handlers (e.g., /api/classes)
+│   ├── classes/              # Dynamic class and town views
+│   ├── lib/                  # Server utilities and data loaders
+│   ├── layout.jsx            # Root layout shell
+│   └── page.jsx              # Landing page experience
+├── components/               # Reusable UI components (cards, dialogs, forms)
+├── server/                   # Automation scripts, Stripe handlers, newsletters
+├── shared/                   # Drizzle/Zod schemas shared between server and app
+├── public/                   # Static assets and icons
+├── package.json              # Scripts & dependencies (Next.js commands)
+├── next.config.mjs           # Next.js configuration
+├── tailwind.config.ts        # TailwindCSS design tokens
+├── postcss.config.js         # PostCSS pipeline
+├── drizzle.config.ts         # Database migration tooling
+└── tsconfig.json             # TypeScript configuration
 ```
 
 ## Database Schema

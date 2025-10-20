@@ -1,84 +1,87 @@
-# GitHub Export Guide for Baby & Toddler Class Finder
+# GitHub Export Guide for Parent Helper (Next.js)
 
-Your project is now prepared for GitHub export with all necessary configuration files.
+Your Next.js application is ready to share on GitHub. Follow this checklist to publish the production codebase (App Router + shared automation tooling).
 
 ## Essential Files for GitHub
 
-### Core Application Files ✓
-- `src/` - Complete React application with all components
-- `server/` - Express backend with database integration
-- `shared/` - Shared types and schemas
-- `index.html` - Main HTML entry point
-- `README.md` - Project documentation
+### Core Application ✓
+- `app/` – Next.js App Router routes, API handlers, and layouts
+- `components/` – Shared UI primitives (cards, dialogs, CTA blocks)
+- `shared/` – Drizzle/Zod schemas used by both API routes and scripts
+- `server/` – Optional automation scripts (Stripe, newsletters, data sync)
+- `public/` – Static assets (icons, images)
+- `README.md` – Project overview and setup instructions
 
-### Configuration Files ✓
-- `package.github.json` - Clean dependencies for GitHub (rename to package.json)
-- `vite.config.github.ts` - Vite config for GitHub (rename to vite.config.ts)
-- `tsconfig.github.json` - TypeScript config (rename to tsconfig.json)
-- `tailwind.config.js` - Updated for src/ structure
-- `.env.example` - Environment variables template
-- `.gitignore` - Excludes unnecessary files
+### Configuration ✓
+- `package.json` / `package-lock.json`
+- `next.config.mjs`
+- `tailwind.config.ts`
+- `postcss.config.js`
+- `tsconfig.json`
+- `.env.example` (template for required environment variables)
+- `.gitignore`
 
 ## GitHub Upload Steps
 
-1. **Create GitHub Repository:**
+1. **Create a repository**
    - Name: `Parent-Helper-5`
-   - Description: `Parent Helper 5 - React + Supabase`
-   - Public repository
+   - Description: `Parent Helper 5 – Next.js App Router`
+   - Visibility: Public (or private if preferred)
 
-2. **Upload Essential Files:**
+2. **Upload the project root**
    ```
-   /src/                    (Complete React app)
-   /server/                 (Express backend)
-   /shared/                 (Types)
-   index.html
-   package.json            (from package.github.json)
-   vite.config.ts          (from vite.config.github.ts)
-   tsconfig.json           (from tsconfig.github.json)
-   tailwind.config.js
-   .gitignore
+   app/
+   components/
+   shared/
+   server/
+   public/
+   package.json
+   package-lock.json
+   next.config.mjs
+   tailwind.config.ts
+   postcss.config.js
+   tsconfig.json
    README.md
    .env.example
+   .gitignore
    ```
 
-3. **Exclude These Files:**
-   - All .cjs scraper files
-   - Database backups (.sql, .csv)
-   - attached_assets/ folder
-   - node_modules/
-   - All temporary scripts
+3. **Exclude** heavy data exports and one-off scripts unless required:
+   - `.cjs` automation scripts you do not plan to share
+   - Database dumps and CSV exports
+   - `node_modules/`
+   - Large attachments in `attached_assets/`
 
 ## Deployment Platforms
 
-**Vercel (Recommended for Frontend):**
-- Automatically detects Vite + React
-- Perfect for static frontend deployment
-- Free tier available
+**Vercel (recommended):**
+- First-class support for Next.js App Router
+- Automatic builds (`npm run build`) and previews per pull request
 
-**Railway/Heroku (For Full-Stack):**
-- Supports Node.js backend
-- Environment variable management
-- Database hosting
+**Railway / Render / Fly.io:**
+- Use the `railway-build` helper script (`npm run railway-build`) or run `npm install && npm run build`
+- Serve production with `npm start`
 
-**Netlify:**
-- Static site hosting
-- Good for frontend-only deployment
+## Environment Variables
 
-## Environment Variables Needed
+Create `.env.local` locally and configure the same keys in your hosting provider:
 
 ```
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-DATABASE_URL=postgresql_fallback_url (optional)
+DATABASE_URL=postgres_connection_string
+SUPABASE_SERVICE_ROLE=service_role_key
+SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=public_anon_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_SECRET_KEY=sk_test_xxx
+SENDGRID_API_KEY=your_sendgrid_api_key
 ```
 
-## Project Features Ready for GitHub
+Additional automation scripts in `/server` may require extra keys (e.g., Instagram, Google Places).
 
-- 7,400+ authentic baby and toddler classes
-- Smart search with location and radius filtering
-- Supabase integration with PostgreSQL fallback
-- Multiple category pages and blog content
-- Responsive design with TailwindCSS
-- TypeScript throughout
+## Project Snapshot
 
-Your baby and toddler class finder is production-ready for GitHub and deployment.
+- 5,000+ curated class records with geospatial search
+- Blog, partner landing pages, and provider dashboards implemented with Next.js App Router
+- Stripe-powered featured listings and SendGrid newsletters ready for production scaling
+
+Your Next.js build is ready for GitHub and cloud deployment.
