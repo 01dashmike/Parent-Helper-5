@@ -162,13 +162,17 @@ The `classes` table has these columns:
 
 ### File Structure
 ```
+app/api/
+├── classes/route.ts      # GET /api/classes
+├── classes/[id]/route.ts # Dynamic class lookups
+└── health/route.ts       # Health checks
+
+shared/
+└── schema.ts             # Drizzle & Zod models shared across routes
+
 server/
-├── index.ts              # Main server file
-├── supabase.ts           # Supabase client & types
-├── classes-service.ts    # Database operations
-├── routes/
-│   └── index.ts         # API routes
-└── vite.ts              # Vite middleware
+├── classes-service.ts    # Database operations for automation scripts
+└── newsletter-automation.ts
 ```
 
 ### Adding New Endpoints
@@ -207,10 +211,10 @@ curl http://localhost:3000/api/classes/search/swimming
 
 ## 🚀 Next Steps
 
-1. **Set up the database**: Run the SQL script in Supabase
-2. **Add more data**: Insert your actual class data
-3. **Build the frontend**: Create a React app to consume this API
-4. **Add authentication**: Implement user authentication if needed
-5. **Add more features**: Booking system, reviews, etc.
+1. **Set up the database**: Run the SQL script in Supabase.
+2. **Add more data**: Insert authentic class records using the automation scripts.
+3. **Wire the API into the Next.js App Router**: Fetch from `/app/lib` utilities or route handlers.
+4. **Add authentication**: Implement provider dashboards and protected routes.
+5. **Extend features**: Stripe bookings, reviews, scheduling automations.
 
-Your API is ready to power your Parent Helper application! 🎉 
+Your API is ready to power the Next.js version of Parent Helper! 🎉 

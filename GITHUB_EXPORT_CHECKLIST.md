@@ -1,42 +1,38 @@
 # GitHub Export Checklist
 
-Your baby & toddler class finder is ready for GitHub and Vercel deployment.
+Use this list to publish the Next.js App Router version of Parent Helper.
 
-## Files to Export
-
-### Core Application ✓
-- `src/` folder (complete React app with 20+ pages and components)
-- `index.html` (entry point with SEO)
-
-### Configuration Files ✓
-- `package-deployment.json` → rename to `package.json`
-- `tsconfig-deployment.json` → rename to `tsconfig.json`
-- `vite-deployment.config.ts` → rename to `vite.config.ts`
-- `tailwind.config.js`
-- `postcss.config.js`
-- `vercel.json`
-
-### Project Files ✓
-- `.gitignore` (excludes node_modules, .env)
+## Files to Include ✓
+- `app/` (routes, API handlers, layouts)
+- `components/` (shared UI)
+- `shared/` (Drizzle/Zod schemas)
+- `server/` (optional automation scripts)
+- `public/`
+- `package.json`, `package-lock.json`
+- `next.config.mjs`, `tsconfig.json`, `tailwind.config.ts`, `postcss.config.js`
+- `.env.example`, `.gitignore`
 - `README.md`
-- `.env.example`
 
-## Export Process
+## Export Steps ✓
+1. Copy the repository contents (excluding `node_modules/` and large data exports).
+2. Create a GitHub repo named `Parent-Helper-5`.
+3. Push or upload the files above.
+4. Configure deployment (Vercel, Railway, Render, etc.).
 
-1. **Download/Copy Files**: Use Replit's export feature or copy files manually
-2. **Create GitHub Repository**: Name it `Parent-Helper-5`
-3. **Upload and Rename**: Follow the renaming instructions above
-4. **Deploy to Vercel**: Connect repository and add environment variables
-
-## Environment Variables for Vercel
+## Environment Variables ✓
 ```
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_key
+DATABASE_URL=postgres_connection_string
+SUPABASE_SERVICE_ROLE=service_role_key
+SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=public_anon_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_SECRET_KEY=sk_test_xxx
+SENDGRID_API_KEY=your_sendgrid_api_key
 ```
 
-## Build Commands Verified
-- `npm install` - installs all dependencies
-- `npm run build` - creates production build in `dist/`
-- Output directory: `dist`
+## Build Commands ✓
+- `npm install`
+- `npm run build`
+- `npm start`
 
-Your application with 7,400+ authentic baby and toddler classes is production-ready.
+Your Next.js project is ready to ship.

@@ -1,78 +1,45 @@
-# Deployment Instructions
+# Deployment Instructions (Next.js App Router)
 
-Your baby & toddler class finder is ready for GitHub and Vercel deployment.
+## 1. Prepare Your Repository
+- Ensure the following directories and files are committed:
+  - `app/`, `components/`, `shared/`, `server/`, `public/`
+  - `package.json`, `package-lock.json`
+  - `next.config.mjs`, `tsconfig.json`, `tailwind.config.ts`, `postcss.config.js`
+  - `.env.example`, `.gitignore`, `README.md`
+- Remove large data exports or one-off scripts you do not intend to publish (database dumps, CSV backups, etc.).
 
-## Files to Upload to GitHub
+## 2. Configure Environment Variables
+Create `.env.local` locally and mirror the same secrets in your hosting provider (Vercel, Railway, Render, Fly.io, etc.):
 
-### Core Application
-- `src/` folder - Complete React application
-- `index.html` - Entry point with SEO meta tags
-
-### Configuration Files (Rename These)
-1. `package-deployment.json` → rename to `package.json`
-2. `tsconfig-deployment.json` → rename to `tsconfig.json`
-3. `vite-deployment.config.ts` → rename to `vite.config.ts`
-4. `tailwind.config.js` - already configured
-5. `postcss.config.js` - already configured
-6. `vercel.json` - Vercel deployment config
-
-### Other Essential Files
-- `.gitignore` - Updated with proper exclusions
-- `README.md` - Project documentation
-- `.env.example` - Environment template
-
-## GitHub Repository Structure
 ```
-Parent-Helper-5/
-├── src/                    # React application
-│   ├── components/         # UI components
-│   ├── pages/             # Route pages
-│   ├── lib/               # Database clients
-│   ├── hooks/             # React hooks
-│   └── main.tsx           # Entry point
-├── index.html             # HTML template
-├── package.json           # Dependencies & build scripts
-├── vite.config.ts         # Vite configuration
-├── tsconfig.json          # TypeScript config
-├── tailwind.config.js     # Tailwind config
-├── postcss.config.js      # PostCSS config
-├── vercel.json            # Vercel deployment config
-├── .gitignore             # Git ignore rules
-└── README.md              # Documentation
+DATABASE_URL=postgres_connection_string
+SUPABASE_SERVICE_ROLE=service_role_key
+SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=public_anon_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_SECRET_KEY=sk_test_xxx
+SENDGRID_API_KEY=your_sendgrid_api_key
 ```
 
-## Deployment Steps
+Additional automation scripts in `/server` may require further keys (Google Places, Instagram, etc.).
 
-### 1. Upload to GitHub
-- Create repository: `Parent-Helper-5`
-- Upload all files with correct names
-- Ensure package.json has correct build scripts
+## 3. Deploy to Vercel
+1. Import the repository into Vercel.
+2. Set the environment variables listed above.
+3. Build command: `npm run build`
+4. Output is served automatically by `next start` in Vercel’s serverless runtime.
 
-### 2. Vercel Deployment
-- Connect GitHub repository to Vercel
-- Add environment variables:
-  ```
-  VITE_SUPABASE_URL=your_supabase_url
-  VITE_SUPABASE_ANON_KEY=your_supabase_key
-  ```
-- Vercel will automatically run:
-  - `npm install`
-  - `npm run build` (outputs to dist/)
-  - Deploy static files
+## 4. Deploy to Railway / Render
+1. Set the build command to `npm run railway-build` (or `npm install && npm run build`).
+2. Start command: `npm start`.
+3. Define the same environment variables in the platform dashboard.
 
-### 3. Build Verification
-The project is configured to:
-- Install dependencies without errors
-- Build successfully with `vite build`
-- Output to `dist/` directory
-- Serve as static frontend on Vercel
+## 5. Local Production Smoke Test
+```bash
+npm install
+npm run build
+npm start
+```
+Visit http://localhost:3000 to verify the production build before pushing live.
 
-## Features Ready for Production
-- 7,400+ authentic baby and toddler classes
-- Smart search with location and radius filtering
-- Supabase database integration with PostgreSQL fallback
-- Responsive design with TailwindCSS
-- TypeScript throughout
-- SEO optimized
-
-Your application is production-ready for Vercel deployment.
+Your Next.js App Router deployment is now aligned with the modern stack—legacy Express-centric steps are no longer required.
