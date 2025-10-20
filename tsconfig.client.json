@@ -1,3 +1,5 @@
+// Note: This config is for editor or tooling only.
+// It is not used by the Next.js build process.
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
