@@ -29,17 +29,19 @@ export function ResultsList() {
   return (
     <section
       aria-label="Search results"
-      className="relative z-10 flex flex-col gap-4 overflow-y-auto px-4 pb-28 pt-6 md:h-screen md:px-8 md:pb-10"
+      className="relative z-10 flex flex-col gap-4 overflow-y-auto px-4 pb-24 pt-6 md:h-screen md:px-8 md:pb-10"
     >
       {results.length === 0 ? (
-        <p className="rounded-2xl bg-white p-6 text-sm text-brand-teal shadow">No classes found.</p>
+        <p className="rounded-2xl bg-white p-6 text-sm text-brand-midnight shadow">
+          No classes found.
+        </p>
       ) : (
         results.map((result, index) => (
           <motion.article
             key={result.id}
             {...animation}
             transition={{ ...animation.transition, delay: shouldReduceMotion ? 0 : index * 0.05 }}
-            className="group flex flex-col gap-4 rounded-3xl bg-white/95 p-4 shadow-sm ring-1 ring-brand-sage/50 transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1"
+            className="group flex flex-col gap-4 rounded-3xl bg-white/95 p-4 shadow-sm ring-1 ring-brand-sage/50 transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1"
             onMouseEnter={() => highlightResult(result.id)}
             onMouseLeave={() => clearHighlight()}
             onFocus={() => highlightResult(result.id)}
@@ -58,7 +60,7 @@ export function ResultsList() {
               <div className="flex flex-1 flex-col gap-3">
                 <header className="flex flex-col gap-1">
                   <h3 className="text-lg font-semibold text-brand-teal">{result.title}</h3>
-                  <p className="text-sm text-brand-teal/70">{result.description}</p>
+                  <p className="text-sm text-brand-midnight/80">{result.description}</p>
                 </header>
                 <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-brand-teal/80">
                   <span className="rounded-full bg-brand-sage/70 px-3 py-1">

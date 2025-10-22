@@ -148,10 +148,10 @@ export function FiltersSidebar() {
           <AnimatePresence initial={false}>
             {openSections.distance && (
               <motion.div {...animation} className="overflow-hidden">
-                <div className="space-y-3 px-2 py-4 text-sm text-brand-teal">
+                <div className="space-y-3 px-2 py-4 text-sm text-brand-midnight">
                   <label htmlFor="distance" className="flex items-center justify-between">
                     <span>{distance} km</span>
-                    <span className="text-brand-teal/60">Max distance</span>
+                    <span className="text-brand-midnight/60">Max distance</span>
                   </label>
                   <input
                     id="distance"
@@ -183,7 +183,7 @@ export function FiltersSidebar() {
           <AnimatePresence initial={false}>
             {openSections.category && (
               <motion.div {...animation} className="overflow-hidden">
-                <div className="space-y-3 px-2 py-4 text-sm text-brand-teal">
+                <div className="space-y-3 px-2 py-4 text-sm text-brand-midnight">
                   {availableCategories.map((category) => (
                     <label key={category} className="flex items-center gap-3">
                       <input
@@ -218,8 +218,8 @@ export function FiltersSidebar() {
           <AnimatePresence initial={false}>
             {openSections.age && (
               <motion.div {...animation} className="overflow-hidden">
-                <div className="flex items-center gap-4 px-2 py-4 text-sm text-brand-teal">
-                  <label className="flex flex-col text-xs uppercase tracking-wide text-brand-teal/70">
+                <div className="flex items-center gap-4 px-2 py-4 text-sm text-brand-midnight">
+                  <label className="flex flex-col text-xs uppercase tracking-wide text-brand-midnight/70">
                     Min Age
                     <input
                       type="number"
@@ -237,7 +237,7 @@ export function FiltersSidebar() {
                       className="mt-1 w-20 rounded-lg border border-brand-sage/70 px-2 py-1"
                     />
                   </label>
-                  <label className="flex flex-col text-xs uppercase tracking-wide text-brand-teal/70">
+                  <label className="flex flex-col text-xs uppercase tracking-wide text-brand-midnight/70">
                     Max Age
                     <input
                       type="number"
@@ -273,7 +273,7 @@ export function FiltersSidebar() {
           <AnimatePresence initial={false}>
             {openSections.mode && (
               <motion.div {...animation} className="overflow-hidden">
-                <div className="grid grid-cols-3 gap-2 px-2 py-4 text-sm">
+                <div className="grid grid-cols-3 gap-2 px-2 py-4 text-sm text-brand-midnight">
                   {[
                     { key: "any", label: "Any" },
                     { key: "online", label: "Online" },

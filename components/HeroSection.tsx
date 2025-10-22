@@ -21,8 +21,8 @@ export default function HeroSection() {
   const bodyDuration = isMobile ? 0.35 : 0.5;
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-sage via-brand-cream to-white px-6 py-14 shadow sm:px-8 sm:py-16 lg:py-20">
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-8 text-center">
+    <section className="relative mt-6 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-sage via-brand-cream to-white px-6 py-10 shadow sm:mt-10 sm:px-8 sm:py-14 md:mt-12 lg:py-16">
+      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-6 text-center">
         <div className="space-y-4 px-2 sm:px-0">
           <motion.h1
             initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
@@ -43,7 +43,7 @@ export default function HeroSection() {
             }}
             style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
           >
-            <p className="text-sm text-brand-teal/80 sm:text-base lg:text-lg">
+            <p className="text-sm text-brand-midnight/80 sm:text-base lg:text-lg">
               Find classes, clubs, and support groups for parents, babies, and toddlers—all curated
               by Parent Helper.
             </p>

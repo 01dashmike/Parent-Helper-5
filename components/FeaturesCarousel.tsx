@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useAnimation, useReducedMotion } from "framer-motion";
 
 import { features } from "@/data/featuresData";
 import { useIsMobile } from "@/hooks/useMediaQuery";
@@ -14,6 +14,10 @@ export default function FeaturesCarousel() {
   const [dragBounds, setDragBounds] = useState({ left: 0, right: 0 });
   const shouldReduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
+  const controls = useAnimation();
+  const offsetRef = useRef(0);
+  const directionRef = useRef<-1 | 1>(-1);
+  const hoveringRef = useRef(false);
 
   useEffect(() => {
     const updateBounds = () => {
@@ -31,23 +35,50 @@ export default function FeaturesCarousel() {
 
   useEffect(() => {
     if (shouldReduceMotion) return;
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
 
-    let direction = 1;
-    const interval = window.setInterval(() => {
-      const maxScroll = wrapper.scrollWidth - wrapper.clientWidth;
-      if (wrapper.scrollLeft >= maxScroll - 16) {
-        direction = -1;
-      } else if (wrapper.scrollLeft <= 16) {
-        direction = 1;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
+
+    const drift = async () => {
+      if (cancelled) return;
+      if (hoveringRef.current) {
+        timeout = setTimeout(drift, 1500);
+        return;
       }
 
-      wrapper.scrollTo({ left: wrapper.scrollLeft + direction * 140, behavior: "smooth" });
-    }, 6000);
+      const { left, right } = dragBounds;
+      if (left === right) {
+        timeout = setTimeout(drift, 4000);
+        return;
+      }
 
-    return () => window.clearInterval(interval);
-  }, [shouldReduceMotion]);
+      let next = offsetRef.current + directionRef.current * -200;
+      if (next <= left) {
+        next = left;
+        directionRef.current = 1;
+      } else if (next >= right) {
+        next = right;
+        directionRef.current = -1;
+      }
+      offsetRef.current = next;
+      await controls.start({ x: next, transition: { duration: 5, ease: "linear" } });
+      timeout = setTimeout(drift, 2000);
+    };
+
+    drift();
+
+    return () => {
+      cancelled = true;
+      controls.stop();
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [controls, dragBounds, shouldReduceMotion]);
+
+  useEffect(() => {
+    const clamped = Math.max(dragBounds.left, Math.min(offsetRef.current, dragBounds.right));
+    offsetRef.current = clamped;
+    controls.set({ x: clamped });
+  }, [controls, dragBounds.left, dragBounds.right]);
 
   const cardTransition = useMemo(
     () => ({ duration: isMobile ? 0.4 : 0.55, ease: "easeOut" as const }),
@@ -58,7 +89,7 @@ export default function FeaturesCarousel() {
     <section className="space-y-8">
       <header className="space-y-2 text-center">
         <h2 className="text-3xl font-semibold text-brand-teal sm:text-4xl">What We’re Building</h2>
-        <p className="text-sm text-brand-teal/70 sm:text-base">
+        <p className="text-sm text-brand-midnight/70 sm:text-base">
           A colourful, curated directory designed to make family life easier and more joyful.
         </p>
       </header>
@@ -73,9 +104,27 @@ export default function FeaturesCarousel() {
             drag={shouldReduceMotion ? false : "x"}
             dragConstraints={dragBounds}
             dragElastic={0.08}
+            animate={controls}
             className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 py-2 hide-scrollbar"
             style={{ cursor: shouldReduceMotion ? "auto" : "grab" }}
             whileTap={shouldReduceMotion ? undefined : { cursor: "grabbing" }}
+            onHoverStart={() => {
+              hoveringRef.current = true;
+            }}
+            onHoverEnd={() => {
+              hoveringRef.current = false;
+            }}
+            onDragStart={() => {
+              hoveringRef.current = true;
+            }}
+            onDragEnd={() => {
+              hoveringRef.current = false;
+            }}
+            onUpdate={(latest) => {
+              if (typeof latest.x === "number") {
+                offsetRef.current = latest.x;
+              }
+            }}
           >
             {features.map(({ icon, title, description, link, gradient }) => {
               const card = (

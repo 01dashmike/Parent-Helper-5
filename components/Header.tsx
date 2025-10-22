@@ -112,11 +112,11 @@ export default function Header() {
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/LOGO_1749921006982.png"
-                alt="Parent Helper logo"
-                width={48}
-                height={48}
+                alt="Parent Helper Logo"
+                width={36}
+                height={36}
                 priority
-                className="h-10 w-auto object-contain sm:h-12"
+                className="h-9 w-9 object-contain sm:h-10 sm:w-10"
               />
               <span className="text-2xl font-semibold tracking-tight text-brand-teal">
                 Parent Helper
@@ -134,7 +134,7 @@ export default function Header() {
                   <Link
                     key={name}
                     href={href}
-                    className="inline-flex items-center rounded-full bg-brand-teal px-4 py-2 text-sm font-semibold text-white shadow-md transition-colors duration-300 hover:bg-brand-coral focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal"
+                    className="inline-flex items-center rounded-full bg-brand-teal px-4 py-2 text-sm font-semibold text-brand-cream shadow-md transition-colors duration-300 ease-out hover:bg-brand-coral hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal"
                   >
                     {name}
                   </Link>
@@ -186,7 +186,7 @@ export default function Header() {
                     className={clsx(
                       "w-full rounded-lg px-4 py-2 text-center text-sm font-medium transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal sm:w-3/4",
                       variant === "button"
-                        ? "bg-brand-teal text-white shadow-md hover:bg-brand-coral"
+                        ? "bg-brand-teal text-brand-cream shadow-md hover:bg-brand-coral hover:text-white"
                         : "hover:bg-brand-sage/30 hover:text-brand-coral"
                     )}
                   >
