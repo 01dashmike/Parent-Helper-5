@@ -18,11 +18,10 @@ if (!window.matchMedia) {
 
 if (!window.IntersectionObserver) {
   class MockIntersectionObserver {
-    constructor(public callback: IntersectionObserverCallback) {}
     observe() {}
     unobserve() {}
     disconnect() {}
-    takeRecords(): IntersectionObserverEntry[] {
+    takeRecords() {
       return [];
     }
   }

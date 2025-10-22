@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 
-import { features } from '@/data/featuresData';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { features } from "@/data/featuresData";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 
 export default function FeaturesCarousel() {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -25,8 +25,8 @@ export default function FeaturesCarousel() {
     };
 
     updateBounds();
-    window.addEventListener('resize', updateBounds);
-    return () => window.removeEventListener('resize', updateBounds);
+    window.addEventListener("resize", updateBounds);
+    return () => window.removeEventListener("resize", updateBounds);
   }, []);
 
   useEffect(() => {
@@ -43,15 +43,15 @@ export default function FeaturesCarousel() {
         direction = 1;
       }
 
-      wrapper.scrollTo({ left: wrapper.scrollLeft + direction * 140, behavior: 'smooth' });
+      wrapper.scrollTo({ left: wrapper.scrollLeft + direction * 140, behavior: "smooth" });
     }, 6000);
 
     return () => window.clearInterval(interval);
   }, [shouldReduceMotion]);
 
   const cardTransition = useMemo(
-    () => ({ duration: isMobile ? 0.4 : 0.55, ease: 'easeOut' as const }),
-    [isMobile],
+    () => ({ duration: isMobile ? 0.4 : 0.55, ease: "easeOut" as const }),
+    [isMobile]
   );
 
   return (
@@ -70,12 +70,12 @@ export default function FeaturesCarousel() {
         <div ref={wrapperRef} className="overflow-hidden">
           <motion.div
             ref={trackRef}
-            drag={shouldReduceMotion ? false : 'x'}
+            drag={shouldReduceMotion ? false : "x"}
             dragConstraints={dragBounds}
             dragElastic={0.08}
             className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 py-2 hide-scrollbar"
-            style={{ cursor: shouldReduceMotion ? 'auto' : 'grab' }}
-            whileTap={shouldReduceMotion ? undefined : { cursor: 'grabbing' }}
+            style={{ cursor: shouldReduceMotion ? "auto" : "grab" }}
+            whileTap={shouldReduceMotion ? undefined : { cursor: "grabbing" }}
           >
             {features.map(({ icon, title, description, link, gradient }) => {
               const card = (
@@ -85,14 +85,20 @@ export default function FeaturesCarousel() {
                   whileHover={shouldReduceMotion ? undefined : { y: -6, scale: 1.02 }}
                   viewport={{ once: false, amount: 0.1 }}
                   transition={cardTransition}
-                  style={shouldReduceMotion ? undefined : { willChange: 'transform, opacity' }}
+                  style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
                   className={`min-w-[260px] snap-center rounded-2xl bg-gradient-to-b ${
-                    gradient ?? 'from-brand-cream via-white to-brand-sage/50'
+                    gradient ?? "from-brand-cream via-white to-brand-sage/50"
                   } p-5 shadow-md sm:min-w-[280px]`}
                 >
                   <div className="mb-4 flex items-center justify-center">
                     <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white/80 shadow-inner">
-                      <Image src={icon} alt={title} width={48} height={48} className="h-12 w-12 object-contain" />
+                      <Image
+                        src={icon}
+                        alt={title}
+                        width={48}
+                        height={48}
+                        className="h-12 w-12 object-contain"
+                      />
                     </span>
                   </div>
                   <h3 className="text-lg font-semibold text-brand-teal">{title}</h3>

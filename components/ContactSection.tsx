@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from "framer-motion";
 
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useIsMobile } from "@/hooks/useMediaQuery";
 
 export default function ContactSection() {
   const isMobile = useIsMobile();
@@ -14,9 +14,9 @@ export default function ContactSection() {
     <motion.section
       initial={shouldReduceMotion ? false : { opacity: 0, y: 40 }}
       whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-      transition={{ duration: sectionDuration, ease: 'easeOut' }}
+      transition={{ duration: sectionDuration, ease: "easeOut" }}
       viewport={{ once: false, amount: 0.1 }}
-      style={shouldReduceMotion ? undefined : { willChange: 'transform, opacity' }}
+      style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
       className="space-y-10 rounded-3xl bg-gradient-to-br from-brand-lavender/50 via-white to-brand-cream/80 p-8 shadow sm:p-10 lg:p-12"
     >
       <header className="space-y-2 text-center">
@@ -31,9 +31,9 @@ export default function ContactSection() {
           className="flex flex-col gap-4 rounded-2xl bg-white/90 p-6 shadow sm:p-8"
           initial={shouldReduceMotion ? false : { opacity: 0, x: -30 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
-          transition={{ duration: childDuration, ease: 'easeOut' }}
+          transition={{ duration: childDuration, ease: "easeOut" }}
           viewport={{ once: false, amount: 0.1 }}
-          style={shouldReduceMotion ? undefined : { willChange: 'transform, opacity' }}
+          style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
         >
           <label className="sr-only" htmlFor="contact-name">
             Your name
@@ -86,7 +86,7 @@ export default function ContactSection() {
             type="submit"
             whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
             whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
-            transition={shouldReduceMotion ? { duration: 0.2 } : { type: 'spring', stiffness: 300 }}
+            transition={shouldReduceMotion ? { duration: 0.2 } : { type: "spring", stiffness: 300 }}
             className="rounded-lg bg-brand-teal px-6 py-3 text-sm font-semibold text-white shadow-md transition-colors duration-300 hover:bg-brand-coral focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal"
           >
             Send Message
@@ -97,16 +97,20 @@ export default function ContactSection() {
           className="flex flex-col justify-between gap-6 rounded-2xl bg-white/70 p-6 text-sm text-brand-teal shadow sm:p-8"
           initial={shouldReduceMotion ? false : { opacity: 0, x: 30 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
-          transition={{ duration: childDuration, ease: 'easeOut' }}
+          transition={{ duration: childDuration, ease: "easeOut" }}
           viewport={{ once: false, amount: 0.1 }}
-          style={shouldReduceMotion ? undefined : { willChange: 'transform, opacity' }}
+          style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
         >
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-brand-teal">For Activity Providers</h3>
             <p className="text-brand-teal/80">
-              Want to list your classes or services? We&rsquo;d love to feature quality providers on our platform.
+              Want to list your classes or services? We&rsquo;d love to feature quality providers on
+              our platform.
             </p>
-            <a href="mailto:notification@parenthelper.co.uk" className="font-medium text-brand-coral hover:text-brand-teal">
+            <a
+              href="mailto:notification@parenthelper.co.uk"
+              className="font-medium text-brand-coral hover:text-brand-teal"
+            >
               notification@parenthelper.co.uk
             </a>
           </div>
@@ -115,7 +119,9 @@ export default function ContactSection() {
             <p className="text-brand-teal/80">
               Have questions, suggestions, or want early access? We&rsquo;d love to hear from you!
             </p>
-            <p className="text-brand-teal/60">Use the form and we&rsquo;ll respond within 24 hours.</p>
+            <p className="text-brand-teal/60">
+              Use the form and we&rsquo;ll respond within 24 hours.
+            </p>
           </div>
         </motion.div>
       </div>

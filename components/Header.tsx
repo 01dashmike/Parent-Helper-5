@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import clsx from 'clsx';
-import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import clsx from "clsx";
+import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-const NAVIGATION: Array<{ name: string; href: string; variant?: 'button' }> = [
-  { name: 'Home', href: '/' },
-  { name: 'Classes', href: '/classes' },
-  { name: 'Clubs', href: '/clubs' },
-  { name: 'Support', href: '/support' },
-  { name: 'Blog', href: '/blog' },
-  { name: 'Contact', href: '/contact' },
-  { name: 'Add Listing', href: '/list-class', variant: 'button' },
+const NAVIGATION: Array<{ name: string; href: string; variant?: "button" }> = [
+  { name: "Home", href: "/" },
+  { name: "Classes", href: "/classes" },
+  { name: "Clubs", href: "/clubs" },
+  { name: "Support", href: "/support" },
+  { name: "Blog", href: "/blog" },
+  { name: "Contact", href: "/contact" },
+  { name: "Add Listing", href: "/list-class", variant: "button" },
 ];
 
 const SCROLL_THRESHOLD = 40;
@@ -27,10 +27,10 @@ export default function Header() {
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
-    let lastY = typeof window !== 'undefined' ? window.scrollY : 0;
+    let lastY = typeof window !== "undefined" ? window.scrollY : 0;
 
     const handleScroll = () => {
-      if (typeof window === 'undefined') return;
+      if (typeof window === "undefined") return;
       const currentY = window.scrollY;
       setHasScrolled(currentY > SCROLL_THRESHOLD);
 
@@ -46,8 +46,8 @@ export default function Header() {
     };
 
     handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [shouldReduceMotion]);
 
   useEffect(() => {
@@ -62,15 +62,15 @@ export default function Header() {
       visible: {
         y: 0,
         transition: shouldReduceMotion
-          ? { type: 'tween' as const, duration: 0.2 }
-          : { type: 'spring' as const, stiffness: 260, damping: 28 },
+          ? { type: "tween" as const, duration: 0.2 }
+          : { type: "spring" as const, stiffness: 260, damping: 28 },
       },
       hidden: {
         y: shouldReduceMotion ? -88 : -120,
-        transition: { duration: 0.3, ease: 'easeInOut' },
+        transition: { duration: 0.3, ease: "easeInOut" },
       },
     }),
-    [shouldReduceMotion],
+    [shouldReduceMotion]
   );
 
   const hoverMotionProps = shouldReduceMotion
@@ -78,7 +78,7 @@ export default function Header() {
     : {
         whileHover: { scale: 1.05 },
         whileTap: { scale: 0.95 },
-        transition: { type: 'spring' as const, stiffness: 320, damping: 20 },
+        transition: { type: "spring" as const, stiffness: 320, damping: 20 },
       };
 
   return (
@@ -91,7 +91,7 @@ export default function Header() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={closeMenu}
             aria-hidden="true"
           />
@@ -101,10 +101,10 @@ export default function Header() {
       <motion.header
         variants={headerVariants}
         initial="visible"
-        animate={isHidden ? 'hidden' : 'visible'}
+        animate={isHidden ? "hidden" : "visible"}
         className={clsx(
-          'sticky top-0 z-50 w-full transition-colors duration-300',
-          hasScrolled ? 'bg-brand-cream/95 shadow-md backdrop-blur-md' : 'bg-transparent',
+          "sticky top-0 z-50 w-full transition-colors duration-300",
+          hasScrolled ? "bg-brand-cream/95 shadow-md backdrop-blur-md" : "bg-transparent"
         )}
       >
         <div className="flex items-center justify-between px-6 py-4">
@@ -118,17 +118,19 @@ export default function Header() {
                 priority
                 className="h-10 w-auto object-contain sm:h-12"
               />
-              <span className="text-2xl font-semibold tracking-tight text-brand-teal">Parent Helper</span>
+              <span className="text-2xl font-semibold tracking-tight text-brand-teal">
+                Parent Helper
+              </span>
             </Link>
 
             <motion.nav
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               className="ml-auto hidden items-center gap-6 font-medium text-brand-teal md:flex"
             >
               {NAVIGATION.map(({ name, href, variant }) =>
-                variant === 'button' ? (
+                variant === "button" ? (
                   <Link
                     key={name}
                     href={href}
@@ -144,7 +146,7 @@ export default function Header() {
                   >
                     {name}
                   </Link>
-                ),
+                )
               )}
             </motion.nav>
 
@@ -152,11 +154,15 @@ export default function Header() {
               type="button"
               onClick={toggleMenu}
               className="ml-auto inline-flex items-center justify-center rounded-md p-2 text-brand-teal transition-colors duration-300 hover:text-brand-coral focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal md:hidden"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
               {...hoverMotionProps}
             >
-              {menuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+              {menuOpen ? (
+                <X className="h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="h-6 w-6" aria-hidden="true" />
+              )}
             </motion.button>
           </div>
         </div>
@@ -168,7 +174,7 @@ export default function Header() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
               className="absolute left-0 right-0 top-full z-50 border-t border-brand-sage/40 bg-brand-cream/95 shadow-lg md:hidden"
             >
               <nav className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-6 text-brand-teal">
@@ -178,10 +184,10 @@ export default function Header() {
                     href={href}
                     onClick={closeMenu}
                     className={clsx(
-                      'w-full rounded-lg px-4 py-2 text-center text-sm font-medium transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal sm:w-3/4',
-                      variant === 'button'
-                        ? 'bg-brand-teal text-white shadow-md hover:bg-brand-coral'
-                        : 'hover:bg-brand-sage/30 hover:text-brand-coral',
+                      "w-full rounded-lg px-4 py-2 text-center text-sm font-medium transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal sm:w-3/4",
+                      variant === "button"
+                        ? "bg-brand-teal text-white shadow-md hover:bg-brand-coral"
+                        : "hover:bg-brand-sage/30 hover:text-brand-coral"
                     )}
                   >
                     {name}

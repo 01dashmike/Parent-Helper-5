@@ -1,15 +1,17 @@
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
+import { createElement } from "react";
 
-jest.mock('next/image', () => ({
+jest.mock("next/image", () => ({
   __esModule: true,
-  default: (props) => {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} alt={props.alt || 'mocked image'} />;
-  },
+  default: (props) =>
+    createElement("img", {
+      ...props,
+      alt: props.alt || "mocked image",
+    }),
 }));
 
 if (!window.matchMedia) {
-  Object.defineProperty(window, 'matchMedia', {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: (query) => ({
       matches: false,

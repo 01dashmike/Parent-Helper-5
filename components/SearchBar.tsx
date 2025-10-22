@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function SearchBar() {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
   const router = useRouter();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) return;
-    const slug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     router.push(`/classes/${slug}`);
   };
 
