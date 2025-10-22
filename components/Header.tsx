@@ -109,18 +109,25 @@ export default function Header() {
       >
         <div className="flex items-center justify-between px-6 py-4">
           <div className="mx-auto flex w-full max-w-6xl items-center gap-4">
-            <Link href="/" className="flex items-center gap-3">
-              <Image
-                src="/LOGO_1749921006982.png"
-                alt="Parent Helper Logo"
-                width={36}
-                height={36}
-                priority
-                className="h-9 w-9 object-contain sm:h-10 sm:w-10"
-              />
-              <span className="text-2xl font-semibold tracking-tight text-brand-teal">
-                Parent Helper
-              </span>
+            <Link href="/" className="group">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="flex items-center space-x-2"
+              >
+                <Image
+                  src="/LOGO_1749921006982.png"
+                  alt="Parent Helper Logo"
+                  width={42}
+                  height={42}
+                  priority
+                  className="h-10 w-10 object-contain"
+                />
+                <span className="text-lg font-semibold tracking-tight text-brand-teal">
+                  Parent Helper
+                </span>
+              </motion.div>
             </Link>
 
             <motion.nav

@@ -26,7 +26,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         className={`${inter.variable} ${poppins.variable} bg-brand-cream text-brand-teal antialiased`}
       >
         <Header />
-        <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-6 pb-16 pt-28 sm:px-8">
+        <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 pb-16 pt-20 sm:px-8">
           {children}
         </main>
       </body>

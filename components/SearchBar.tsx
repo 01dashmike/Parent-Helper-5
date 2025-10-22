@@ -41,9 +41,9 @@ export default function SearchBar() {
       initial={shouldReduceMotion ? undefined : { opacity: 0, y: 10 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: "easeOut" }}
-      className="mx-auto mt-6 w-full max-w-xl"
+      className="mx-auto mt-6 flex w-full max-w-lg flex-col items-center justify-center gap-3 sm:flex-row sm:gap-2"
     >
-      <div className="relative flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-md ring-1 ring-brand-sage/50 transition-transform duration-300 ease-out hover:scale-[1.01] focus-within:ring-2 focus-within:ring-brand-coral">
+      <div className="relative w-full flex-1">
         <label className="sr-only" htmlFor="search-location">
           Search by location
         </label>
@@ -54,18 +54,11 @@ export default function SearchBar() {
           onChange={(event) => setValue(event.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
-            // Delay closing to allow click
             setTimeout(() => setIsFocused(false), 120);
           }}
-          placeholder="Location"
-          className="flex-1 bg-transparent text-sm text-brand-midnight placeholder-brand-midnight/40 outline-none"
+          placeholder="Enter location"
+          className="flex-1 rounded-xl border border-brand-sage/70 bg-white p-3 text-sm text-brand-midnight shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal"
         />
-        <button
-          type="submit"
-          className="rounded-full bg-brand-coral px-4 py-2 text-sm font-medium text-white transition-colors duration-300 hover:bg-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal"
-        >
-          Search
-        </button>
         <AnimatePresence>
           {isFocused && filteredSuggestions.length > 0 && (
             <motion.ul
@@ -95,6 +88,17 @@ export default function SearchBar() {
           )}
         </AnimatePresence>
       </div>
+      <motion.button
+        type="submit"
+        whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+        transition={
+          shouldReduceMotion ? { duration: 0.2 } : { type: "spring", stiffness: 250, damping: 15 }
+        }
+        className="w-full rounded-xl bg-brand-teal px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors duration-300 hover:bg-brand-coral focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal sm:w-auto"
+      >
+        Search
+      </motion.button>
     </motion.form>
   );
 }
