@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useAnimation, useReducedMotion } from "framer-motion";
+import { motion, useAnimation, useAnimationFrame, useReducedMotion } from "framer-motion";
 
 import { features } from "@/data/featuresData";
 import { useIsMobile } from "@/hooks/useMediaQuery";
@@ -17,8 +17,10 @@ export default function FeaturesCarousel() {
   const isMobile = useIsMobile();
   const controls = useAnimation();
   const offsetRef = useRef(0);
-  const directionRef = useRef<-1 | 1>(-1);
   const hoveringRef = useRef(false);
+  const pausedRef = useRef(false);
+  const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const resumeStartRef = useRef<number | null>(null);
 
   useEffect(() => {
     const updateBounds = () => {
@@ -35,51 +37,69 @@ export default function FeaturesCarousel() {
   }, []);
 
   useEffect(() => {
-    if (shouldReduceMotion) return;
-
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    let cancelled = false;
-
-    const drift = async () => {
-      if (cancelled) return;
-      if (hoveringRef.current) {
-        timeout = setTimeout(drift, 1500);
-        return;
-      }
-
-      const { left, right } = dragBounds;
-      if (left === right) {
-        timeout = setTimeout(drift, 4000);
-        return;
-      }
-
-      let next = offsetRef.current + directionRef.current * -200;
-      if (next <= left) {
-        next = left;
-        directionRef.current = 1;
-      } else if (next >= right) {
-        next = right;
-        directionRef.current = -1;
-      }
-      offsetRef.current = next;
-      await controls.start({ x: next, transition: { duration: 5, ease: "linear" } });
-      timeout = setTimeout(drift, 2000);
-    };
-
-    drift();
-
-    return () => {
-      cancelled = true;
-      controls.stop();
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [controls, dragBounds, shouldReduceMotion]);
-
-  useEffect(() => {
     const clamped = Math.max(dragBounds.left, Math.min(offsetRef.current, dragBounds.right));
     offsetRef.current = clamped;
     controls.set({ x: clamped });
   }, [controls, dragBounds.left, dragBounds.right]);
+
+  const pauseAutoScroll = () => {
+    pausedRef.current = true;
+    resumeStartRef.current = null;
+    if (resumeTimeoutRef.current) {
+      clearTimeout(resumeTimeoutRef.current);
+      resumeTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleResume = () => {
+    if (shouldReduceMotion) return;
+    if (resumeTimeoutRef.current) {
+      clearTimeout(resumeTimeoutRef.current);
+    }
+    resumeTimeoutRef.current = setTimeout(() => {
+      pausedRef.current = false;
+      resumeStartRef.current = performance.now();
+    }, 3000);
+  };
+
+  useAnimationFrame((_, delta) => {
+    if (shouldReduceMotion) return;
+    if (pausedRef.current) return;
+    const { left, right } = dragBounds;
+    if (left === right) return;
+
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const baseSpeed = 12; // px per second
+    let speed = baseSpeed;
+
+    if (resumeStartRef.current !== null) {
+      const progress = Math.min((performance.now() - resumeStartRef.current) / 500, 1);
+      speed *= progress;
+      if (progress >= 1) {
+        resumeStartRef.current = null;
+      }
+    }
+
+    const distance = speed * (delta / 1000);
+    let next = offsetRef.current - distance;
+
+    if (next <= left) {
+      next = right;
+    }
+
+    offsetRef.current = next;
+    controls.set({ x: next });
+  });
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimeoutRef.current) {
+        clearTimeout(resumeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const cardTransition = useMemo(
     () => ({ duration: isMobile ? 0.4 : 0.55, ease: "easeOut" as const }),
@@ -132,15 +152,25 @@ export default function FeaturesCarousel() {
             whileTap={shouldReduceMotion ? undefined : { cursor: "grabbing" }}
             onHoverStart={() => {
               hoveringRef.current = true;
+              pauseAutoScroll();
             }}
             onHoverEnd={() => {
               hoveringRef.current = false;
+              scheduleResume();
             }}
             onDragStart={() => {
               hoveringRef.current = true;
+              pauseAutoScroll();
             }}
             onDragEnd={() => {
               hoveringRef.current = false;
+              scheduleResume();
+            }}
+            onPointerDown={() => {
+              pauseAutoScroll();
+            }}
+            onPointerUp={() => {
+              scheduleResume();
             }}
             onUpdate={(latest) => {
               if (typeof latest.x === "number") {
