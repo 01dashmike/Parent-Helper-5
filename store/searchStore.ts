@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { onFilterChange } from "@/analytics/events";
 import { SearchResult, mockResults } from "@/data/mockResults";
 
 type AgeRange = [number, number] | null;
@@ -43,9 +44,11 @@ export const useSearchStore = create<SearchState>((set, get) => ({
   results: mockResults,
   highlightedId: null,
   setFilters: (filters) =>
-    set((state) => ({
-      filters: { ...state.filters, ...filters },
-    })),
+    set((state) => {
+      const nextFilters = { ...state.filters, ...filters };
+      onFilterChange(nextFilters);
+      return { filters: nextFilters };
+    }),
   setUserLocation: (location) => set({ userLocation: location }),
   setResults: (results) => set({ results }),
   highlightResult: (id) => set({ highlightedId: id }),

@@ -103,8 +103,8 @@ export default function Header() {
         initial="visible"
         animate={isHidden ? "hidden" : "visible"}
         className={clsx(
-          "sticky top-0 z-50 w-full transition-colors duration-300",
-          hasScrolled ? "bg-brand-cream/95 shadow-md backdrop-blur-md" : "bg-transparent"
+          "sticky top-0 z-50 w-full backdrop-blur-md transition-all duration-300 ease-out",
+          hasScrolled ? "bg-white/85 shadow-md" : "bg-white/70 shadow-sm"
         )}
       >
         <div className="flex items-center justify-between px-6 py-4">

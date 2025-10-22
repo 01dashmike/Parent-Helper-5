@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { fadeUp } from "@/motion/variants";
 
 export default function ContactSection() {
   const isMobile = useIsMobile();
@@ -12,19 +13,33 @@ export default function ContactSection() {
 
   return (
     <motion.section
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 40 }}
-      whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+      initial={{
+        opacity: shouldReduceMotion ? 1 : 0,
+        y: shouldReduceMotion ? 0 : 40,
+        backgroundColor: "rgba(255,255,255,0.9)",
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+        backgroundColor: shouldReduceMotion ? "rgba(255,255,255,0.9)" : "rgba(236,227,245,0.6)",
+      }}
       transition={{ duration: sectionDuration, ease: "easeOut" }}
       viewport={{ once: false, amount: 0.1 }}
       style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
-      className="space-y-10 rounded-3xl bg-gradient-to-br from-brand-lavender/50 via-white to-brand-cream/80 p-8 shadow sm:p-10 lg:p-12"
+      className="space-y-10 rounded-3xl bg-gradient-to-br from-brand-lavender/40 via-white to-brand-cream/80 p-8 shadow transition-colors duration-500 sm:p-10 lg:p-12"
     >
-      <header className="space-y-2 text-center">
+      <motion.header
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.4 }}
+        className="space-y-2 text-center"
+      >
         <h2 className="text-3xl font-semibold text-brand-teal sm:text-4xl">Get in Touch</h2>
-        <p className="text-sm text-brand-teal/70 sm:text-base">
+        <p className="text-sm text-brand-midnight/80 sm:text-base">
           Be the first to know when we launch, or share your ideas with the Parent Helper team.
         </p>
-      </header>
+      </motion.header>
 
       <div className="mx-auto grid max-w-4xl gap-8 sm:grid-cols-2">
         <motion.form
@@ -43,7 +58,7 @@ export default function ContactSection() {
             type="text"
             name="name"
             placeholder="Your name"
-            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-teal shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
+            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-midnight shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
             required
           />
           <label className="sr-only" htmlFor="contact-email">
@@ -54,7 +69,7 @@ export default function ContactSection() {
             type="email"
             name="email"
             placeholder="Your email address"
-            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-teal shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
+            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-midnight shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
             required
           />
           <label className="sr-only" htmlFor="contact-type">
@@ -63,7 +78,7 @@ export default function ContactSection() {
           <select
             id="contact-type"
             name="type"
-            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-teal shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
+            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-midnight shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
             required
           >
             <option value="">Select message type</option>
@@ -80,7 +95,7 @@ export default function ContactSection() {
             name="message"
             rows={4}
             placeholder="Your message (optional)"
-            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-teal shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
+            className="w-full rounded-xl border border-brand-teal/20 px-4 py-3 text-sm text-brand-midnight shadow-sm focus:border-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/20"
           />
           <motion.button
             type="submit"
@@ -94,7 +109,7 @@ export default function ContactSection() {
         </motion.form>
 
         <motion.div
-          className="flex flex-col justify-between gap-6 rounded-2xl bg-white/70 p-6 text-sm text-brand-teal shadow sm:p-8"
+          className="flex flex-col justify-between gap-6 rounded-2xl bg-white/70 p-6 text-sm text-brand-midnight shadow sm:p-8"
           initial={shouldReduceMotion ? false : { opacity: 0, x: 30 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
           transition={{ duration: childDuration, ease: "easeOut" }}
@@ -103,7 +118,7 @@ export default function ContactSection() {
         >
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-brand-teal">For Activity Providers</h3>
-            <p className="text-brand-teal/80">
+            <p className="text-brand-midnight/80">
               Want to list your classes or services? We&rsquo;d love to feature quality providers on
               our platform.
             </p>
@@ -116,10 +131,10 @@ export default function ContactSection() {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-brand-teal">For Parents</h3>
-            <p className="text-brand-teal/80">
+            <p className="text-brand-midnight/80">
               Have questions, suggestions, or want early access? We&rsquo;d love to hear from you!
             </p>
-            <p className="text-brand-teal/60">
+            <p className="text-brand-midnight/60">
               Use the form and we&rsquo;ll respond within 24 hours.
             </p>
           </div>

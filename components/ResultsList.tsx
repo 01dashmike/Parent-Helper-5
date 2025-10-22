@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
 import { useSearchStore } from "@/store/searchStore";
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { fadeUp } from "@/motion/variants";
 
 export function ResultsList() {
   const isMobile = useIsMobile();
@@ -48,7 +49,14 @@ export function ResultsList() {
             onBlur={() => clearHighlight()}
           >
             <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="relative h-36 w-full overflow-hidden rounded-2xl sm:w-48">
+              <motion.div
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
+                className="relative h-36 w-full overflow-hidden rounded-2xl sm:w-48"
+              >
                 <Image
                   src={result.imageUrl}
                   alt={result.title}
@@ -56,7 +64,7 @@ export function ResultsList() {
                   className="object-cover"
                   sizes="(max-width: 640px) 100vw, 200px"
                 />
-              </div>
+              </motion.div>
               <div className="flex flex-1 flex-col gap-3">
                 <header className="flex flex-col gap-1">
                   <h3 className="text-lg font-semibold text-brand-teal">{result.title}</h3>

@@ -7,6 +7,7 @@ import { motion, useAnimation, useReducedMotion } from "framer-motion";
 
 import { features } from "@/data/featuresData";
 import { useIsMobile } from "@/hooks/useMediaQuery";
+import { fadeUp } from "@/motion/variants";
 
 export default function FeaturesCarousel() {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -86,12 +87,33 @@ export default function FeaturesCarousel() {
   );
 
   return (
-    <section className="space-y-8">
+    <motion.section
+      className="space-y-8 rounded-3xl bg-brand-cream px-4 py-10 sm:px-8"
+      initial={{ backgroundColor: "#FCFAF6" }}
+      whileInView={{ backgroundColor: "#F2F7F5" }}
+      viewport={{ once: false, amount: 0.4 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut" }}
+    >
       <header className="space-y-2 text-center">
-        <h2 className="text-3xl font-semibold text-brand-teal sm:text-4xl">What We’re Building</h2>
-        <p className="text-sm text-brand-midnight/70 sm:text-base">
+        <motion.h2
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.4 }}
+          className="text-3xl font-semibold text-brand-teal sm:text-4xl"
+        >
+          What We’re Building
+        </motion.h2>
+        <motion.p
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
+          className="text-sm text-brand-midnight/80 sm:text-base"
+        >
           A colourful, curated directory designed to make family life easier and more joyful.
-        </p>
+        </motion.p>
       </header>
 
       <div className="relative">
@@ -132,14 +154,20 @@ export default function FeaturesCarousel() {
                   initial={{ opacity: 0, y: 30, scale: 0.9 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   whileHover={shouldReduceMotion ? undefined : { y: -6, scale: 1.02 }}
-                  viewport={{ once: false, amount: 0.1 }}
+                  viewport={{ once: false, amount: 0.2 }}
                   transition={cardTransition}
                   style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
                   className={`min-w-[260px] snap-center rounded-2xl bg-gradient-to-b ${
                     gradient ?? "from-brand-cream via-white to-brand-sage/50"
                   } p-5 shadow-md sm:min-w-[280px]`}
                 >
-                  <div className="mb-4 flex items-center justify-center">
+                  <motion.div
+                    variants={fadeUp}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, amount: 0.4 }}
+                    className="mb-4 flex items-center justify-center"
+                  >
                     <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white/80 shadow-inner">
                       <Image
                         src={icon}
@@ -149,9 +177,9 @@ export default function FeaturesCarousel() {
                         className="h-12 w-12 object-contain"
                       />
                     </span>
-                  </div>
+                  </motion.div>
                   <h3 className="text-lg font-semibold text-brand-teal">{title}</h3>
-                  <p className="mt-2 text-sm text-slate-600">{description}</p>
+                  <p className="mt-2 text-sm text-brand-midnight/80">{description}</p>
                 </motion.article>
               );
 
@@ -176,6 +204,6 @@ export default function FeaturesCarousel() {
           </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

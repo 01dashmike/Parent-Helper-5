@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, type TargetAndTransition } from "framer-motion";
 import type { IconOptions, LatLngExpression, PointExpression } from "leaflet";
 
+import { onMapInteraction } from "@/analytics/events";
 import { useIsMobile } from "@/hooks/useMediaQuery";
 import { useSearchStore } from "@/store/searchStore";
 
@@ -35,10 +36,11 @@ export function MapPanel() {
 
   useEffect(() => {
     setMapReady(true);
+    onMapInteraction("ready", { device: isMobile ? "mobile" : "desktop" });
     import("leaflet").then((mod) => {
       setLeaflet(mod);
     });
-  }, []);
+  }, [isMobile]);
 
   const { baseIcon, highlightIcon } = useMemo(() => {
     if (!mapReady || !leaflet) {
@@ -88,16 +90,20 @@ export function MapPanel() {
           key={result.id}
           position={[result.lat, result.lng]}
           icon={highlightedId === result.id && highlightIcon ? highlightIcon : baseIcon}
+          eventHandlers={{
+            click: () => onMapInteraction("marker_click", { id: result.id }),
+          }}
         >
           <Popup>
             <div className="space-y-2 text-brand-teal">
               <h3 className="text-sm font-semibold">{result.title}</h3>
-              <a
-                href="#"
-                className="inline-flex text-xs font-medium text-brand-coral hover:text-brand-teal"
+              <button
+                type="button"
+                onClick={() => onMapInteraction("view_details", { id: result.id })}
+                className="inline-flex text-xs font-medium text-brand-coral transition-colors duration-200 hover:text-brand-teal"
               >
                 View details
-              </a>
+              </button>
             </div>
           </Popup>
         </Marker>
@@ -114,7 +120,13 @@ export function MapPanel() {
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex items-end justify-center px-4 pb-6">
         <button
           type="button"
-          onClick={() => setShowMobileMap((prev) => !prev)}
+          onClick={() =>
+            setShowMobileMap((prev) => {
+              const next = !prev;
+              onMapInteraction(next ? "open" : "close", { device: "mobile" });
+              return next;
+            })
+          }
           className="pointer-events-auto rounded-full bg-brand-coral px-5 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal"
         >
           {showMobileMap ? "Hide Map" : "Show Map"}

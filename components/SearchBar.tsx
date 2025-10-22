@@ -1,20 +1,38 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+import { onSearchSubmit } from "@/analytics/events";
 
 export default function SearchBar() {
   const [value, setValue] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
+
+  const suggestions = useMemo(() => ["Winchester", "Southampton", "Basingstoke"], []);
+  const filteredSuggestions = useMemo(() => {
+    const lowered = value.toLowerCase();
+    if (!lowered) return suggestions;
+    return suggestions.filter((item) => item.toLowerCase().startsWith(lowered));
+  }, [suggestions, value]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) return;
-    const slug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    router.push(`/classes/${slug}`);
+    onSearchSubmit(trimmed);
+    setIsFocused(false);
+    router.push(`/search?location=${encodeURIComponent(trimmed)}`);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setValue(suggestion);
+    onSearchSubmit(suggestion);
+    setIsFocused(false);
+    router.push(`/search?location=${encodeURIComponent(suggestion)}`);
   };
 
   return (
@@ -25,7 +43,7 @@ export default function SearchBar() {
       transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: "easeOut" }}
       className="mx-auto mt-6 w-full max-w-xl"
     >
-      <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-md ring-1 ring-brand-sage/50 transition-transform duration-300 hover:scale-[1.01] focus-within:ring-2 focus-within:ring-brand-coral">
+      <div className="relative flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-md ring-1 ring-brand-sage/50 transition-transform duration-300 ease-out hover:scale-[1.01] focus-within:ring-2 focus-within:ring-brand-coral">
         <label className="sr-only" htmlFor="search-location">
           Search by location
         </label>
@@ -34,6 +52,11 @@ export default function SearchBar() {
           type="text"
           value={value}
           onChange={(event) => setValue(event.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            // Delay closing to allow click
+            setTimeout(() => setIsFocused(false), 120);
+          }}
           placeholder="Location"
           className="flex-1 bg-transparent text-sm text-brand-midnight placeholder-brand-midnight/40 outline-none"
         />
@@ -43,6 +66,34 @@ export default function SearchBar() {
         >
           Search
         </button>
+        <AnimatePresence>
+          {isFocused && filteredSuggestions.length > 0 && (
+            <motion.ul
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+              role="listbox"
+              aria-label="Suggested locations"
+              className="absolute left-0 top-full z-20 mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-brand-sage/60"
+            >
+              {filteredSuggestions.map((suggestion) => (
+                <li key={suggestion}>
+                  <button
+                    type="button"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    role="option"
+                    aria-selected={value.toLowerCase() === suggestion.toLowerCase()}
+                    className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-brand-midnight transition-colors duration-200 ease-out hover:bg-brand-sage/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal"
+                  >
+                    <span>{suggestion}</span>
+                    <span className="text-xs text-brand-midnight/60">Use this</span>
+                  </button>
+                </li>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </div>
     </motion.form>
   );
