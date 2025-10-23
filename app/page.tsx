@@ -1,17 +1,38 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
+
 import ContactSection from "@/components/ContactSection";
 import FeaturesCarousel from "@/components/FeaturesCarousel";
 import HeroSection from "@/components/HeroSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 
 export default function Home() {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
-    <div className="space-y-12 md:space-y-14">
+    <main className="overflow-hidden bg-brand-cream">
       <HeroSection />
+
+      <div className="relative h-16 w-full -mt-8" aria-hidden="true">
+        {!prefersReducedMotion ? (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-b from-brand-cream/0 via-brand-cream/60 to-brand-cream"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 1.2, ease: "easeOut" }}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-cream/0 via-brand-cream/60 to-brand-cream" />
+        )}
+      </div>
+
       <section className="mt-6 md:mt-4">
         <FeaturesCarousel />
       </section>
+
       <HowItWorksSection />
       <ContactSection />
-    </div>
+    </main>
   );
 }
