@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 
+import AIChatbot from "@/components/AIChatbot";
 import Header from "@/components/Header";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 pb-16 pt-20 sm:px-8">
           {children}
         </main>
+        <AIChatbot />
       </body>
     </html>
   );

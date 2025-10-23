@@ -7,7 +7,8 @@ import { ArrowUp } from "lucide-react";
 import { FiltersSidebar } from "@/components/FiltersSidebar";
 import { MapPanel } from "@/components/MapPanel";
 import { ResultsList } from "@/components/ResultsList";
-import { mockResults } from "@/data/mockResults";
+import { testActivities } from "@/data/testActivities";
+import type { SearchResult } from "@/data/mockResults";
 import { useIsMobile } from "@/hooks/useMediaQuery";
 import { useSearchStore } from "@/store/searchStore";
 
@@ -18,7 +19,17 @@ export default function SearchPage() {
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
-    setResults(mockResults);
+    const mapped: SearchResult[] = testActivities.map((item) => ({
+      id: item.id.toString(),
+      title: item.title,
+      description: item.description,
+      imageUrl: "/images/placeholder.jpg",
+      lat: item.latitude,
+      lng: item.longitude,
+      distanceKm: item.distance,
+      category: item.category,
+    }));
+    setResults(mapped);
   }, [setResults]);
 
   useEffect(() => {
