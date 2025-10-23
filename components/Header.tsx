@@ -111,7 +111,7 @@ export default function Header() {
           <div className="mx-auto flex w-full max-w-6xl items-center gap-4">
             <Link href="/" className="group">
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="flex items-center space-x-2"
@@ -124,7 +124,7 @@ export default function Header() {
                   priority
                   className="h-10 w-10 object-contain"
                 />
-                <span className="text-lg font-semibold tracking-tight text-brand-teal">
+                <span className="text-brand-teal text-lg font-semibold tracking-tight">
                   Parent Helper
                 </span>
               </motion.div>

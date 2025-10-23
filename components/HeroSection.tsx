@@ -54,7 +54,7 @@ export default function HeroSection() {
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: headingDuration, ease: "easeOut" }}
             style={shouldReduceMotion ? undefined : { willChange: "transform, opacity" }}
-            className="text-3xl font-bold tracking-tight text-brand-teal sm:text-4xl lg:text-5xl"
+            className="text-center text-4xl font-bold text-brand-teal sm:text-5xl"
           >
             Discover the <span className="text-brand-coral">Best Family Activities</span> Near You
           </motion.h1>
