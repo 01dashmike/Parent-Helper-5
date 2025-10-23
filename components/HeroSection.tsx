@@ -45,9 +45,9 @@ export default function HeroSection() {
       whileInView="show"
       viewport={{ once: true, amount: 0.3 }}
       variants={fadeIn}
-      className="relative mt-6 overflow-hidden rounded-3xl bg-gradient-to-b from-brand-cream to-brand-sage/15 px-6 py-10 shadow-sm sm:mt-10 sm:px-8 sm:py-14 md:mt-12 lg:py-16"
+      className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-b from-brand-cream to-white px-6 pt-8 pb-6 shadow-sm sm:mt-6 sm:px-8 md:mt-8 md:pt-12 md:pb-8"
     >
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-5 text-center">
+      <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
         <div className="space-y-4 px-2 sm:px-0">
           <motion.h1
             initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
@@ -58,7 +58,7 @@ export default function HeroSection() {
           >
             Discover the <span className="text-brand-coral">Best Family Activities</span> Near You
           </motion.h1>
-          <div className="h-12 text-sm text-brand-midnight sm:text-base lg:text-lg">
+          <div className="h-12 text-sm text-brand-teal/70 sm:text-base lg:text-lg">
             {shouldReduceMotion ? (
               <p>Discover classes, clubs, and experiences for every stage of family life.</p>
             ) : (

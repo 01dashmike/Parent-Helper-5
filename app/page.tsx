@@ -14,7 +14,7 @@ export default function Home() {
     <main className="overflow-hidden bg-brand-cream">
       <HeroSection />
 
-      <div className="relative h-16 w-full -mt-8" aria-hidden="true">
+      <div className="relative h-16 w-full -mt-6" aria-hidden="true">
         {!prefersReducedMotion ? (
           <motion.div
             className="absolute inset-0 bg-gradient-to-b from-brand-cream/0 via-brand-cream/60 to-brand-cream"
@@ -27,7 +27,7 @@ export default function Home() {
         )}
       </div>
 
-      <section className="mt-6 md:mt-4">
+      <section className="mt-8 md:mt-6">
         <FeaturesCarousel />
       </section>
 
