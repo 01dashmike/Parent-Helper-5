@@ -1,0 +1,25 @@
+name: Ping Search Engines After Deploy
+on:
+  workflow_run:
+    workflows: ["Railway Deploy"]
+    types:
+      - completed
+
+jobs:
+  ping:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Ping search engines
+        run: npm run ping-search
