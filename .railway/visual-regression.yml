@@ -1,0 +1,38 @@
+name: "Visual Regression QA"
+
+on:
+  deployment:
+    environment: preview
+
+jobs:
+  ui-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start app
+        run: npm run start & npx wait-on http://localhost:3000/ui-preview
+
+      - name: Run Playwright visual tests
+        run: |
+          npx playwright install --with-deps
+          npx playwright test tests/ui-preview.spec.ts --reporter=dot
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-visual-report
+          path: playwright-report

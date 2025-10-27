@@ -1,0 +1,12 @@
+stages:
+  - name: build
+    run: npm run build
+
+  - name: visual-regression
+    run: npx playwright test tests/ui-preview.spec.ts
+    if: success()
+    continue-on-error: false
+
+  - name: promote
+    run: railway promote
+    if: success()
