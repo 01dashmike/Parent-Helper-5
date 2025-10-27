@@ -5,7 +5,10 @@ stages:
   - name: visual-regression
     run: npx playwright test tests/ui-preview.spec.ts
     if: success()
-    continue-on-error: false
+
+  - name: lighthouse
+    run: npx lhci autorun --config=.lighthouserc.json
+    if: success()
 
   - name: promote
     run: railway promote
