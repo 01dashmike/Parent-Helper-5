@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "echo 'Skipping linting for now'",
     "test": "echo 'Skipping tests for now'",
-    "ping-search": "node scripts/ping-search-engines.ts"
+    "ping-search": "node scripts/ping-search-engines.ts",
+    "qa:sync": "curl -s https://parent-helper-app-parenthelper5.up.railway.app/api/qa-sync"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -99,7 +100,8 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
-    "@lhci/cli": "^0.12.1"
+    "@lhci/cli": "^0.12.1",
+    "adm-zip": "^0.5.12"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

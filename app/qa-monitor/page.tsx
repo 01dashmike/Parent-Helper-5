@@ -31,15 +31,19 @@ export default function QAMonitorPage() {
   const [latest, setLatest] = useState<Report | null>(null);
 
   useEffect(() => {
-    fetch("/qa/reports.json")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length) {
-          setReports(data);
-          setLatest(data[data.length - 1]);
-        }
-      })
-      .catch(() => console.warn("No QA report data found"));
+    const sync = async () => {
+      await fetch("/api/qa-sync").catch(() => {});
+      const res = await fetch(`/qa/reports.json?_=${Date.now()}`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        setReports(data);
+        setLatest(data[data.length - 1]);
+      }
+    };
+
+    sync();
+    const id = setInterval(sync, 5 * 60 * 1000);
+    return () => clearInterval(id);
   }, []);
 
   if (!latest) {
