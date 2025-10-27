@@ -12,7 +12,7 @@ type BasicClass = {
 export async function searchClasses(params: { town?: string } = {}): Promise<BasicClass[]> {
   if (params.town) {
     const classes = getClassesForTown(params.town) ?? [];
-    return classes.map((item) => ({
+    return classes.map((item: any) => ({
       id: item.id,
       name: item.name,
       provider: item.provider,
@@ -22,7 +22,7 @@ export async function searchClasses(params: { town?: string } = {}): Promise<Bas
   }
 
   const all = Object.entries(classesByTown).flatMap(([town, items]) =>
-    items.map((item) => ({
+    (items as any[]).map((item) => ({
       id: item.id,
       name: item.name,
       provider: item.provider,
