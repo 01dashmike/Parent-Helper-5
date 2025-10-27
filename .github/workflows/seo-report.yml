@@ -1,0 +1,13 @@
+name: Weekly SEO Health Report
+on:
+  schedule:
+    - cron: "0 8 * * 0"
+  workflow_dispatch:
+
+jobs:
+  weekly-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call API route
+        run: |
+          curl -s -X GET https://parent-helper-app-parenthelper5.up.railway.app/api/send-seo-summary
