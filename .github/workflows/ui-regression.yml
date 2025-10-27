@@ -142,3 +142,67 @@ jobs:
           title: "⚠️ UI Regression Detected Post-Heal"
           content-filepath: .github/ISSUE_TEMPLATES/regression-report.md
           labels: bug, ui, regression
+
+  quality-gate:
+    runs-on: ubuntu-latest
+    needs: [verify-ui, rollback-safeguard]
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps
+
+      - name: Run Playwright visual diff check
+        id: diffcheck
+        run: |
+          echo "🔎 Checking visual diff threshold..."
+          BASE_URL="https://parent-helper-app-parenthelper5.up.railway.app" npx playwright test --reporter json > results.json
+          DIFF=$(cat results.json | jq '.suites[]?.specs[]?.tests[]?.results[]?.attachments[]? | select(.name=="diff") | .size' | awk '{s+=$1} END {print s}')
+          DIFF=${DIFF:-0}
+          DIFF_SCORE=$(echo "scale=4; $DIFF / 10000" | bc -l)
+          echo "DIFF_SCORE=$DIFF_SCORE" >> $GITHUB_ENV
+          echo "📊 Diff score computed: ${DIFF_SCORE}%"
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse Performance Audit
+        id: lighthouse
+        run: |
+          echo "🚀 Running Lighthouse..."
+          lhci collect --url=https://parent-helper-app-parenthelper5.up.railway.app --numberOfRuns=3 --output=json > lhci-report.json
+          SCORE=$(cat lhci-report.json | jq '[.[] | .summary.performance] | add / length * 100' | xargs printf "%.0f\n")
+          echo "LIGHTHOUSE_SCORE=$SCORE" >> $GITHUB_ENV
+          echo "Lighthouse score: $SCORE"
+
+      - name: Evaluate quality gate
+        id: evaluate
+        run: |
+          echo "✅ Evaluating quality gate..."
+          echo "Diff: $DIFF_SCORE | Lighthouse: $LIGHTHOUSE_SCORE"
+          if (( $(echo "$DIFF_SCORE > 2" | bc -l) )) || [ "${LIGHTHOUSE_SCORE:-0}" -lt 90 ]; then
+            echo "❌ Quality gate failed"
+            echo "GATE_FAILED=true" >> $GITHUB_ENV
+          else
+            echo "✅ Quality gate passed"
+            echo "GATE_FAILED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Post quality summary comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: quality-gate-summary
+          message: |
+            ### 🧭 Parent Helper Quality Gate Report
+            🧩 Visual Diff: ${{ env.DIFF_SCORE }} %
+            ⚡️ Lighthouse Performance: ${{ env.LIGHTHOUSE_SCORE }}
+            ${{ env.GATE_FAILED == 'true' && '❌ Gate failed – merge blocked.' || '✅ Gate passed – ready to merge.' }}
+            _Thresholds: diff < 2 %, performance ≥ 90_
+
+      - name: Fail workflow if gate fails
+        if: env.GATE_FAILED == 'true'
+        run: exit 1
