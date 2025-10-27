@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import fetch from "node-fetch";
 
 const LIGHTHOUSE_REPORT = ".lighthouseci/lhr-0.report.json";
@@ -62,6 +63,20 @@ ${
 `;
 
   console.log(report);
+
+  const reportData = {
+    timestamp: new Date().toISOString(),
+    lighthouse: lhScores,
+    visualDiff,
+    overall,
+  };
+  const reportsPath = path.join(process.cwd(), "public/qa/reports.json");
+  const history = fs.existsSync(reportsPath)
+    ? JSON.parse(fs.readFileSync(reportsPath, "utf8"))
+    : [];
+  history.push(reportData);
+  fs.mkdirSync(path.dirname(reportsPath), { recursive: true });
+  fs.writeFileSync(reportsPath, JSON.stringify(history.slice(-20), null, 2));
 
   if (process.env.SLACK_WEBHOOK_URL) {
     try {
