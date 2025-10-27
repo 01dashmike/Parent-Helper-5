@@ -1,4 +1,4 @@
-import { getClassesForTown } from "@/app/lib/classes";
+import { classesByTown, getClassesForTown } from "@/app/lib/classes";
 
 type BasicClass = {
   id: string;
