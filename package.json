@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "echo 'Skipping linting for now'",
-    "test": "echo 'Skipping tests for now'"
+    "test": "echo 'Skipping tests for now'",
+    "ping-search": "node scripts/ping-search-engines.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
