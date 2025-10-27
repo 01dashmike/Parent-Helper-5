@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { supabase } from "@/lib/db/supabase";
+import { searchClasses } from "@/lib/db/supabase";
 
 const BASE_URL = "https://parent-helper-app-parenthelper5.up.railway.app";
 
@@ -13,18 +13,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  const { data: classes } = await supabase
-    .from("classes")
-    .select("id, updated_at")
-    .limit(5000);
+  const classes = await searchClasses({});
 
-  const classPages =
-    classes?.map((cls) => ({
-      url: `${BASE_URL}/classes/${cls.id}`,
-      lastModified: cls.updated_at ? new Date(cls.updated_at) : new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
-    })) || [];
+  const classPages = classes.map((cls) => ({
+    url: `${BASE_URL}/classes/${cls.id}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
 
   const staticPages = [
     { url: `${BASE_URL}/`, lastModified: new Date(), priority: 1.0 },
