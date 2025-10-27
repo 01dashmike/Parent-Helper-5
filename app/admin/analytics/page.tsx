@@ -15,6 +15,7 @@ import {
 import dayjs from "dayjs";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type PingEntry = {
   id: string;
@@ -28,6 +29,8 @@ type PingEntry = {
 export default function AdminAnalyticsPage() {
   const [pings, setPings] = useState<PingEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -60,6 +63,24 @@ export default function AdminAnalyticsPage() {
     fetchPings();
   }, []);
 
+  async function sendReport() {
+    setSending(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/send-seo-summary");
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setMessage("✅ Report sent successfully!");
+      } else {
+        setMessage("⚠️ Failed to send report. Check logs.");
+      }
+    } catch (err: any) {
+      setMessage(`❌ Error: ${err.message ?? err}`);
+    } finally {
+      setSending(false);
+    }
+  }
+
   if (loading) {
     return <p className="p-8 text-gray-500">Loading ping data...</p>;
   }
@@ -73,6 +94,16 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-8 p-8">
+      <div className="flex items-center gap-4">
+        <Button
+          onClick={sendReport}
+          disabled={sending}
+          className="bg-coral px-6 py-3 font-semibold text-white shadow-md hover:bg-coral-dark"
+        >
+          {sending ? "Sending..." : "📧 Send Test Report Now"}
+        </Button>
+        {message ? <span className="text-sm font-medium text-sage">{message}</span> : null}
+      </div>
       <Card className="border-t-4 border-teal-500 shadow-lg">
         <CardHeader>
           <CardTitle>📊 Sitemap Ping Health</CardTitle>
