@@ -4,8 +4,6 @@ import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 
 import AIChatbot from "@/components/AIChatbot";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
 import { NewsletterModal } from "@/components/NewsletterModal";
 import QueryProvider from "@/components/QueryProvider";
 import { UTMTracker } from "@/components/UTMTracker";
@@ -81,11 +79,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${inter.variable} ${poppins.variable}`}>
         <QueryProvider>
           <UTMTracker />
-          <Header />
-          <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 pb-20 pt-32 sm:px-8">
-            {children}
-          </main>
-          <Footer />
+          <main className="min-h-screen w-full bg-cream">{children}</main>
           <AIChatbot />
           <NewsletterModal />
           <Toaster />
