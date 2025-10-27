@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Gauge } from "lucide-react";
+import dayjs from "dayjs";
 import {
   CartesianGrid,
   Line,
@@ -11,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import QAGallery from "@/components/QAGallery";
 
 interface Report {
   timestamp: string;
@@ -90,12 +92,41 @@ export default function QAMonitorPage() {
         </ResponsiveContainer>
       </div>
 
+      <QAGallery
+        screenshots={[
+          {
+            viewport: "Mobile (375px)",
+            local: "/qa/screenshots/mobile-local.png",
+            prod: "/qa/screenshots/mobile-prod.png",
+            diff: "/qa/screenshots/mobile-diff.png",
+          },
+          {
+            viewport: "Tablet (768px)",
+            local: "/qa/screenshots/tablet-local.png",
+            prod: "/qa/screenshots/tablet-prod.png",
+            diff: "/qa/screenshots/tablet-diff.png",
+          },
+          {
+            viewport: "Laptop (1024px)",
+            local: "/qa/screenshots/laptop-local.png",
+            prod: "/qa/screenshots/laptop-prod.png",
+            diff: "/qa/screenshots/laptop-diff.png",
+          },
+          {
+            viewport: "Desktop (1440px)",
+            local: "/qa/screenshots/desktop-local.png",
+            prod: "/qa/screenshots/desktop-prod.png",
+            diff: "/qa/screenshots/desktop-diff.png",
+          },
+        ]}
+      />
+
       <div className="mt-10 bg-white rounded-xl shadow-md p-6">
         <h2 className="text-lg font-semibold text-teal-dark mb-2">Visual Regression</h2>
         <p className="text-sage">{latest.visualDiff}</p>
       </div>
 
-      <p className="text-gray-400 text-xs mt-6">Last updated {new Date(latest.timestamp).toLocaleString()}</p>
+      <p className="text-gray-400 text-xs mt-6">Last updated {dayjs(latest.timestamp).format("YYYY-MM-DD HH:mm")}</p>
     </div>
   );
 }
