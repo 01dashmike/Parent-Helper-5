@@ -11,7 +11,8 @@
     "lint": "echo 'Skipping linting for now'",
     "test": "echo 'Skipping tests for now'",
     "ping-search": "node scripts/ping-search-engines.ts",
-    "qa:sync": "curl -s https://parent-helper-app-parenthelper5.up.railway.app/api/qa-sync"
+    "qa:sync": "curl -s https://parent-helper-app-parenthelper5.up.railway.app/api/qa-sync",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -101,21 +102,28 @@
     "@types/react-dom": "^18.3.1",
     "@typescript-eslint/parser": "^8.35.0",
     "adm-zip": "^0.5.12",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.21",
+    "depcheck": "^1.4.7",
     "drizzle-kit": "^0.30.4",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.6",
     "eslint-plugin-unused-imports": "^4.1.4",
+    "husky": "^9.1.7",
     "lighthouse-ci": "^1.13.1",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.17",
+    "lint-staged": "^16.2.6",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^3.4.18",
     "typescript": "^5.8.3"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   },
   "lint-staged": {
-    "*": "echo 'lint-staged skipped'"
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "description": "A comprehensive digital platform for discovering baby and toddler activities across the United Kingdom, powered by Next.js.",
   "main": "add-missing-andover-businesses.js",

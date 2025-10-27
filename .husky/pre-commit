@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-npm run lint && npm run test && npx lint-staged
+npx depcheck --ignore-dirs=tests,temp --skip-missing && npx lint-staged
