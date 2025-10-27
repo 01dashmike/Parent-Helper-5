@@ -11,20 +11,20 @@ const TOWNS = [
     blurb:
       "Creative adventures across every borough with sensory play, STEM labs, and story sessions.",
     tags: ["Creative Clubs", "STEM Labs", "Weekend Fun"],
-    href: "/classes/london",
+    href: "/classes/town/london",
   },
   {
     name: "Manchester",
     blurb:
       "Community-led hubs for music, movement, and outdoor explorations in the heart of the city.",
     tags: ["Music & Movement", "Forest Play", "Parent Meetups"],
-    href: "/classes/manchester",
+    href: "/classes/town/manchester",
   },
   {
     name: "Bristol",
     blurb: "Harbourside hideouts and eco-minded classes designed for curious little explorers.",
     tags: ["Eco Adventures", "Harbourside", "Art & Makers"],
-    href: "/classes/bristol",
+    href: "/classes/town/bristol",
   },
 ];
 
