@@ -7,26 +7,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60",
+  "inline-flex items-center justify-center rounded-full font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-60",
   {
     variants: {
       variant: {
-        default: "bg-brand-teal text-white hover:bg-brand-coral focus-visible:ring-brand-teal",
-        outline:
-          "border border-brand-sage/60 bg-transparent text-brand-teal hover:border-brand-teal focus-visible:ring-brand-teal",
-        ghost:
-          "bg-transparent text-brand-teal hover:bg-brand-sage/30 focus-visible:ring-brand-teal",
+        default: "bg-teal text-white hover:bg-teal-dark focus:ring-teal",
+        outline: "border border-teal text-teal hover:bg-teal hover:text-white focus:ring-teal",
+        ghost: "text-sage hover:text-teal focus:ring-teal",
       },
       size: {
-        default: "px-5 py-2.5",
-        sm: "px-3 py-1.5 text-xs",
-        lg: "px-6 py-3 text-base",
+        sm: "px-3 py-1 text-sm",
+        md: "px-4 py-2 text-base",
+        lg: "px-6 py-3 text-lg",
         icon: "h-10 w-10",
       },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      size: "md",
     },
   }
 );
