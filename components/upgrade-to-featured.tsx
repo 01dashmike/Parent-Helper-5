@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { Crown, Check } from 'lucide-react';
 
 type UpgradeToFeaturedProps = {
@@ -18,25 +17,9 @@ export function UpgradeToFeatured({ classId }: UpgradeToFeaturedProps) {
   const [status, setStatus] = useState<UpgradeStatus>({ type: 'idle' });
 
   const handleUpgrade = async () => {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-
-    if (!publishableKey) {
-      setStatus({
-        type: 'error',
-        message: 'Stripe is not configured. Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to enable checkout.',
-      });
-      return;
-    }
-
     setStatus({ type: 'loading' });
 
     try {
-      const stripe = await loadStripe(publishableKey);
-
-      if (!stripe) {
-        throw new Error('Unable to initialise Stripe.');
-      }
-
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,14 +30,16 @@ export function UpgradeToFeatured({ classId }: UpgradeToFeaturedProps) {
         throw new Error('Checkout session request failed.');
       }
 
-      const { sessionId } = await response.json();
+      const payload = await response.json();
+      const redirectUrl = payload.sessionUrl ?? payload.url ?? null;
 
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) {
-        throw error;
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+        setStatus({ type: 'success', message: 'Redirecting you to Stripe Checkout…' });
+        return;
       }
 
-      setStatus({ type: 'success', message: 'Redirecting you to Stripe Checkout…' });
+      throw new Error('Invalid checkout session payload.');
     } catch (error) {
       console.error(error);
       setStatus({
