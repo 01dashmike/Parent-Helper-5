@@ -1,0 +1,11 @@
+{
+  "monitor": {
+    "target": "https://parent-helper-app-parenthelper5.up.railway.app",
+    "frequency": "24h",
+    "thresholds": {
+      "visual": 2,
+      "performance": 90
+    },
+    "alert": "slack"
+  }
+}

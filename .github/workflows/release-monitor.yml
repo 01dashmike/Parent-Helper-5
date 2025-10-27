@@ -1,0 +1,65 @@
+name: "🌤️ Parent Helper – Release Monitor"
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  daily-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps
+      - run: npm install -g @lhci/cli
+
+      - name: 🧩 Run Playwright Visual Snapshot
+        id: visual
+        run: |
+          BASE_URL="https://parent-helper-app-parenthelper5.up.railway.app" \
+          npx playwright test --reporter json > results.json
+          DIFF=$(cat results.json | jq '.suites[].specs[].tests[]?.results[]?.attachments[]? | select(.name=="diff") | .size' | awk '{s+=$1} END {print s}')
+          DIFF=${DIFF:-0}
+          echo "DIFF_SCORE=$(echo "$DIFF / 10000" | bc -l)" >> $GITHUB_ENV
+
+      - name: ⚡️ Run Lighthouse Performance
+        id: perf
+        run: |
+          lhci collect --url=https://parent-helper-app-parenthelper5.up.railway.app --numberOfRuns=3 --output=json > lhci.json
+          SCORE=$(cat lhci.json | jq '[.[] | .summary.performance] | add / length * 100' | xargs printf "%.0f\n")
+          echo "LIGHTHOUSE_SCORE=$SCORE" >> $GITHUB_ENV
+
+      - name: 💾 Upload Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-audit-reports
+          path: |
+            results.json
+            lhci.json
+
+      - name: 🚨 Slack Alert (if degraded)
+        if: env.LIGHTHOUSE_SCORE < 90 || env.DIFF_SCORE > 2
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "🚨 *Parent Helper Daily Audit* failed!",
+              "attachments": [
+                {
+                  "color": "#ff4d4f",
+                  "fields": [
+                    {"title": "Visual Diff", "value": "${{ env.DIFF_SCORE }} %", "short": true},
+                    {"title": "Performance", "value": "${{ env.LIGHTHOUSE_SCORE }}", "short": true},
+                    {"title": "URL", "value": "https://parent-helper-app-parenthelper5.up.railway.app", "short": false}
+                  ],
+                  "footer": "Triggered automatically by Codex Release Monitor"
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
