@@ -13,7 +13,7 @@ interface TownPageProps {
 
 export async function generateMetadata({ params }: TownPageProps): Promise<Metadata> {
   const town = decodeURIComponent(params.town);
-  const displayName =
+  const capitalisedTown =
     town.length > 0
       ? town
           .split("-")
@@ -21,12 +21,9 @@ export async function generateMetadata({ params }: TownPageProps): Promise<Metad
           .join(" ")
       : town;
 
-  const title = `Baby & Toddler Classes in ${displayName} | Parent Helper`;
-  const description = `Discover amazing baby, toddler, and preschool classes in ${displayName}. Search music, sensory, yoga, and swimming activities near you.`;
-
   return {
-    title,
-    description,
+    title: `Baby & Toddler Classes in ${capitalisedTown} | Parent Helper`,
+    description: `Discover baby, toddler, and preschool activities in ${capitalisedTown}.`,
     alternates: {
       canonical: `https://parent-helper-app-parenthelper5.up.railway.app/classes/town/${params.town}`,
     },
