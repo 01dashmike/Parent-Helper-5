@@ -1,11 +1,15 @@
-name: UI Regression Check
+name: UI Regression Verification
 on:
+  pull_request:
+    branches: [ main ]
   push:
     branches: [ main ]
 
 jobs:
   verify-ui:
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.test.outcome }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -14,4 +18,31 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps
-      - run: BASE_URL="https://parent-helper-app-parenthelper5.up.railway.app" npx playwright test
+
+      - name: Run visual regression tests
+        id: test
+        run: BASE_URL="https://parent-helper-app-parenthelper5.up.railway.app" npx playwright test
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          retention-days: 5
+
+  comment-status:
+    runs-on: ubuntu-latest
+    needs: verify-ui
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Post Playwright results to PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: playwright-summary
+          message: |
+            ### 🎨 Parent Helper Visual Regression Report
+            ✅ **Tests:** ${{ needs.verify-ui.result }}
+            🖼 **Screenshots:** [Download from workflow artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            🌐 **Live Preview:** [parent-helper-app-parenthelper5.up.railway.app](https://parent-helper-app-parenthelper5.up.railway.app)
+            _This comment updates automatically on each push._
