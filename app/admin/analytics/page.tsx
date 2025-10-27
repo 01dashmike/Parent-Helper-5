@@ -26,11 +26,18 @@ type PingEntry = {
   message?: string | null;
 };
 
+interface HistoryEntry {
+  date: string;
+  rate: number;
+}
+
 export default function AdminAnalyticsPage() {
   const [pings, setPings] = useState<PingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
+  const [lastSent, setLastSent] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -61,7 +68,39 @@ export default function AdminAnalyticsPage() {
     }
 
     fetchPings();
+    fetchLastSent();
+    fetchHistory();
   }, []);
+
+  async function fetchLastSent() {
+    try {
+      const res = await fetch("/api/last-seo-report");
+      const json = await res.json();
+      if (json.lastSent) {
+        setLastSent(json.lastSent);
+      }
+    } catch (err) {
+      console.error("Failed to fetch last sent timestamp:", err);
+    }
+  }
+
+  async function fetchHistory() {
+    try {
+      const res = await fetch("/api/seo-report-history");
+      const json = await res.json();
+      if (json.data) {
+        const formatted = [...json.data]
+          .reverse()
+          .map((entry: any) => ({
+            date: dayjs(entry.sent_at).format("MMM D"),
+            rate: Math.round(entry.success_rate ?? (entry.success ? 100 : 0)),
+          }));
+        setHistory(formatted);
+      }
+    } catch (err) {
+      console.error("Failed to load history", err);
+    }
+  }
 
   async function sendReport() {
     setSending(true);
@@ -71,11 +110,13 @@ export default function AdminAnalyticsPage() {
       const json = await res.json();
       if (res.ok && json.success) {
         setMessage("✅ Report sent successfully!");
+        fetchLastSent();
+        fetchHistory();
       } else {
-        setMessage("⚠️ Failed to send report. Check logs.");
+        setMessage("⚠️ Failed to send report.");
       }
     } catch (err: any) {
-      setMessage(`❌ Error: ${err.message ?? err}`);
+      setMessage(`❌ ${err.message ?? err}`);
     } finally {
       setSending(false);
     }
@@ -92,19 +133,57 @@ export default function AdminAnalyticsPage() {
     }))
     .reverse();
 
+  const sparklineColor = history.some((entry) => entry.rate < 90) ? "#fb7185" : "#14b8a6";
+
   return (
     <div className="space-y-8 p-8">
-      <div className="flex items-center gap-4">
-        <Button
-          onClick={sendReport}
-          disabled={sending}
-          className="bg-coral px-6 py-3 font-semibold text-white shadow-md hover:bg-coral-dark"
-        >
-          {sending ? "Sending..." : "📧 Send Test Report Now"}
-        </Button>
-        {message ? <span className="text-sm font-medium text-sage">{message}</span> : null}
+      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+        <div className="bg-white rounded-2xl shadow-soft hover:shadow-lg transition p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-teal">SEO Health Trend</h3>
+            <span className="text-sm text-sage">Updated {dayjs().format("MMM D, HH:mm")}</span>
+          </div>
+          {history.length > 0 ? (
+            <ResponsiveContainer width="100%" height={140}>
+              <LineChart data={history}>
+                <XAxis dataKey="date" hide />
+                <YAxis domain={[0, 100]} hide />
+                <Tooltip formatter={(value: number) => `${value}%`} labelFormatter={(label) => `Week of ${label}`} />
+                <Line
+                  type="monotone"
+                  dataKey="rate"
+                  stroke={sparklineColor}
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: "#fb7185", strokeWidth: 2 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-sage">No SEO history yet</p>
+          )}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-soft hover:shadow-lg transition p-6 flex flex-col gap-3 justify-center">
+          <Button
+            onClick={sendReport}
+            disabled={sending}
+            className="bg-coral hover:bg-coral-500 text-white px-6 py-3 font-semibold shadow-md"
+          >
+            {sending ? "Sending..." : "📧 Send Test Report Now"}
+          </Button>
+          {lastSent ? (
+            <span className="text-sm font-medium text-sage">
+              Last sent: {dayjs(lastSent).format("YYYY-MM-DD HH:mm")}
+            </span>
+          ) : (
+            <span className="text-sm text-sage">Report not sent yet</span>
+          )}
+          {message ? <span className="text-sm font-medium text-sage">{message}</span> : null}
+        </div>
       </div>
-      <Card className="border-t-4 border-teal-500 shadow-lg">
+
+      <Card className="border-t-4 border-teal shadow-lg">
         <CardHeader>
           <CardTitle>📊 Sitemap Ping Health</CardTitle>
         </CardHeader>
