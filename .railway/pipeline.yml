@@ -10,6 +10,10 @@ stages:
     run: npx lhci autorun --config=.lighthouserc.json
     if: success()
 
+  - name: quality-summary
+    run: node scripts/ci/quality-summary.js
+    if: always()
+
   - name: promote
     run: railway promote
     if: success()
