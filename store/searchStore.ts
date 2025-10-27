@@ -1,77 +1,79 @@
 "use client";
 
 import { create } from "zustand";
-import { onFilterChange } from "@/analytics/events";
-import { SearchResult, mockResults } from "@/data/mockResults";
 
-type AgeRange = [number, number] | null;
+export interface SearchFilters {
+  q: string;
+  lat: number | null;
+  lng: number | null;
+  radiusKm: number;
+  category: string;
+  page: number;
+}
 
-export type SearchFilters = {
-  distance: number;
-  categories: string[];
-  ageRange: AgeRange;
-  isOnline: boolean | null;
+interface SearchState extends SearchFilters {
+  activeId: number | null;
+  setQuery: (q: string) => void;
+  setLocation: (lat: number | null, lng: number | null) => void;
+  setRadius: (radiusKm: number) => void;
+  setCategory: (category: string) => void;
+  setPage: (page: number) => void;
+  setActiveId: (id: number | null) => void;
+  hydrate: (initial: Partial<SearchFilters>) => void;
+}
+
+const DEFAULT_STATE: SearchState = {
+  q: "",
+  lat: null,
+  lng: null,
+  radiusKm: 5,
+  category: "",
+  page: 1,
+  activeId: null,
+  setQuery: () => undefined,
+  setLocation: () => undefined,
+  setRadius: () => undefined,
+  setCategory: () => undefined,
+  setPage: () => undefined,
+  setActiveId: () => undefined,
+  hydrate: () => undefined,
 };
 
-type UserLocation = {
-  lat: number;
-  lng: number;
-} | null;
-
-type SearchState = {
-  filters: SearchFilters;
-  userLocation: UserLocation;
-  results: SearchResult[];
-  highlightedId: string | null;
-  setFilters: (filters: Partial<SearchFilters>) => void;
-  setUserLocation: (location: UserLocation) => void;
-  setResults: (results: SearchResult[]) => void;
-  highlightResult: (id: string | null) => void;
-  clearHighlight: () => void;
-  getFilteredResults: () => SearchResult[];
-};
-
-const initialFilters: SearchFilters = {
-  distance: 5,
-  categories: [],
-  ageRange: null,
-  isOnline: null,
-};
-
-export const useSearchStore = create<SearchState>((set, get) => ({
-  filters: initialFilters,
-  userLocation: null,
-  results: mockResults,
-  highlightedId: null,
-  setFilters: (filters) =>
-    set((state) => {
-      const nextFilters = { ...state.filters, ...filters };
-      onFilterChange(nextFilters);
-      return { filters: nextFilters };
-    }),
-  setUserLocation: (location) => set({ userLocation: location }),
-  setResults: (results) => set({ results }),
-  highlightResult: (id) => set({ highlightedId: id }),
-  clearHighlight: () => set({ highlightedId: null }),
-  getFilteredResults: () => {
-    const { filters, results } = get();
-    return results.filter((result) => {
-      const withinDistance = result.distanceKm <= filters.distance + 0.0001;
-      const matchesCategory =
-        filters.categories.length === 0 || filters.categories.includes(result.category);
-      const matchesOnline =
-        filters.isOnline === null
-          ? true
-          : filters.isOnline
-            ? result.category.toLowerCase().includes("online")
-            : !result.category.toLowerCase().includes("online");
-
-      let matchesAge = true;
-      if (filters.ageRange) {
-        const [min] = filters.ageRange;
-        matchesAge = min <= 12; // placeholder matching
-      }
-      return withinDistance && matchesCategory && matchesOnline && matchesAge;
-    });
-  },
+export const useSearchStore = create<SearchState>((set) => ({
+  ...DEFAULT_STATE,
+  setQuery: (q) =>
+    set((state) => ({
+      q,
+      page: q !== state.q ? 1 : state.page,
+    })),
+  setLocation: (lat, lng) =>
+    set(() => ({
+      lat,
+      lng,
+      page: 1,
+    })),
+  setRadius: (radiusKm) =>
+    set(() => ({
+      radiusKm,
+      page: 1,
+    })),
+  setCategory: (category) =>
+    set(() => ({
+      category,
+      page: 1,
+    })),
+  setPage: (page) =>
+    set(() => ({
+      page: Math.max(1, page),
+    })),
+  setActiveId: (id) =>
+    set(() => ({
+      activeId: id,
+    })),
+  hydrate: (initial) =>
+    set((state) => ({
+      ...state,
+      ...initial,
+      page: initial.page ? Math.max(1, initial.page) : state.page,
+    })),
 }));

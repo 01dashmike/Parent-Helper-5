@@ -1,38 +1,27 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-
 import ContactSection from "@/components/ContactSection";
 import FeaturesCarousel from "@/components/FeaturesCarousel";
 import HeroSection from "@/components/HeroSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
+import TownHighlightsSection from "@/components/TownHighlightsSection";
 
 export default function Home() {
-  const prefersReducedMotion = useReducedMotion();
-
   return (
-    <main className="overflow-hidden bg-brand-cream">
+    <main className="min-h-screen bg-cream overflow-x-hidden">
       <HeroSection />
-
-      <div className="relative h-16 w-full -mt-6" aria-hidden="true">
-        {!prefersReducedMotion ? (
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-b from-brand-cream/0 via-brand-cream/60 to-brand-cream"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 1.2, ease: "easeOut" }}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-cream/0 via-brand-cream/60 to-brand-cream" />
-        )}
-      </div>
-
-      <section className="mt-8 md:mt-6">
-        <FeaturesCarousel />
+      <section className="mt-6">
+        <TownHighlightsSection />
       </section>
-
-      <HowItWorksSection />
-      <ContactSection />
+      <div className="mt-2 md:mt-3">
+        <FeaturesCarousel />
+      </div>
+      <section className="mt-6">
+        <HowItWorksSection />
+      </section>
+      <section className="mt-6">
+        <ContactSection />
+      </section>
     </main>
   );
 }
