@@ -1,5 +1,6 @@
 import PostCard from "@/components/blog/PostCard";
-import { hasSupabaseServerEnv, supabaseServer } from "@/lib/supabase";
+import { hasSupabaseServerEnv } from "@/lib/env";
+import { getSupabaseServer } from "@/lib/supabase.server";
 import Link from "next/link";
 
 export const revalidate = 3600;
@@ -22,7 +23,7 @@ export default async function BlogIndex({
   const search = params.q ?? "";
   const locality = params.locality ?? "";
   const page = Math.max(1, Number(params.page ?? "1"));
-  const supabaseAvailable = hasSupabaseServerEnv();
+  const supabase = hasSupabaseServerEnv() ? getSupabaseServer() : null;
 
   const limit = 12;
   const from = (page - 1) * limit;
@@ -31,8 +32,7 @@ export default async function BlogIndex({
   let data: any[] = [];
   let totalPages = 1;
 
-  if (supabaseAvailable) {
-    const supabase = supabaseServer();
+  if (supabase) {
     let query = supabase
       .from("blog_posts_ai")
       .select(
@@ -60,7 +60,7 @@ export default async function BlogIndex({
           <p className="text-slateSoft">
             Stories, guides, and gentle advice for families exploring the UK together.
           </p>
-          {!supabaseAvailable && (
+          {!supabase && (
             <p className="text-sm text-terracotta">
               Supabase environment variables are not configured, so articles will appear once the connection is set up.
             </p>

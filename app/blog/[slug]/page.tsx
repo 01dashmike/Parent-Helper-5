@@ -1,7 +1,8 @@
 import PostMeta from "@/components/blog/PostMeta";
 import Prose from "@/components/blog/Prose";
 import { replaceInternalLinks } from "@/lib/links";
-import { hasSupabaseServerEnv, supabaseServer } from "@/lib/supabase";
+import { hasSupabaseServerEnv } from "@/lib/env";
+import { getSupabaseServer } from "@/lib/supabase.server";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,7 +13,8 @@ export const revalidate = 3600;
 
 async function getPost(slug: string) {
   if (!hasSupabaseServerEnv()) return null;
-  const supabase = supabaseServer();
+  const supabase = getSupabaseServer();
+  if (!supabase) return null;
   const { data } = await supabase
     .from("blog_posts_ai")
     .select("*, sources")
@@ -24,7 +26,8 @@ async function getPost(slug: string) {
 
 async function getRelated(category: string, id: string, locality?: string | null) {
   if (!hasSupabaseServerEnv()) return [];
-  const supabase = supabaseServer();
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
   let query = supabase
     .from("blog_posts_ai")
     .select("id,title,slug,excerpt,hero_image,reading_time_minutes,locality,category,created_at")
@@ -42,14 +45,15 @@ async function getRelated(category: string, id: string, locality?: string | null
 
 export async function generateStaticParams() {
   if (!hasSupabaseServerEnv()) return [];
-  const supabase = supabaseServer();
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
   const { data } = await supabase
     .from("blog_posts_ai")
     .select("slug")
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(50);
-  return (data ?? []).map((row) => ({ slug: row.slug }));
+  return (data ?? []).map((row: any) => ({ slug: row.slug }));
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
@@ -161,7 +165,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <section className="space-y-4">
             <h2 className="text-xl font-semibold">Related posts</h2>
             <div className="grid gap-4 md:grid-cols-2">
-              {related.map((item) => (
+              {related.map((item: any) => (
                 <Link
                   key={item.id}
                   href={`/blog/${item.slug}`}

@@ -1,11 +1,15 @@
-import { supabaseServer } from "@/lib/supabase";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServer } from "@/lib/supabase.server";
 import { slugify } from "@/lib/slug";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 async function ensureUniqueSlug(
-  supabase: ReturnType<typeof supabaseServer>,
+  supabase: SupabaseClient<any>,
   desired: string,
   excludeId?: string,
 ) {
@@ -45,7 +49,10 @@ export async function POST(req: Request) {
   const { action, id, updates } = body as { action?: string; id?: string; updates?: any };
   if (!action || !id) return NextResponse.json({ error: "Missing action or id" }, { status: 400 });
 
-  const supabase = supabaseServer();
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+  }
 
   if (action === "delete") {
     await supabase.from("blog_posts_ai").delete().eq("id", id);

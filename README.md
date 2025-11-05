@@ -43,19 +43,17 @@ npm run railway-build  # installs dependencies and runs next build
 
 ## Environment Setup
 
-Create a `.env.local` (or project-level secrets in your hosting platform) with the required credentials. Common keys include:
+Create a `.env.local` (or project-level secrets in your hosting platform) with the required credentials. For Railway deployments, set the following at **both the Project scope and the Service scope** so builds and runtime containers can read them:
 
-```
-DATABASE_URL=postgresql_connection_string
-SUPABASE_SERVICE_ROLE=service_role_key
-SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=public_anon_key
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
-STRIPE_SECRET_KEY=sk_test_xxx
-SENDGRID_API_KEY=your_sendgrid_api_key
-```
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENAI_API_KEY`
+- `ADMIN_SECRET`
+- `DATABASE_URL` (optional, used for schema repair scripts and direct SQL access)
 
-> Many automation scripts under `/server` and `/scripts` expect the same variables. Review each script before running it against production data.
+Stripe, SendGrid, and other integrations still require their respective keys (`STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `SENDGRID_API_KEY`, etc.). Many automation scripts under `/server` and `/scripts` expect the same variables—review each script before running it against production data.
 
 ## Project Structure
 

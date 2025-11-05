@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { supabaseServer } from "../lib/supabase";
+import { getSupabaseServer } from "../lib/supabase.server";
 
 const TOPICS = [
   { topic: "Gentle sleep strategies for newborns", category: "Parenting Advice", intent: "evergreen" },
@@ -25,7 +25,10 @@ const TOPICS = [
 ];
 
 export async function seedTopics() {
-  const supabase = supabaseServer();
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    throw new Error("Supabase not configured");
+  }
   const { error } = await supabase.from("blog_topics_queue").insert(TOPICS);
   if (error) {
     throw new Error(`Failed to seed topics: ${error.message}`);

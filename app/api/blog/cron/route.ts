@@ -1,5 +1,8 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase.server";
 
 function siteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -15,7 +18,10 @@ export async function GET(request: Request) {
     }
   }
 
-  const sb = supabaseServer();
+  const sb = getSupabaseServer();
+  if (!sb) {
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+  }
   const frequency = process.env.BLOG_CRON_FREQUENCY ?? "daily";
   const limit = frequency === "daily" ? 1 : 1;
 

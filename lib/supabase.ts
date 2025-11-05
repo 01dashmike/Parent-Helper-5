@@ -1,45 +1,18 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  getSupabaseBrowserKey,
+  getSupabaseBrowserUrl,
+  hasSupabaseBrowserEnv,
+  hasSupabaseServerEnv,
+} from "./env";
 
-const resolveBrowserUrl = () =>
-  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-
-const resolveBrowserKey = () =>
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const resolveServerUrl = () =>
-  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-const resolveServerKey = () =>
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-export function hasSupabaseBrowserEnv() {
-  return Boolean(resolveBrowserUrl() && resolveBrowserKey());
-}
-
-export function hasSupabaseServerEnv() {
-  return Boolean(resolveServerUrl() && resolveServerKey());
-}
+export { hasSupabaseBrowserEnv, hasSupabaseServerEnv } from "./env";
 
 export const supabaseBrowser = () => {
-  const url = resolveBrowserUrl();
-  const key = resolveBrowserKey();
+  const url = getSupabaseBrowserUrl();
+  const key = getSupabaseBrowserKey();
   if (!url || !key) {
     throw new Error("Supabase browser environment variables are not configured");
   }
   return createClient(url, key);
-};
-
-export const supabaseServer = () => {
-  const url = resolveServerUrl();
-  const key = resolveServerKey();
-  if (!url || !key) {
-    throw new Error("Supabase server environment variables are not configured");
-  }
-  return createClient(
-    url,
-    key,
-    {
-      auth: { persistSession: false },
-    },
-  );
 };

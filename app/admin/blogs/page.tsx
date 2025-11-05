@@ -1,5 +1,6 @@
 import AdminBlogsClient from "@/components/blog/AdminBlogsClient";
-import { hasSupabaseServerEnv, supabaseServer } from "@/lib/supabase";
+import { hasSupabaseServerEnv } from "@/lib/env";
+import { getSupabaseServer } from "@/lib/supabase.server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -7,7 +8,8 @@ export const revalidate = 0;
 
 async function getPosts() {
   if (!hasSupabaseServerEnv()) return [];
-  const supabase = supabaseServer();
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
   const { data } = await supabase
     .from("blog_posts_ai")
     .select(

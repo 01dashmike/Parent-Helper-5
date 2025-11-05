@@ -1,4 +1,8 @@
-import { supabaseServer } from "@/lib/supabase";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServer } from "@/lib/supabase.server";
 import { slugify } from "@/lib/slug";
 import { NextResponse } from "next/server";
 
@@ -90,7 +94,7 @@ async function callOpenAI(topic: Topic, attempt = 1): Promise<GeneratedPayload> 
   return parsed;
 }
 
-async function pickTopic(sb: ReturnType<typeof supabaseServer>, topicId?: number) {
+async function pickTopic(sb: SupabaseClient<any>, topicId?: number) {
   if (topicId) {
     const { data } = await sb
       .from("blog_topics_queue")
@@ -120,7 +124,7 @@ function countWords(markdown: string) {
 }
 
 async function ensureUniqueSlug(
-  sb: ReturnType<typeof supabaseServer>,
+  sb: SupabaseClient<any>,
   desired: string,
   excludeId?: string,
 ) {
@@ -163,7 +167,10 @@ function normaliseSources(value: unknown) {
 
 export async function POST(req: Request) {
   const { topicId } = await req.json().catch(() => ({}));
-  const sb = supabaseServer();
+  const sb = getSupabaseServer();
+  if (!sb) {
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+  }
   const topic = await pickTopic(sb, topicId);
 
   if (!topic) {
