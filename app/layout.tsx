@@ -56,6 +56,12 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${poppins.variable} scroll-smooth`}
     >
+      <head>
+        {/* Preconnect to external domains for faster loading */}
+        <link rel="preconnect" href="https://tile.openstreetmap.org" />
+        <link rel="preconnect" href="https://unpkg.com" />
+        <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
+      </head>
       <body className="min-h-screen bg-cream text-charcoal antialiased">
         <div className="relative flex min-h-screen flex-col">
           <Header />

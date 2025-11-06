@@ -50,30 +50,53 @@ export default function SearchBarSticky() {
 
   return (
     <div className="sticky top-16 z-30 border-b border-sage/20 bg-cream/90 backdrop-blur supports-[backdrop-filter]:bg-cream/70">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:gap-2">
+      <form 
+        className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:gap-2"
+        role="search"
+        aria-label="Search for baby and toddler classes"
+        onSubmit={(e) => {
+          e.preventDefault();
+          router.refresh();
+        }}
+      >
         <input
           className="ph-input flex-1"
           placeholder="Enter town or postcode"
           value={loc}
           onChange={(e) => setLoc(e.target.value)}
+          aria-label="Location: Enter town or postcode"
+          type="text"
+          autoComplete="postal-code"
         />
         <input
           className="ph-input flex-1"
           placeholder="Search activity (e.g. 'music', 'yoga')"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          aria-label="Activity: Search for specific class types"
+          type="search"
+          autoComplete="off"
         />
-        <select className="ph-input md:w-48" value={age} onChange={(e) => setAge(e.target.value)}>
+        <select 
+          className="ph-input md:w-48" 
+          value={age} 
+          onChange={(e) => setAge(e.target.value)}
+          aria-label="Filter by child's age range"
+        >
           <option value="">All Ages</option>
           <option value="0-12">0–12 months</option>
           <option value="12-24">1–2 years</option>
           <option value="24-36">2–3 years</option>
           <option value="36-60">3–5 years</option>
         </select>
-        <button className="ph-btn" onClick={() => router.refresh()}>
+        <button 
+          className="ph-btn" 
+          type="submit"
+          aria-label="Refresh search results"
+        >
           Explore
         </button>
-      </div>
+      </form>
     </div>
   );
 }

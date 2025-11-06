@@ -27,25 +27,36 @@ export default function CategoryRail() {
   };
 
   return (
-    <div className="flex gap-2 overflow-x-auto py-2">
+    <nav 
+      className="flex gap-2 overflow-x-auto py-2"
+      role="navigation"
+      aria-label="Filter classes by category"
+    >
       {CATS.map((cat) => {
         const isActive = cat.key === active;
         return (
           <button
             key={cat.key}
             onClick={() => setCategory(cat.key)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setCategory(cat.key);
+              }
+            }}
             aria-pressed={isActive}
-            className={`shrink-0 inline-flex items-center gap-2 rounded-full border px-4 py-2 transition-colors ${
+            aria-label={`${isActive ? "Remove" : "Filter by"} ${cat.label} classes`}
+            className={`shrink-0 inline-flex items-center gap-2 rounded-full border px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-sage/50 ${
               isActive
                 ? "bg-sage text-white border-sage"
                 : "border-sage/30 bg-white/70 text-charcoal hover:bg-cream"
             }`}
           >
-            <span>{cat.icon}</span>
+            <span aria-hidden="true">{cat.icon}</span>
             <span className="text-sm font-medium">{cat.label}</span>
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }

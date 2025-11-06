@@ -43,6 +43,7 @@
   "include": [
     "app",
     "components",
+    "types",
     "next-env.d.ts",
     "shared",
     ".next/types/**/*.ts"

@@ -31,10 +31,21 @@ export default function QuickFilters() {
   }, [day, fromTime, toTime, radiusKm, paramsKey, router]);
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <fieldset 
+      className="grid grid-cols-2 gap-3 md:grid-cols-4"
+      aria-label="Quick filters for class search"
+    >
+      <legend className="sr-only">Refine your class search</legend>
+      
       <div className="flex items-center gap-2">
-        <label className="text-sm text-slateSoft">Day</label>
-        <select value={day} onChange={(e) => setDay(e.target.value)} className="ph-input">
+        <label htmlFor="day-filter" className="text-sm text-slateSoft">Day</label>
+        <select 
+          id="day-filter"
+          value={day} 
+          onChange={(e) => setDay(e.target.value)} 
+          className="ph-input"
+          aria-label="Filter by day of the week"
+        >
           <option value="">Any</option>
           {DAYS.map((d, i) => (
             <option key={d} value={i}>
@@ -43,25 +54,48 @@ export default function QuickFilters() {
           ))}
         </select>
       </div>
+      
       <div className="flex items-center gap-2">
-        <label className="text-sm text-slateSoft">From</label>
-        <input type="time" value={fromTime} onChange={(e) => setFromTime(e.target.value)} className="ph-input" />
+        <label htmlFor="from-time-filter" className="text-sm text-slateSoft">From</label>
+        <input 
+          id="from-time-filter"
+          type="time" 
+          value={fromTime} 
+          onChange={(e) => setFromTime(e.target.value)} 
+          className="ph-input"
+          aria-label="Filter by start time"
+        />
       </div>
+      
       <div className="flex items-center gap-2">
-        <label className="text-sm text-slateSoft">To</label>
-        <input type="time" value={toTime} onChange={(e) => setToTime(e.target.value)} className="ph-input" />
+        <label htmlFor="to-time-filter" className="text-sm text-slateSoft">To</label>
+        <input 
+          id="to-time-filter"
+          type="time" 
+          value={toTime} 
+          onChange={(e) => setToTime(e.target.value)} 
+          className="ph-input"
+          aria-label="Filter by end time"
+        />
       </div>
+      
       <div className="flex items-center gap-3">
-        <label className="text-sm text-slateSoft">Distance</label>
+        <label htmlFor="radius-filter" className="text-sm text-slateSoft">Distance</label>
         <input
+          id="radius-filter"
           type="range"
           min={1}
           max={40}
           value={radiusKm}
           onChange={(e) => setRadiusKm(Number(e.target.value))}
+          aria-label={`Search radius: ${radiusKm} kilometres`}
+          aria-valuemin={1}
+          aria-valuemax={40}
+          aria-valuenow={radiusKm}
+          aria-valuetext={`${radiusKm} kilometres`}
         />
-        <span className="w-12 text-sm">{radiusKm}km</span>
+        <span className="w-12 text-sm" aria-live="polite">{radiusKm}km</span>
       </div>
-    </div>
+    </fieldset>
   );
 }

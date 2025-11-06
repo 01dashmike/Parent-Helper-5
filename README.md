@@ -9,6 +9,7 @@ Parent Helper connects UK families with thousands of verified baby and toddler a
 - Rich editorial content (blog, guides) served through the Next.js App Router
 - Franchise and provider tooling, including Stripe checkout hooks and CRM exports
 - Automation scripts (in `/server` and `/scripts`) for syncing data, newsletters, and analytics
+- **Privacy-first analytics** - GDPR-compliant, cookie-free usage tracking
 
 ## Technology Stack
 
@@ -76,6 +77,68 @@ Stripe, SendGrid, and other integrations still require their respective keys (`S
 ```
 
 Legacy Express automation scripts remain in the repository; they can be run independently when needed, but the primary user experience now ships from Next.js.
+
+## Privacy-First Analytics
+
+Parent Helper includes a privacy-respectful analytics system that helps us understand user behavior without compromising personal data:
+
+### What We Track
+- Search queries (anonymized patterns, not exact text)
+- Map interactions (zoom, pan, marker clicks)
+- Blog post views
+- Class card interactions
+- Filter usage patterns
+
+### Privacy Guarantees
+✅ **No personal data collected** - We never store names, emails, or identifying information
+✅ **No cookies used** - Session tracking uses localStorage only (no consent needed under UK GDPR)
+✅ **Anonymous session IDs** - Generated client-side using UUID v4
+✅ **90-day retention** - Data automatically deleted after 90 days
+✅ **Fully GDPR compliant** - Designed for UK/EU privacy regulations
+✅ **Fire-and-forget** - Analytics never block the UI or slow down user experience
+
+### Technical Implementation
+```typescript
+// lib/analytics.ts
+import { logSearch, logMapInteraction, logBlogView } from "@/lib/analytics";
+
+// Example usage
+logSearch({
+  query: "music classes",
+  location: "Winchester",
+  category: "Music",
+  resultCount: 12
+});
+```
+
+Events are batched (500ms debounce) and sent to `/api/analytics`, which stores them in Supabase with RLS policies preventing public writes.
+
+### Admin Dashboard
+View anonymized insights at `/admin/insights`:
+- Top searched categories
+- Most active towns
+- Popular blog posts
+- Map interaction patterns
+- Daily search trends
+
+All displayed using Recharts with Parent Helper's sage/cream brand colors.
+
+### Database Setup
+Run the migration to create the analytics table:
+```sql
+-- supabase/migrations/create_analytics_table.sql
+-- Creates analytics_events table with RLS and 90-day retention
+```
+
+For automated cleanup, set up a cron job to call the `delete_old_analytics_events()` function daily.
+
+### Compliance
+This analytics implementation complies with:
+- **UK GDPR** (General Data Protection Regulation)
+- **PECR** (Privacy and Electronic Communications Regulations)
+- **ICO Guidelines** (Information Commissioner's Office)
+
+No cookie banner required as we don't use cookies for tracking.
 
 ## Deployment Notes
 
