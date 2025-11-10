@@ -13,11 +13,16 @@ Parent Helper connects UK families with thousands of verified baby and toddler a
 
 ## Technology Stack
 
-- **Framework**: Next.js 15 App Router (React 18 + TypeScript)
+- **Framework**: Next.js 15 App Router (React 19 + TypeScript)
 - **Styling**: Tailwind CSS, Radix UI primitives, shadcn/ui design system
 - **Data**: Supabase/Postgres + Drizzle ORM schema shared via `/shared`
 - **Payments & Email**: Stripe billing flows, SendGrid transactional emails
 - **Tooling**: ESLint flat config, Prettier, Turbo/automation scripts for data ingestion
+
+## React & Mapping Notes
+
+- Next 15.5.6 requires React 19. We pin a single copy of `react`/`react-dom` at 19.0.0 via npm overrides to avoid duplicate React installs.
+- `react-leaflet-markercluster` (React 17 only) has been removed. The map currently renders simple markers and we will reintroduce clustering once a React 19-compatible option is available.
 
 ## Quick Start
 
@@ -55,6 +60,18 @@ Create a `.env.local` (or project-level secrets in your hosting platform) with t
 - `DATABASE_URL` (optional, used for schema repair scripts and direct SQL access)
 
 Stripe, SendGrid, and other integrations still require their respective keys (`STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `SENDGRID_API_KEY`, etc.). Many automation scripts under `/server` and `/scripts` expect the same variables—review each script before running it against production data.
+
+### SendGrid & Email Configuration
+
+Add the following email variables to support transactional sends and the `/api/test-email` verification endpoint:
+
+```
+SENDGRID_FROM_EMAIL=notification@parenthelper.co.uk
+SENDGRID_FROM_NAME=Parent Helper
+SENDGRID_REPLY_TO=notification@parenthelper.co.uk
+ADMIN_EMAIL=admin@parenthelper.co.uk
+ENABLE_TEST_EMAILS=true
+```
 
 ## Project Structure
 

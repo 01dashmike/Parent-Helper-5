@@ -1,105 +1,128 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import useSWR from "swr";
-import { useSearchParams } from "next/navigation";
-import { useState, useRef, useEffect, memo, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { logSearch, logClassInteraction } from "@/lib/analytics";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { safeImage } from "@/lib/images";
+import { logClassViewed } from "@/lib/analytics";
+import type { ClassResult } from "./SearchPageClient";
+import type { MapPoint } from "./ResultsSplitMap";
 
 const MapPane = dynamic(() => import("./ResultsSplitMap"), {
   ssr: false,
   loading: () => <div className="h-[50vh] rounded-2xl bg-cream animate-pulse" />,
 });
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const isFeaturedActive = (flags?: ClassResult["featured"]) => {
+  if (!flags) return false;
+  if (!flags.budgetOk) return false;
+  if (!flags.windowActive) return false;
+  return Boolean(flags.isBoosted || flags.listingStatus === "active");
+};
 
-// Memoized ResultCard component to prevent unnecessary re-renders
 interface ResultCardProps {
-  result: any;
+  result: ClassResult;
   isSelected: boolean;
   isHovered: boolean;
-  onHover: (id: number | null) => void;
-  onSelect: (id: number) => void;
+  onHover: (id: number | string | null) => void;
+  onSelect: (id: number | string) => void;
   cardRef: (el: HTMLElement | null) => void;
 }
 
 const ResultCard = memo(function ResultCard({
   result,
   isSelected,
-  isHovered,
   onHover,
   onSelect,
   cardRef,
 }: ResultCardProps) {
-  const r = result;
-  
+  const { src, alt } = safeImage({
+    src: undefined,
+    alt: result.title,
+  });
+
+  const featured = result.featured;
+  const showBoosted =
+    Boolean(featured?.isBoosted) && featured?.budgetOk && featured?.windowActive;
+  const showFeatured = showBoosted || isFeaturedActive(featured);
+  const badgeLabel = showBoosted ? "Promoted" : "Featured";
+  const badgeDescription = showBoosted
+    ? "Promoted listing with boosted placement"
+    : "Featured listing";
+
   return (
     <article
       ref={cardRef}
-      onMouseEnter={() => onHover(r.id)}
+      onMouseEnter={() => onHover(result.id)}
       onMouseLeave={() => onHover(null)}
-      onClick={() => onSelect(r.id)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect(r.id);
+      onClick={() => onSelect(result.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(result.id);
         }
       }}
       tabIndex={0}
       role="button"
-      aria-label={`View details for ${r.class_name} in ${r.postcode || "your area"}`}
+      aria-label={`View details for ${result.title} in ${result.town ?? "your area"}`}
       aria-pressed={isSelected}
-      className={`
-        overflow-hidden rounded-2xl border bg-white shadow-sm 
-        cursor-pointer transition-all duration-300
-        focus:outline-none focus:ring-2 focus:ring-sage/50
-        ${
-          isSelected
-            ? "border-sage/60 ring-2 ring-sage/30"
-            : "border-sage/20 hover:border-sage/40"
-        }
-      `}
+      className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/50 ${isSelected
+        ? "border-sage/60 ring-2 ring-sage/30"
+        : "border-sage/20 hover:border-sage/40"
+        }`}
     >
       <div className="flex">
-        <div className="h-28 w-40 shrink-0 relative">
+        <div className="relative h-28 w-40 shrink-0 overflow-hidden rounded-2xl bg-cream/60">
           <Image
-            src={r.image_url || "/images/categories/arts.jpg"}
-            alt={`${r.class_name} - ${r.category} class for babies and toddlers`}
+            src={src}
+            alt={alt}
             fill
-            sizes="160px"
-            className="object-cover"
+            sizes="(max-width: 768px) 160px, 160px"
+            className="object-cover object-center transition-transform duration-300"
             loading="lazy"
           />
         </div>
         <div className="flex-1 p-3">
-          <h3 className="text-lg font-semibold text-charcoal">{r.class_name}</h3>
-          <p className="text-sm text-slateSoft line-clamp-2">{r.description}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-            <span 
-              className="rounded-full bg-sage/15 px-2 py-1 text-charcoal"
-              aria-label={`Category: ${r.category}`}
-            >
-              {r.category}
-            </span>
-            {(r.day_of_week !== null && r.start_time && r.end_time) && (
-              <span 
-                className="rounded-full bg-terracotta/10 px-2 py-1 text-terracotta"
-                aria-label={`Schedule: ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][r.day_of_week]} ${r.start_time} to ${r.end_time}`}
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-lg font-semibold text-charcoal">{result.title}</h3>
+            {showFeatured && (
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${showBoosted
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-sage/15 text-sage"
+                  }`}
+                aria-label={badgeDescription}
               >
-                {typeof r.day_of_week === "number"
-                  ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][r.day_of_week]
-                  : ""}{" "}
-                {r.start_time?.slice(0, 5)}–{r.end_time?.slice(0, 5)}
+                {badgeLabel}
               </span>
             )}
-            {r.postcode && (
-              <span 
-                className="rounded-full bg-cream px-2 py-1 text-charcoal/70"
-                aria-label={`Location: ${r.postcode}`}
-              >
-                {r.postcode}
+          </div>
+          {result.description && (
+            <p className="line-clamp-2 text-sm text-charcoal/70">{result.description}</p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-charcoal/70">
+            {result.category && (
+              <span className="rounded-full bg-sage/15 px-2 py-1 text-sage" aria-label={`Category: ${result.category}`}>
+                {result.category}
+              </span>
+            )}
+            {result.town && (
+              <span className="rounded-full bg-cream px-2 py-1" aria-label={`Town: ${result.town}`}>
+                {result.town}
+              </span>
+            )}
+            {result.age_range && (
+              <span className="rounded-full bg-cream px-2 py-1" aria-label={`Age range: ${result.age_range}`}>
+                Ages {result.age_range}
+              </span>
+            )}
+            {featured?.planSlug && showFeatured && (
+              <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700" aria-label="Plan type">
+                {featured.planSlug === "bookings"
+                  ? "Bookings Plan"
+                  : featured.planSlug === "promote"
+                    ? "Promote Plan"
+                    : "Featured"}
               </span>
             )}
           </div>
@@ -109,119 +132,112 @@ const ResultCard = memo(function ResultCard({
   );
 });
 
-export default function ResultsSplit() {
-  const params = useSearchParams();
-  const query = params?.toString() ?? "";
-  
-  // Optimized SWR configuration for better caching and performance
-  const { data, isLoading } = useSWR(`/api/search?${query}`, fetcher, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: true,
-    dedupingInterval: 30000, // Dedupe requests within 30 seconds
-    keepPreviousData: true, // Keep previous data while fetching new data
-  });
+ResultCard.displayName = "ResultCard";
 
-  const results = data?.results ?? [];
+export default function ResultsSplit({ results }: { results: ClassResult[] }) {
+  const [selectedId, setSelectedId] = useState<number | string | null>(null);
+  const [hoveredId, setHoveredId] = useState<number | string | null>(null);
 
-  // Log search analytics when results change
-  useEffect(() => {
-    if (!isLoading && results.length >= 0) {
-      const params = new URLSearchParams(query);
-      logSearch({
-        query: params.get("q") || undefined,
-        location: params.get("loc") || undefined,
-        category: params.get("category") || undefined,
-        ageRange: params.get("minAge") && params.get("maxAge")
-          ? `${params.get("minAge")}-${params.get("maxAge")}`
-          : undefined,
-        dayOfWeek: params.get("day") || undefined,
-        resultCount: results.length,
-      });
-    }
-  }, [query, results.length, isLoading]);
+  const cardRefs = useRef<Record<string, HTMLElement | null>>({});
 
-  // State for synchronized interaction between map and results
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [hoveredId, setHoveredId] = useState<number | null>(null);
-  
-  // Refs for scrolling result cards into view
-  const cardRefs = useRef<{ [key: number]: HTMLElement | null }>({});
-
-  // Memoized callbacks to prevent unnecessary re-renders
-  const handleHover = useCallback((id: number | null) => {
+  const handleHover = useCallback((id: number | string | null) => {
     setHoveredId(id);
   }, []);
 
-  const handleSelect = useCallback((id: number) => {
-    setSelectedId(id);
-    
-    // Log class interaction
-    const selectedClass = results.find((r: any) => r.id === id);
-    if (selectedClass) {
-      logClassInteraction({
-        action: "click",
-        classId: selectedClass.id,
-        category: selectedClass.category,
-        location: selectedClass.postcode,
-      });
-    }
-  }, [results]);
+  const organisedResults = useMemo(() => results ?? [], [results]);
 
-  // Scroll selected card into view when marker is clicked
+  const resultLookup = useMemo(() => {
+    const map = new Map<number | string, ClassResult>();
+    organisedResults.forEach((item) => map.set(item.id, item));
+    return map;
+  }, [organisedResults]);
+
+  const trackClassView = useCallback((record: ClassResult) => {
+    logClassViewed({
+      classId: record.id,
+      title: record.title,
+      category: record.category ?? undefined,
+      location: record.town ?? undefined,
+      isFeatured: isFeaturedActive(record.featured),
+      searchScore: record.searchScore ?? null,
+    });
+  }, []);
+
+  const handleSelect = useCallback(
+    (id: number | string) => {
+      setSelectedId(id);
+      const record = resultLookup.get(id);
+      if (record) {
+        trackClassView(record);
+      }
+    },
+    [resultLookup, trackClassView],
+  );
+
   useEffect(() => {
-    if (selectedId && cardRefs.current[selectedId]) {
-      cardRefs.current[selectedId]?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    if (selectedId != null) {
+      const key = String(selectedId);
+      const el = cardRefs.current[key];
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     }
   }, [selectedId]);
 
+  if (!organisedResults.length) {
+    return (
+      <div className="rounded-2xl border border-sage/20 bg-white p-6 text-center text-charcoal/70">
+        <p className="font-medium">No classes found yet.</p>
+        <p className="mt-2 text-sm">
+          Try another search term or widen your town to discover more providers.
+        </p>
+      </div>
+    );
+  }
+
+  const mapPoints = useMemo<MapPoint[]>(() => {
+    if (!Array.isArray(organisedResults)) return [];
+
+    return organisedResults
+      .filter((result) => typeof result.latitude === "number" && typeof result.longitude === "number")
+      .map((result) => ({
+        id: result.id,
+        lat: result.latitude as number,
+        lng: result.longitude as number,
+        name: result.title,
+        venue: result.town ?? undefined,
+      }));
+  }, [organisedResults]);
+
+  const mapCenter = useMemo<[number, number]>(() => {
+    if (mapPoints.length) {
+      return [mapPoints[0].lat, mapPoints[0].lng];
+    }
+    return [51.5074, -0.1278];
+  }, [mapPoints]);
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <div 
+      <div
         className="space-y-3"
         role="list"
         aria-label="Search results for baby and toddler classes"
       >
-        {isLoading
-          ? Array.from({ length: 6 }).map((_, i) => (
-              <div 
-                key={i} 
-                className="h-32 rounded-2xl border border-sage/20 bg-white/60 animate-pulse"
-                role="status"
-                aria-label="Loading class information"
-              />
-            ))
-          : results.length
-          ? results.map((r: any) => (
-              <ResultCard
-                key={r.id}
-                result={r}
-                isSelected={selectedId === r.id}
-                isHovered={hoveredId === r.id}
-                onHover={handleHover}
-                onSelect={handleSelect}
-                cardRef={(el) => (cardRefs.current[r.id] = el)}
-              />
-            ))
-          : (
-              <div 
-                className="rounded-2xl border border-sage/20 bg-white p-6 text-center text-slateSoft"
-                role="status"
-              >
-                <p>No classes match your filters yet.</p>
-                <p className="mt-2 text-sm">Try adjusting the day or distance to see more results.</p>
-              </div>
-            )}
+        {organisedResults.map((result) => (
+          <ResultCard
+            key={result.id}
+            result={result}
+            isSelected={selectedId === result.id}
+            isHovered={hoveredId === result.id}
+            onHover={handleHover}
+            onSelect={handleSelect}
+            cardRef={(el) => {
+              cardRefs.current[String(result.id)] = el;
+            }}
+          />
+        ))}
       </div>
-      <MapPane 
-        results={results} 
-        selectedId={selectedId}
-        hoveredId={hoveredId}
-        activeResultId={hoveredId}
-        onMarkerClick={handleSelect}
-      />
+      <MapPane points={mapPoints} center={mapCenter} zoom={11} />
     </div>
   );
 }
