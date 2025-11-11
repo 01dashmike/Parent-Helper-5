@@ -12,7 +12,9 @@
     "build:clean": "rm -rf .next && next build",
     "build:next": "next build",
     "start": "next start",
-    "lint": "echo 'Skipping linting for now'",
+    "lint": "eslint --ext .ts,.tsx .",
+    "lint:errors": "eslint --ext .ts,.tsx .",
+    "fix:errors": "node scripts/eslint-fix-errors.mjs",
     "test:unit": "playwright test tests/unit",
     "check-env": "node scripts/check-env.mjs",
     "rebuild": "npm run clean && npm install && npm run build",
@@ -27,6 +29,7 @@
     "clean": "node scripts/clean-next.mjs || true",
     "dev:clean": "rm -rf .next && next dev",
     "inspect:modules": "node --loader ts-node/esm scripts/dev/inspect-modules.mts",
+    "prestart": "node scripts/check-next-health.mjs",
     "diagnose:react": "node -e \"const {execSync}=require('child_process');try{console.log(execSync('npm ls react react-dom').toString())}catch(e){console.log(e.stdout?.toString()||e.message)}\""
   },
   "dependencies": {
