@@ -12,7 +12,7 @@ async function getPosts() {
   const { data } = await supabase
     .from("blog_posts_ai")
     .select(
-      "id,title,slug,status,category,tags,excerpt,locality,created_at,hero_image,seo_title,seo_description,postcode_prefix"
+      "id,title,slug,status,category,tags,excerpt,locality,created_at,hero_image,seo_title,seo_description,postcode_prefix,body_markdown"
     )
     .order("created_at", { ascending: false })
     .limit(100);

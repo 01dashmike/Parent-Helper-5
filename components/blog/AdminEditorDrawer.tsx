@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FormProvider } from "react-hook-form";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Eye, Edit } from "lucide-react";
 import Image from "next/image";
 import { slugify } from "@/lib/slug";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +16,8 @@ import { ErrorMessage } from "@/components/ui/errormessage";
 import { Button, GhostButton } from "@/components/ui/buttons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type BlogPost = {
   id: string;
@@ -28,6 +30,7 @@ type BlogPost = {
   postcode_prefix?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
+  body_markdown?: string | null;
 };
 
 type BlogPostUpdate = {
@@ -40,6 +43,7 @@ type BlogPostUpdate = {
   postcode_prefix: string;
   seo_title: string;
   seo_description: string;
+  body_markdown: string;
 };
 
 interface AdminEditorDrawerProps {
@@ -61,6 +65,7 @@ const blogPostFormSchema = z.object({
   postcode_prefix: z.string().optional(),
   seo_title: z.string().max(60, "SEO title must be 60 characters or less").optional(),
   seo_description: z.string().max(160, "SEO description must be 160 characters or less").optional(),
+  body_markdown: z.string().optional(),
 });
 
 type BlogPostFormData = z.infer<typeof blogPostFormSchema>;
@@ -78,8 +83,11 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
       postcode_prefix: "",
       seo_title: "",
       seo_description: "",
+      body_markdown: "",
     },
   });
+
+  const [markdownPreview, setMarkdownPreview] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -101,6 +109,7 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
         postcode_prefix: post.postcode_prefix ?? "",
         seo_title: post.seo_title ?? title,
         seo_description: post.seo_description ?? excerpt,
+        body_markdown: post.body_markdown ?? "",
       });
       setAiError(null);
     } else {
@@ -153,6 +162,7 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
         postcode_prefix: data.postcode_prefix?.trim() || "",
         seo_title: data.seo_title?.trim() || data.title.trim() || "Untitled Post",
         seo_description: data.seo_description?.trim() || data.excerpt?.trim() || "",
+        body_markdown: data.body_markdown?.trim() || "",
       };
       await onSave(updates);
       setAnnouncement('Saved');
@@ -198,6 +208,7 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
         postcode_prefix: generated.postcode_prefix || "",
         seo_title: generated.seo_title || generated.title || "",
         seo_description: generated.seo_description || generated.excerpt || "",
+        body_markdown: generated.body_markdown || "",
       });
 
       // The generated post is already saved to the database
@@ -214,6 +225,7 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
           postcode_prefix: generated.postcode_prefix || null,
           seo_title: generated.seo_title || null,
           seo_description: generated.seo_description || null,
+          body_markdown: generated.body_markdown || null,
         });
       } else {
         // Fallback: refresh page to show new post in list
@@ -365,6 +377,48 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
                 >
                   <Textarea {...form.register("seo_description")} rows={2} placeholder={form.watch("excerpt") || "SEO description (defaults to excerpt)"} />
                 </FormField>
+              </div>
+              <div className="border-t border-sage/20 pt-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-small font-semibold text-charcoal">Blog Content</h3>
+                  <button
+                    type="button"
+                    onClick={() => setMarkdownPreview(!markdownPreview)}
+                    className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-3 py-1.5 text-small font-medium text-forest transition hover:bg-sage/10"
+                  >
+                    {markdownPreview ? (
+                      <>
+                        <Edit className="h-4 w-4" aria-hidden="true" />
+                        <span>Edit</span>
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                        <span>Preview</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                {markdownPreview ? (
+                  <div className="min-h-[400px] rounded-lg border border-sage/20 bg-white p-4 prose prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {form.watch("body_markdown") || "*No content yet. Generate a blog post with AI or start writing.*"}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <FormField
+                    label="Markdown Content"
+                    error={form.formState.errors.body_markdown?.message}
+                    id="body_markdown"
+                  >
+                    <Textarea
+                      {...form.register("body_markdown")}
+                      rows={20}
+                      placeholder="Blog content in Markdown format. Use the 'Generate with AI' button to create content automatically."
+                      className="font-mono text-sm"
+                    />
+                  </FormField>
+                )}
               </div>
           <div className="flex items-center justify-between gap-3 pt-4">
             {post && (
