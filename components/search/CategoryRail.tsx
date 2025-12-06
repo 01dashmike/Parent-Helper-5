@@ -36,13 +36,19 @@ const CategoryRail = memo(function CategoryRail(): React.ReactNode {
   }, [active, params]);
 
   // Detect when filters are being applied (URL is changing)
+  // Extract URL params to separate variables for dependency array
+  const dayParam = params?.get("day");
+  const fromTimeParam = params?.get("fromTime");
+  const toTimeParam = params?.get("toTime");
+  const radiusKmParam = params?.get("radiusKm");
+  
   useEffect(() => {
     setIsFiltering(true);
     const timer = setTimeout(() => {
       setIsFiltering(false);
     }, 500); // Show loader for 500ms after filter change
     return () => clearTimeout(timer);
-  }, [active, params?.get("day"), params?.get("fromTime"), params?.get("toTime"), params?.get("radiusKm")]);
+  }, [active, dayParam, fromTimeParam, toTimeParam, radiusKmParam]);
 
   const setCategory = useCallback((key: string): void => {
     const next = new URLSearchParams(params?.toString() ?? "");
