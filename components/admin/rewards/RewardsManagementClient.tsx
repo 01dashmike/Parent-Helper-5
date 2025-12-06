@@ -516,7 +516,7 @@ function AddRewardModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onCreate: (data: { user_id: string; value_cents: number; points: number; source: string; metadata?: Record<string, unknown>; status?: string; reason?: string }) => Promise<void>;
+  onCreate: (data: { user_id: string; value_cents: number; points: number; source: string; metadata?: Record<string, unknown> }) => Promise<void>;
 }) {
   const [userId, setUserId] = useState("");
   const [valueCents, setValueCents] = useState("");
@@ -532,7 +532,8 @@ function AddRewardModal({
       value_cents: parseInt(valueCents, 10),
       points: points ? parseInt(points, 10) : 0,
       source,
-      metadata: reason ? { reason, status } : { status },
+      status,
+      reason: reason || undefined,
     });
     // Reset form
     setUserId("");
