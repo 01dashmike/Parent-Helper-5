@@ -54,7 +54,7 @@ function PostCard({
       >
         <motion.div
           className="relative w-full h-48 md:h-56 overflow-hidden bg-cream/40 aspect-[16/9]"
-          whileHover={whileHover({ scale: 1.05 })}
+          whileHover={whileHover({ scale: 1.05 }) as { scale: number } | undefined}
           transition={{ duration: motionTokens.medium }}
         >
           <Image
