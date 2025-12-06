@@ -1,7 +1,8 @@
 "use client";
 
-import { forwardRef, ElementType } from "react";
+import { forwardRef, ElementType, ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
+import type { HTMLMotionProps, MotionProps } from "framer-motion";
 
 export interface CardContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -36,15 +37,15 @@ export interface CardContainerProps extends React.HTMLAttributes<HTMLDivElement>
   /**
    * Motion props (for framer-motion components passed via `as`)
    */
-  initial?: unknown;
-  animate?: unknown;
-  exit?: unknown;
-  transition?: unknown;
-  whileHover?: unknown;
-  whileTap?: unknown;
-  whileInView?: unknown;
-  viewport?: unknown;
-  variants?: unknown;
+  initial?: MotionProps["initial"];
+  animate?: MotionProps["animate"];
+  exit?: MotionProps["exit"];
+  transition?: MotionProps["transition"];
+  whileHover?: MotionProps["whileHover"];
+  whileTap?: MotionProps["whileTap"];
+  whileInView?: MotionProps["whileInView"];
+  viewport?: MotionProps["viewport"];
+  variants?: MotionProps["variants"];
   [key: string]: unknown;
 }
 
@@ -122,16 +123,12 @@ export const CardContainer = forwardRef<HTMLDivElement, CardContainerProps>(
         event.preventDefault();
         // Create a synthetic mouse event for onClick
         const syntheticEvent = new MouseEvent("click", { bubbles: true, cancelable: true });
-        onClick(syntheticEvent as unknown as React.MouseEvent<HTMLElement>);
+        onClick(syntheticEvent as unknown as React.MouseEvent<HTMLElement, MouseEvent>);
       }
       onKeyDown?.(event);
     };
 
-    // Extract motion props and regular props
-    const { initial, animate, exit, transition, whileHover, whileTap, whileInView, viewport, variants, ...restProps } = props;
-    
     const componentProps = {
-      ref,
       role: interactive ? "button" : undefined,
       "aria-label": interactive && ariaLabel ? ariaLabel : undefined,
       tabIndex: interactive ? 0 : undefined,
@@ -139,27 +136,23 @@ export const CardContainer = forwardRef<HTMLDivElement, CardContainerProps>(
       onKeyDown: handleKeyDown,
       className: cn(
         baseClasses,
-        variantClasses[variant || "default"] || "",
-        bgClasses[bgVariant || "white"] || "",
+        variantClasses[variant || "default"],
+        bgClasses[bgVariant || "white"],
         interactiveClasses,
         selectedClasses,
         className
       ),
-      ...(Component !== "div" && {
-        initial,
-        animate,
-        exit,
-        transition,
-        whileHover,
-        whileTap,
-        whileInView,
-        viewport,
-        variants,
-      }),
-      ...restProps,
-    };
-    
-    return React.createElement(Component, componentProps, children);
+      ...props,
+    } as ComponentPropsWithoutRef<ElementType>;
+
+    return (
+      <Component
+        ref={ref}
+        {...componentProps}
+      >
+        {children}
+      </Component>
+    );
   }
 );
 

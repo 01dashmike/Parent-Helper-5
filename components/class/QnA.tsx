@@ -178,6 +178,7 @@ const QnA = memo(function QnA({ classId, providerId, currentUserId, initialQuest
           <Button
             type="submit"
             disabled={submitting || !questionText.trim()}
+            aria-label={submitting ? "Submitting question" : "Ask question"}
           >
             {submitting ? "Submitting..." : "Ask Question"}
           </Button>
