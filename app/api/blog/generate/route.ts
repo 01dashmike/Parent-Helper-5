@@ -70,11 +70,15 @@ function formatTrendingTopics(topics: string[]): string {
   return `\n\nRECENT USER INTERESTS (use these to influence topic relevance):\n${topics.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
 }
 
-function buildUserPrompt(topic: Topic, trendingContext: string = "") {
-  return `Write a long-form UK parenting article for the Parent Helper Journal.${trendingContext}\n\nTOPIC: ${topic.topic}\n${topic.intent ? `INTENT: ${topic.intent}\n` : ""}\nAudience: UK parents and carers. Voice: warm, well-educated British parent; supportive, practical, never condescending.\nLength: 1,200-1,700 words (minimum ${MIN_WORDS} words).\nTone: supportive, knowledgeable, and encouraging. Format with headings, bullets, and a 2-sentence intro summary.\nStructure: punchy hook intro; H2/H3 subheads; short paragraphs; bullet lists; one pull quote; finish with an actionable checklist.\nInclude 2-4 internal link placeholders like [link:classes/sensory] or [link:blog/sleep].\nInclude 4-7 reputable UK sources (NHS, BBC, GOV.UK, universities) and return them as an array of objects in the JSON payload.\nIf locality is provided (${topic.target_locality ?? "none"}), include a short "Getting started in ${topic.target_locality}" box with universally helpful tips (no invented venues).\nFocus on topics local parents are searching for recently, based on analytics data.\nReturn strictly valid JSON matching:\n{\n  "meta": {"title": string, "excerpt": string, "category": string, "tags": string[], "hero_image": string | null, "seoTitle": string, "seoDescription": string, "locality": string | null, "postcodePrefix": string | null, "sources": [{"title": string, "url": string}] },\n  "content": "Markdown here"\n}.\nDo not include backticks or extra text.`;
+function buildUserPrompt(topic: Topic, trendingContext: string = "", customGuidelines: string = "") {
+  const basePrompt = `Write a long-form UK parenting article for the Parent Helper Journal.${trendingContext}\n\nTOPIC: ${topic.topic}\n${topic.intent ? `INTENT: ${topic.intent}\n` : ""}\nAudience: UK parents and carers. Voice: warm, well-educated British parent; supportive, practical, never condescending.\nLength: 1,200-1,700 words (minimum ${MIN_WORDS} words).\nTone: supportive, knowledgeable, and encouraging. Format with headings, bullets, and a 2-sentence intro summary.\nStructure: punchy hook intro; H2/H3 subheads; short paragraphs; bullet lists; one pull quote; finish with an actionable checklist.\nInclude 2-4 internal link placeholders like [link:classes/sensory] or [link:blog/sleep].\nInclude 4-7 reputable UK sources (NHS, BBC, GOV.UK, universities) and return them as an array of objects in the JSON payload.\nIf locality is provided (${topic.target_locality ?? "none"}), include a short "Getting started in ${topic.target_locality}" box with universally helpful tips (no invented venues).\nFocus on topics local parents are searching for recently, based on analytics data.`;
+  
+  const guidelinesSection = customGuidelines ? `\n\nADDITIONAL GUIDELINES:\n${customGuidelines}` : "";
+  
+  return `${basePrompt}${guidelinesSection}\n\nReturn strictly valid JSON matching:\n{\n  "meta": {"title": string, "excerpt": string, "category": string, "tags": string[], "hero_image": string | null, "seoTitle": string, "seoDescription": string, "locality": string | null, "postcodePrefix": string | null, "sources": [{"title": string, "url": string}] },\n  "content": "Markdown here"\n}.\nDo not include backticks or extra text.`;
 }
 
-async function callOpenAI(topic: Topic, trendingContext: string = "", attempt = 1): Promise<GeneratedPayload> {
+async function callOpenAI(topic: Topic, trendingContext: string = "", customGuidelines: string = "", attempt = 1): Promise<GeneratedPayload> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY not configured");
   }
@@ -96,7 +100,7 @@ async function callOpenAI(topic: Topic, trendingContext: string = "", attempt = 
         },
         {
           role: "user",
-          content: buildUserPrompt(topic, trendingContext),
+          content: buildUserPrompt(topic, trendingContext, customGuidelines),
         },
       ],
       temperature: 0.7,
@@ -117,7 +121,7 @@ async function callOpenAI(topic: Topic, trendingContext: string = "", attempt = 
     parsed = JSON.parse(content);
   } catch (error) {
     if (attempt === 1) {
-      return callOpenAI(topic, trendingContext, attempt + 1);
+      return callOpenAI(topic, trendingContext, "", attempt + 1);
     }
     throw new Error("Failed to parse model response as JSON");
   }
@@ -196,23 +200,49 @@ function normaliseSources(value: unknown) {
 }
 
 export async function POST(req: Request) {
-  const { topicId, trendSource } = await req.json().catch(() => ({}));
+  const { 
+    topicId, 
+    trendSource, 
+    customTopic, 
+    customGuidelines, 
+    category, 
+    intent, 
+    target_locality, 
+    target_postcode_prefix 
+  } = await req.json().catch(() => ({}));
   const sb = getSupabaseServer();
   if (!sb) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
   }
-  const topic = await pickTopic(sb, topicId);
 
-  if (!topic) {
-    return NextResponse.json({ error: "No topics pending" }, { status: 404 });
+  let topic: Topic | null = null;
+  let shouldUpdateQueue = false;
+
+  // If customTopic is provided, create a topic object directly (skip queue)
+  if (customTopic) {
+    topic = {
+      id: 0, // Temporary ID for custom topics
+      topic: customTopic,
+      intent: intent || null,
+      category: category || null,
+      target_locality: target_locality || null,
+      target_postcode_prefix: target_postcode_prefix || null,
+    };
+  } else {
+    // Otherwise, pick from queue (existing behavior)
+    topic = await pickTopic(sb, topicId);
+    if (!topic) {
+      return NextResponse.json({ error: "No topics pending" }, { status: 404 });
+    }
+    shouldUpdateQueue = true;
+    await sb.from("blog_topics_queue").update({ status: "in_progress" }).eq("id", topic.id);
   }
-
-  await sb.from("blog_topics_queue").update({ status: "in_progress" }).eq("id", topic.id);
 
   try {
     // Get trending topics for context
     const trendingContext = await getTrendingTopicsForPrompt();
-    const result = await callOpenAI(topic, trendingContext);
+    const guidelines = customGuidelines || "";
+    const result = await callOpenAI(topic, trendingContext, guidelines);
     const markdown = (result.content ?? result.markdown ?? "").trim();
     if (!markdown) {
       throw new Error("Model returned empty content");
@@ -221,7 +251,7 @@ export async function POST(req: Request) {
     const wordCount = result.meta?.wordCount ?? countWords(markdown);
     if (wordCount < MIN_WORDS) {
       // attempt one retry
-      const retry = await callOpenAI(topic, trendingContext, 2);
+      const retry = await callOpenAI(topic, trendingContext, guidelines, 2);
       const retryContent = (retry.content ?? retry.markdown ?? "").trim();
       if (!retryContent) {
         throw new Error("Model returned empty content on retry");
@@ -277,17 +307,23 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    await sb
-      .from("blog_topics_queue")
-      .update({ status: "done", scheduled_for: null })
-      .eq("id", topic.id);
+    // Only update queue if we used a topic from the queue
+    if (shouldUpdateQueue && topic.id) {
+      await sb
+        .from("blog_topics_queue")
+        .update({ status: "done", scheduled_for: null })
+        .eq("id", topic.id);
+    }
 
     return NextResponse.json({ ok: true, post: data });
   } catch (error: any) {
-    await sb
-      .from("blog_topics_queue")
-      .update({ status: "error" })
-      .eq("id", topic.id);
+    // Only update queue if we used a topic from the queue
+    if (shouldUpdateQueue && topic && topic.id) {
+      await sb
+        .from("blog_topics_queue")
+        .update({ status: "error" })
+        .eq("id", topic.id);
+    }
     return NextResponse.json({ error: error?.message ?? "Generation failed" }, { status: 500 });
   }
 }
