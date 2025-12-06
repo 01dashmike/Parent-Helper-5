@@ -1,8 +1,7 @@
 "use client";
 
-import { forwardRef, ElementType, ComponentPropsWithoutRef } from "react";
+import { forwardRef, ElementType } from "react";
 import { cn } from "@/lib/utils";
-import type { HTMLMotionProps, MotionProps } from "framer-motion";
 
 export interface CardContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -37,15 +36,15 @@ export interface CardContainerProps extends React.HTMLAttributes<HTMLDivElement>
   /**
    * Motion props (for framer-motion components passed via `as`)
    */
-  initial?: MotionProps["initial"];
-  animate?: MotionProps["animate"];
-  exit?: MotionProps["exit"];
-  transition?: MotionProps["transition"];
-  whileHover?: MotionProps["whileHover"];
-  whileTap?: MotionProps["whileTap"];
-  whileInView?: MotionProps["whileInView"];
-  viewport?: MotionProps["viewport"];
-  variants?: MotionProps["variants"];
+  initial?: unknown;
+  animate?: unknown;
+  exit?: unknown;
+  transition?: unknown;
+  whileHover?: unknown;
+  whileTap?: unknown;
+  whileInView?: unknown;
+  viewport?: unknown;
+  variants?: unknown;
   [key: string]: unknown;
 }
 
@@ -123,32 +122,28 @@ export const CardContainer = forwardRef<HTMLDivElement, CardContainerProps>(
         event.preventDefault();
         // Create a synthetic mouse event for onClick
         const syntheticEvent = new MouseEvent("click", { bubbles: true, cancelable: true });
-        onClick(syntheticEvent as unknown as React.MouseEvent<HTMLElement, MouseEvent>);
+        onClick(syntheticEvent as unknown as React.MouseEvent<HTMLElement>);
       }
       onKeyDown?.(event);
     };
 
-    const componentProps = {
-      role: interactive ? "button" : undefined,
-      "aria-label": interactive && ariaLabel ? ariaLabel : undefined,
-      tabIndex: interactive ? 0 : undefined,
-      onClick,
-      onKeyDown: handleKeyDown,
-      className: cn(
-        baseClasses,
-        variantClasses[variant || "default"],
-        bgClasses[bgVariant || "white"],
-        interactiveClasses,
-        selectedClasses,
-        className
-      ),
-      ...props,
-    } as ComponentPropsWithoutRef<ElementType>;
-
     return (
       <Component
         ref={ref}
-        {...componentProps}
+        role={interactive ? "button" : undefined}
+        aria-label={interactive && ariaLabel ? ariaLabel : undefined}
+        tabIndex={interactive ? 0 : undefined}
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
+        className={cn(
+          baseClasses,
+          variantClasses[variant || "default"],
+          bgClasses[bgVariant || "white"],
+          interactiveClasses,
+          selectedClasses,
+          className
+        )}
+        {...props}
       >
         {children}
       </Component>
