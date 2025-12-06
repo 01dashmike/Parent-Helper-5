@@ -72,7 +72,7 @@ const ResultCard = memo(function ResultCard({
   type SearchResultWithExtras = typeof result & { distanceKm?: number; nextSession?: { start_time?: string | null } | null };
   const resultWithExtras = result as SearchResultWithExtras;
   const distanceKm = resultWithExtras.distanceKm;
-  const nextSession = resultWithExtras.nextSession;
+  const nextSession = resultWithExtras.nextSession?.start_time;
   const distanceText = distanceKm !== undefined ? `${distanceKm.toFixed(1)} km away` : null;
 
   return (
@@ -179,12 +179,12 @@ const ResultCard = memo(function ResultCard({
 ResultCard.displayName = "ResultCard";
 
 interface ResultsSplitProps {
-  results: ClassResult[];
+  results?: ClassResult[];
   onResetFilters?: () => void;
   loading?: boolean;
 }
 
-export default function ResultsSplit({ results, onResetFilters }: ResultsSplitProps): React.ReactNode {
+export default function ResultsSplit({ results = [], onResetFilters }: ResultsSplitProps): React.ReactNode {
   const [selectedId, setSelectedId] = useState<number | string | null>(null);
   const [hoveredId, setHoveredId] = useState<number | string | null>(null);
   const searchParams = useSearchParams();

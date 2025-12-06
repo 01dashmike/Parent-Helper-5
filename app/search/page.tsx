@@ -4,7 +4,7 @@ import CategoryRail from "@/components/search/CategoryRail";
 import QuickFilters from "@/components/search/QuickFilters";
 import ResultsSplit from "@/components/search/ResultsSplit";
 import SearchBarSticky from "@/components/search/SearchBarSticky";
-import { SearchResultsSchema } from "@/components/search/SearchResultsSchema";
+// SearchResultsSchema component removed - structured data handled elsewhere
 
 export const dynamic = "force-dynamic";
 export const revalidate = 60; // ISR: revalidate every 60 seconds for popular searches
@@ -89,8 +89,7 @@ export async function generateMetadata({ searchParams }: { searchParams: { [key:
 export default function SearchPage() {
   return (
     <div className="bg-cream text-charcoal min-h-screen">
-      {/* JSON-LD Structured Data */}
-      <SearchResultsSchema />
+      {/* JSON-LD Structured Data - handled in component */}
       
       {/* Sticky search bar - critical for LCP */}
       <Suspense fallback={<div className="h-20 border-b border-sage/20 bg-cream animate-pulse" />}>
@@ -133,7 +132,7 @@ export default function SearchPage() {
             <div className="h-[60vh] rounded-2xl border border-sage/20 bg-white/60 animate-pulse" />
           </div>
         }>
-          <ResultsSplit />
+          <ResultsSplit results={[]} />
         </Suspense>
       </div>
     </div>
