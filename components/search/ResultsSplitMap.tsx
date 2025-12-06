@@ -1,7 +1,7 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { memo } from "react";
+import MapboxStaticPreview from "./MapboxStaticPreview";
 
 type MapPoint = {
   id: string | number;
@@ -9,6 +9,7 @@ type MapPoint = {
   lng: number;
   name: string;
   venue?: string;
+  distance?: number | null;
 };
 
 type Props = {
@@ -19,26 +20,30 @@ type Props = {
 
 export type { MapPoint };
 
-export default function ResultsSplitMap({ points, center, zoom = 11 }: Props) {
-  const fallbackCenter: [number, number] = [51.5074, -0.1278];
-  const initialCenter: [number, number] =
-    center ?? (points.length ? [points[0].lat, points[0].lng] : fallbackCenter);
-
+/**
+ * Map component using Mapbox Static Images API
+ * React 19 compatible - displays static map preview instead of interactive map
+ */
+const ResultsSplitMap = memo(function ResultsSplitMap({ 
+  points, 
+  center, 
+  zoom = 13 
+}: Props): React.ReactNode {
   return (
-    <MapContainer center={initialCenter} zoom={zoom} style={{ height: "100%", width: "100%" }}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
+    <div className="h-full w-full" style={{ minHeight: "300px" }}>
+      <MapboxStaticPreview
+        points={points}
+        center={center}
+        zoom={zoom}
+        width={800}
+        height={600}
+        className="w-full h-full object-cover"
       />
-
-      {points.map((point) => (
-        <Marker key={point.id} position={[point.lat, point.lng]}>
-          <Popup>
-            <strong>{point.name}</strong>
-            {point.venue ? <div>{point.venue}</div> : null}
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    </div>
   );
-}
+});
+
+// Export MapPane as an alias for ResultsSplitMap for backward compatibility
+export const MapPane = ResultsSplitMap;
+
+export default ResultsSplitMap;

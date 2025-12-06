@@ -1,5 +1,7 @@
 # Parent Helper App (Next.js App Router)
 
+[![CI](https://github.com/01dashmike/parent-helper-app/actions/workflows/ci.yml/badge.svg)](https://github.com/01dashmike/parent-helper-app/actions/workflows/ci.yml)
+
 Parent Helper connects UK families with thousands of verified baby and toddler activities. The project now runs entirely on the Next.js App Router, pairing server-rendered React components with modern data fetching, while retaining the rich dataset, Supabase integrations, and automation tooling that power the platform.
 
 ## Features
@@ -27,24 +29,39 @@ Parent Helper connects UK families with thousands of verified baby and toddler a
 ## Quick Start
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 - The app boots at http://localhost:3000 with hot reloading.
 - API routes live under `app/api/*` and share types with `/shared/schema.ts`.
 
+## Development Scripts
+
+```bash
+pnpm dev          # Start development server
+pnpm build        # Build for production
+pnpm start        # Serve production build
+pnpm lint         # Run ESLint
+pnpm typecheck    # Run TypeScript type checking
+pnpm check        # Run lint + typecheck
+pnpm test         # Run unit tests
+pnpm test:watch   # Run tests in watch mode
+pnpm test:e2e     # Run end-to-end tests
+pnpm test:full    # Run all tests (unit + e2e)
+```
+
 ## Build & Deploy
 
 ```bash
-npm run build
-npm start            # serves the production build with next start
+pnpm build
+pnpm start            # serves the production build with next start
 ```
 
 For Railway or other container hosts you can use the bundled helper script:
 
 ```bash
-npm run railway-build  # installs dependencies and runs next build
+pnpm run railway-build  # installs dependencies and runs next build
 ```
 
 ## Environment Setup
@@ -60,6 +77,28 @@ Create a `.env.local` (or project-level secrets in your hosting platform) with t
 - `DATABASE_URL` (optional, used for schema repair scripts and direct SQL access)
 
 Stripe, SendGrid, and other integrations still require their respective keys (`STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `SENDGRID_API_KEY`, etc.). Many automation scripts under `/server` and `/scripts` expect the same variables—review each script before running it against production data.
+
+### Feature Flags
+
+- `NEXT_PUBLIC_WELLNESS_ENABLED` (default: `true`) - Controls visibility of the "Health & Wellness" navigation menu and wellness hub pages. Set to `"false"` to hide the wellness section.
+- `NEXT_PUBLIC_ACCOUNT_ENABLED` (default: `true`) - Controls visibility of the account area (`/account`). Set to `"false"` to disable the members area.
+- `NEXT_PUBLIC_EXPERIMENTS_ENABLED` (default: `false`) - Enables A/B testing for hero copy and CTA placement. Set to `"true"` to enable experiments.
+- `NEXT_PUBLIC_MEMBERS_ENABLED` (default: `true`) - Enables the expanded Members Area with saved searches, alerts, and enhanced dashboard. Set to `"false"` to disable members features.
+- `PROVIDER_ANALYTICS_ENABLED` or `NEXT_PUBLIC_PROVIDER_ANALYTICS_ENABLED` (default: `false`) - Enables provider analytics dashboard with metrics, charts, and weekly email digests. Set to `"true"` to enable.
+- `BULK_SCHEDULING_ENABLED` or `NEXT_PUBLIC_BULK_SCHEDULING_ENABLED` (default: `false`) - Enables bulk scheduling feature for providers to create repeated class occurrences quickly. Set to `"true"` to enable.
+- `FAMILY_WALLET_ENABLED` or `NEXT_PUBLIC_FAMILY_WALLET_ENABLED` (default: `false`) - Enables Family Wallet system allowing parents, grandparents, and guardians to share booking credits, manage household members, and gift points. Set to `"true"` to enable.
+- `GROWTH_AUTOMATION_DASHBOARD_ENABLED` or `NEXT_PUBLIC_GROWTH_AUTOMATION_DASHBOARD_ENABLED` (default: `false`) - Enables the Growth Automation Control Center for admins with AI insights, automated provider reports, and performance coaching. Set to `"true"` to enable.
+- `PROVIDER_PAYOUTS_ENABLED` (default: `false`) - Enables provider payout reconciliation dashboard with Stripe integration, booking matching, and monthly summary emails. Set to `"true"` to enable.
+- `CRON_SECRET` (optional) - Secret token for securing the `/api/cron/check-alerts`, `/api/cron/provider-metrics-digest`, `/api/cron/provider-payout-summary`, `/api/cron/update-loyalty-tiers`, and `/api/cron/provider-weekly-growth` endpoints. Set this when configuring cron jobs.
+- `TRACKING_ENABLED` or `NEXT_PUBLIC_TRACKING_ENABLED` (default: `false`) - Enables lightweight analytics tracking for personalized experiences. Set to `"true"` to enable.
+- `ANALYTICS_RETENTION_ENABLED` (default: `false`) - Enables engagement score calculation and retention intelligence. Set to `"true"` to enable.
+- `REACTIVATION_EMAILS_ENABLED` (default: `false`) - Enables automated reactivation emails for inactive families. Set to `"true"` to enable.
+- `PERSONALIZATION_ENABLED` or `NEXT_PUBLIC_PERSONALIZATION_ENABLED` (default: `false`) - Enables AI personalisation with family profiles, recommendations, and tailored newsletters. Set to `"true"` to enable.
+- `AUTO_RECS_ON_SIGNIN` (default: `false`) - Automatically build recommendations when user signs in. Set to `"true"` to enable.
+- `NEWSLETTER_ENABLED` (default: `false`) - Enables weekly tailored newsletters. Set to `"true"` to enable.
+- `RECS_WEIGHTS` (optional) - JSON string with recommendation weights: `'{"w_age_fit":0.35,"w_distance":0.2,"w_pop":0.2,"w_quality":0.2,"w_novelty":0.05}'`
+- `RECS_MAX_RADIUS_KM` (default: `20`) - Maximum radius in km for location-based recommendations.
+- `NEWSLETTER_BATCH_SIZE` (default: `500`) - Number of newsletters to send per batch.
 
 ### SendGrid & Email Configuration
 
@@ -130,6 +169,34 @@ logSearch({
 
 Events are batched (500ms debounce) and sent to `/api/analytics`, which stores them in Supabase with RLS policies preventing public writes.
 
+### Analytics & Retention
+
+Parent Helper includes analytics and retention intelligence to measure family engagement and automatically re-engage lapsed users:
+
+- **Lightweight Tracking**: Fire-and-forget event tracking using `sendBeacon` API
+- **Engagement Scores**: Calculated loyalty scores (0-100) based on visits, recommendations clicked, conversions, and session time
+- **Retention Automation**: Weekly reactivation emails to inactive families
+- **Admin Dashboard**: View metrics at `/admin/analytics`
+
+#### Usage
+
+```typescript
+import { track, trackEvents } from "@/lib/analytics-track";
+
+// Track custom events
+track("custom_event", { property: "value" });
+
+// Use convenience functions
+trackEvents.recommendationClick(classId);
+trackEvents.bookingCompleted(classId, amount);
+trackEvents.onboardingCompleted();
+```
+
+#### Retention Functions
+
+- **Calculate Engagement Scores**: `POST /api/retention/calculate-engagement` (run nightly via cron)
+- **Send Reactivation Emails**: `POST /api/retention/send-reactivation` (run weekly via cron)
+
 ### Admin Dashboard
 View anonymized insights at `/admin/insights`:
 - Top searched categories
@@ -157,11 +224,84 @@ This analytics implementation complies with:
 
 No cookie banner required as we don't use cookies for tracking.
 
+### Provider Growth Score System
+
+Parent Helper includes a comprehensive Provider Growth Score system that helps providers understand their performance and receive AI-powered recommendations.
+
+#### Overview
+
+The Provider Growth Score is a composite metric (0-100) that combines:
+- **40%** Booking growth (vs previous week)
+- **25%** Conversion rate (bookings/views)
+- **20%** Profile completeness
+- **15%** Review average
+
+#### Architecture
+
+```
+Metrics Collection → Score Calculation → AI Suggestions → Weekly Email → Dashboard Display
+```
+
+1. **Metrics Collection**: Weekly aggregation of views, bookings, reviews, and profile data
+2. **Score Calculation**: Weighted composite score normalized to 0-100
+3. **AI Suggestions**: OpenAI-powered "Next Best Action" recommendations
+4. **Weekly Email**: A/B tested engagement emails sent every Sunday
+5. **Dashboard Display**: Real-time growth score visualization on provider dashboard
+
+#### Database Schema
+
+- `provider_growth_score`: Stores weekly scores, metrics, and AI suggestions
+- `provider_email_tests`: Tracks A/B test variants and email performance
+
+#### Weekly Automation
+
+The system runs automatically every Sunday at 03:00 UTC via cron job:
+
+```bash
+# Cron command (set up in your hosting provider)
+0 3 * * 0 curl -X POST https://your-domain.com/api/cron/provider-weekly-growth \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+#### A/B Testing
+
+Email variants are automatically assigned based on provider ID:
+- **Variant A**: "Your Parent Helper Growth Report"
+- **Variant B**: "See how your classes performed this week"
+
+Open rates and click rates are tracked in `provider_email_tests` for analysis.
+
+#### Dashboard Integration
+
+Providers can view their growth score at `/provider`:
+- Visual score ring (0-100)
+- Week-over-week comparison
+- Metric breakdown
+- AI "Next Best Action" suggestion
+- "Improve Your Score" checklist
+
+#### API Endpoints
+
+- `GET /api/provider/growth-score` - Get current provider's growth score
+- `POST /api/cron/provider-weekly-growth` - Weekly calculation job (requires CRON_SECRET)
+
+#### Testing
+
+Unit tests verify score calculation logic:
+```bash
+pnpm test -- provider-growth-score.test.ts
+```
+
+E2E tests verify dashboard display and email delivery:
+```bash
+pnpm test:e2e -- provider-growth-score.spec.ts
+```
+
 ## Deployment Notes
 
 1. Set environment variables in your hosting provider (Vercel, Railway, Render, etc.).
-2. Run `npm run build` during the build phase (or `npm run railway-build`).
-3. Launch with `npm start` (Next will default to port 3000; adjust with `PORT` if required).
+2. Run `pnpm build` during the build phase (or `pnpm run railway-build`).
+3. Launch with `pnpm start` (Next will default to port 3000; adjust with `PORT` if required).
 4. Enable connection pooling (e.g., Neon + PgBouncer) for Supabase/Postgres when running at scale.
 
 The Parent Helper Next.js implementation is production-ready and replaces the previous Express frontend stack while preserving all core features and automation workflows.

@@ -1,14 +1,34 @@
 "use client";
 
-import { useEffect, useCallback, useState, type FormEventHandler } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { FormProvider } from "react-hook-form";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/formfield";
+import { Input } from "@/components/ui/input";
+import { isNewsletterEnabled } from "@/lib/env";
 
 const STORAGE_KEY = "newsletterDismissed";
 
+const newsletterFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+type NewsletterFormData = z.infer<typeof newsletterFormSchema>;
+
+// Helper to check if we're in browser environment
+function isBrowser(): boolean {
+  return typeof window !== "undefined";
+}
+
 function shouldShowModal(): boolean {
-  if (typeof window === "undefined") return false;
+  if (!isBrowser()) return false;
   try {
     return window.localStorage.getItem(STORAGE_KEY) !== "true";
-  } catch (error) {
+  } catch {
     return true;
   }
 }
@@ -16,18 +36,28 @@ function shouldShowModal(): boolean {
 export default function NewsletterModal() {
   const [open, setOpen] = useState(false);
 
+  const form = useForm<NewsletterFormData>({
+    resolver: zodResolver(newsletterFormSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
   const close = useCallback(() => {
     setOpen(false);
-    if (typeof window !== "undefined") {
+    form.reset();
+    if (isBrowser()) {
       try {
         window.localStorage.setItem(STORAGE_KEY, "true");
-      } catch (error) {
+      } catch {
         // ignore storage errors
       }
     }
-  }, []);
+  }, [form]);
 
   useEffect(() => {
+    // Only show modal if newsletter feature is enabled
+    if (!isBrowser() || !isNewsletterEnabled()) return;
     if (!shouldShowModal()) return;
 
     const timer = window.setTimeout(() => setOpen(true), 5000);
@@ -47,15 +77,17 @@ export default function NewsletterModal() {
       window.clearTimeout(timer);
       window.removeEventListener("scroll", handleScroll);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Reason: effect should only run once on mount to set up scroll listener
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!isBrowser()) return;
 
     const handleManualOpen = () => {
       try {
         window.localStorage.removeItem(STORAGE_KEY);
-      } catch (error) {
+      } catch {
         // ignore storage errors
       }
       setOpen(true);
@@ -65,53 +97,52 @@ export default function NewsletterModal() {
     return () => {
       window.removeEventListener("newsletter:open", handleManualOpen);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Reason: effect should only run once on mount to set up custom event listener
   }, []);
 
-  if (!open) return null;
-
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
+  const onSubmit = async (_data: NewsletterFormData) => {
+    // Handle newsletter subscription
+    // This would typically call an API endpoint
     close();
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-charcoal/40 px-4 py-10 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-xl bg-cream p-8 shadow-xl">
-        <button
-          type="button"
-          onClick={close}
-          className="absolute right-5 top-5 text-sm text-charcoal/50 transition hover:text-charcoal"
-          aria-label="Close newsletter sign-up"
-        >
-          ✕
-        </button>
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-charcoal">
-            Join the Parent Helper Family
-          </h2>
-          <p className="text-charcoal/70">
-            Weekly inspiration, gentle reminders, and curated activities for your family inbox.
-          </p>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <label className="block text-sm font-medium text-charcoal">
-              Email address
-              <input
-                type="email"
-                name="email"
+    <Modal
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen) close();
+      }}
+      title="Join the Parent Helper Family"
+      description="Weekly inspiration, gentle reminders, and curated activities for your family inbox."
+      size="lg"
+      overlayClassName="z-[120]"
+    >
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                label="Email address"
                 required
-                className="mt-2 w-full rounded-full border border-sage/30 px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/40 focus:border-sage focus:outline-none focus:ring-0"
-                placeholder="you@example.com"
-              />
-            </label>
-            <button
-              type="submit"
-              className="w-full rounded-full bg-sage px-5 py-3 text-sm font-semibold text-white transition hover:bg-sage/90 hover:text-[#C97C5C]"
-            >
-              Sign me up
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+                error={form.formState.errors.email?.message}
+                id="newsletter-email"
+              >
+                <Input
+                  {...form.register("email")}
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              </FormField>
+              <Button
+                type="submit"
+                size="lg"
+                variant="default"
+                className="w-full"
+              >
+                Sign me up
+              </Button>
+            </form>
+          </FormProvider>
+    </Modal>
   );
 }

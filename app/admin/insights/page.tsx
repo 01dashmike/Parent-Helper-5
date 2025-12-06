@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import InsightsDashboard from "@/components/admin/InsightsDashboard";
+import { requireAdminServerComponent } from "@/lib/admin/auth-improved";
 
 export const metadata: Metadata = {
   title: "Analytics Insights | Parent Helper Admin",
@@ -16,6 +17,7 @@ const supabase = createClient(
 
 // Server Component - fetches data
 export default async function InsightsPage() {
+  await requireAdminServerComponent();
   const days = 30;
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);

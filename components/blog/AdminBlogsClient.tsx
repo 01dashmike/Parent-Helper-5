@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
 import AdminEditorDrawer from "./AdminEditorDrawer";
+import { EmptyState } from "@/components/ui/emptystate";
 
 interface PostRecord {
   id: string;
@@ -27,7 +28,7 @@ interface Props {
 export default function AdminBlogsClient({ posts }: Props) {
   const router = useRouter();
   const [filterStatus, setFilterStatus] = useState<string>("draft");
-  const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const [selectedPost, setSelectedPost] = useState<PostRecord | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -39,46 +40,65 @@ export default function AdminBlogsClient({ posts }: Props) {
 
   const publishPost = (id: string) => {
     startTransition(async () => {
-      const response = await fetch("/api/blog/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "publish", id }),
-      });
-      if (!response.ok) {
-        console.error("Failed to publish post", await response.text());
-        return;
+      try {
+        const response = await fetch("/api/blog/admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "publish", id }),
+        });
+        if (!response.ok) {
+          console.error("Failed to publish post", await response.text());
+          return;
+        }
+        router.refresh();
+      } catch (err) {
+        console.error("Error publishing post:", err);
       }
-      router.refresh();
     });
   };
 
   const handleDelete = async (id: string) => {
-    const response = await fetch("/api/blog/admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", id }),
-    });
-    if (!response.ok) {
-      console.error("Failed to delete post", await response.text());
-      return;
+    try {
+      const response = await fetch("/api/blog/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id }),
+      });
+      if (!response.ok) {
+        console.error("Failed to delete post", await response.text());
+        return;
+      }
+      setDrawerOpen(false);
+      router.refresh();
+    } catch (err) {
+      console.error("Error deleting post:", err);
     }
-    setDrawerOpen(false);
-    router.refresh();
   };
 
-  const handleSave = async (updates: any) => {
+  const handleSave = async (updates: Partial<PostRecord>) => {
     if (!selectedPost) return;
-    const response = await fetch("/api/blog/admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "update", id: selectedPost.id, updates }),
-    });
-    if (!response.ok) {
-      console.error("Failed to save post", await response.text());
-      return;
+    try {
+      const response = await fetch("/api/blog/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", id: selectedPost.id, updates }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to save post", errorText);
+        throw new Error(errorText || "Failed to save post");
+      }
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error("Save failed");
+      }
+      setDrawerOpen(false);
+      setSelectedPost(null);
+      router.refresh();
+    } catch (err) {
+      console.error("Error saving post:", err);
+      throw err; // Re-throw so AdminEditorDrawer can handle it
     }
-    setDrawerOpen(false);
-    router.refresh();
   };
 
   return (
@@ -90,12 +110,12 @@ export default function AdminBlogsClient({ posts }: Props) {
           <option value="scheduled">Scheduled</option>
           <option value="published">Published</option>
         </select>
-        {isPending && <span className="text-sm text-slateSoft">Updating…</span>}
+        {isPending && <span className="text-small text-slateSoft">Updating…</span>}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-sage/20 bg-white">
-        <table className="min-w-full divide-y divide-sage/20 text-left text-sm">
-          <thead className="bg-cream/70 text-slateSoft">
+      <div className="overflow-x-auto rounded-2xl border border-accent/20 bg-white">
+        <table className="min-w-full divide-y divide-accent/20 text-left text-small">
+          <thead className="bg-surface/70 text-slateSoft">
             <tr>
               <th className="px-4 py-3">Title</th>
               <th className="px-4 py-3">Status</th>
@@ -106,10 +126,10 @@ export default function AdminBlogsClient({ posts }: Props) {
           </thead>
           <tbody className="divide-y divide-sage/10">
             {filtered.map((post) => (
-              <tr key={post.id} className="hover:bg-cream/60">
+              <tr key={post.id} className="hover:bg-surface/60">
                 <td className="px-4 py-3">
-                  <div className="font-semibold text-charcoal">{post.title}</div>
-                  {post.excerpt && <p className="text-xs text-slateSoft line-clamp-1">{post.excerpt}</p>}
+                  <div className="font-semibold text-primary">{post.title}</div>
+                  {post.excerpt && <p className="text-small text-slateSoft line-clamp-1">{post.excerpt}</p>}
                 </td>
                 <td className="px-4 py-3 capitalize">{post.status}</td>
                 <td className="px-4 py-3">{post.category}</td>
@@ -118,19 +138,21 @@ export default function AdminBlogsClient({ posts }: Props) {
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
-                      className="rounded-full border border-sage px-3 py-1 text-xs text-sage transition hover:bg-sage/10"
+                      className="rounded-full border border-accent px-3 py-1 text-small text-accent transition hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2"
                       onClick={() => {
                         setSelectedPost(post);
                         setDrawerOpen(true);
                       }}
+                      aria-label={`Edit ${post.title}`}
                     >
                       Edit
                     </button>
                     {post.status !== "published" && (
                       <button
                         type="button"
-                        className="rounded-full bg-sage px-3 py-1 text-xs font-medium text-white transition hover:bg-sage/90 hover:text-[#C97C5C]"
+                        className="rounded-full bg-accent px-3 py-1 text-small font-medium text-white transition hover:bg-accent/90 hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2"
                         onClick={() => publishPost(post.id)}
+                        aria-label={`Approve and publish ${post.title}`}
                       >
                         Approve
                       </button>
@@ -141,14 +163,32 @@ export default function AdminBlogsClient({ posts }: Props) {
             ))}
           </tbody>
         </table>
+        {filtered.length === 0 && (
+          <div className="p-8">
+            <EmptyState
+              title="No posts found"
+              description={filterStatus ? `No posts found with status "${filterStatus}".` : "No posts found."}
+              iconVariant="inbox"
+              size="default"
+            />
+          </div>
+        )}
       </div>
 
       <AdminEditorDrawer
         open={drawerOpen}
         post={selectedPost}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedPost(null);
+        }}
         onSave={handleSave}
         onDelete={handleDelete}
+        onPostGenerated={(newPost) => {
+          // Update selected post and refresh list
+          setSelectedPost(newPost as PostRecord);
+          router.refresh();
+        }}
       />
     </div>
   );

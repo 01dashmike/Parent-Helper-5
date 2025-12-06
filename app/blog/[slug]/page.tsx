@@ -103,7 +103,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       ) : null}
       <div className="relative h-64 w-full md:h-80">
         <Image
-          src={post.hero_image || "/images/categories/arts.jpg"}
+          src={post.hero_image || "/images/categories/arts.webp"}
           alt={post.title}
           fill
           priority

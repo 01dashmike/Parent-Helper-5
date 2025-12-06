@@ -1,10 +1,18 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
+import { useState, useRef, useEffect, useMemo, type MouseEvent, type CSSProperties } from "react";
 import { motion } from "framer-motion";
+import { motionTokens } from "@/lib/motion/tokens";
+import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { safeImage } from "@/lib/images";
+import LinkComponent from "@/components/ui/link";
+import { IconButton } from "@/components/ui/buttons";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, Close, Menu as MenuIcon } from "@/components/icons";
+import { iconSize } from "@/lib/icons/tokens";
 
 type NavItem = {
   label: string;
@@ -12,6 +20,9 @@ type NavItem = {
   dropdown?: Array<{ label: string; href: string }>;
   newsletter?: boolean;
 };
+
+const WELLNESS_ENABLED =
+  process.env.NEXT_PUBLIC_WELLNESS_ENABLED !== "false";
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/" },
@@ -25,6 +36,20 @@ const NAV_ITEMS: NavItem[] = [
       { label: "FAQs", href: "/faqs" },
     ],
   },
+  ...(WELLNESS_ENABLED
+    ? [
+      {
+        label: "Health & Wellness",
+        href: "/wellness",
+        dropdown: [
+          { label: "Mum", href: "/wellness/mum" },
+          { label: "Dad", href: "/wellness/dad" },
+          { label: "Family", href: "/wellness/family" },
+          { label: "Grandparents", href: "/wellness/grandparents" },
+        ],
+      },
+    ]
+    : []),
   { label: "About Us", href: "/about" },
   { label: "Newsletter", href: "#newsletter", newsletter: true },
   { label: "Contact", href: "/contact" },
@@ -32,8 +57,12 @@ const NAV_ITEMS: NavItem[] = [
 
 const ProviderLogin = {
   label: "Provider Login",
-  href: "/providers/login",
+  href: "/provider/login",
 };
+
+const SHOW_ADMIN_LINK =
+  process.env.NEXT_PUBLIC_SHOW_ADMIN_LINK === "true" ||
+  process.env.NODE_ENV === "development";
 
 function normalizePath(path: string) {
   return path.split("?")[0].split("#")[0];
@@ -61,6 +90,7 @@ export default function Header() {
   const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null);
   const closeTimeout = useRef<NodeJS.Timeout | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const clearCloseTimeout = () => {
     if (closeTimeout.current) {
@@ -80,7 +110,7 @@ export default function Header() {
   };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") return; // Keep direct check for Header since it's already client-only
 
     const handleScroll = () => setScrolled(window.scrollY > 10);
     handleScroll();
@@ -92,8 +122,8 @@ export default function Header() {
   }, []);
 
   const headerClasses = scrolled
-    ? "bg-white shadow-md border-[#DAD7D0]"
-    : "bg-[#E7E5E0] border-[#DAD7D0]";
+    ? "bg-white shadow-md border-border-light"
+    : "bg-cream-light border-border-light";
 
   const activeMap = useMemo(() => {
     const map = new Map<string, boolean>();
@@ -132,6 +162,7 @@ export default function Header() {
   ) => {
     event?.preventDefault();
     if (typeof window !== "undefined") {
+      // Keep direct check here since Header is already client-only
       window.dispatchEvent(new CustomEvent("newsletter:open", { detail: { source: "header" } }));
     }
 
@@ -143,46 +174,60 @@ export default function Header() {
 
   return (
     <motion.header
-      className={`fixed top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300 ${headerClasses}`}
-      initial={{ opacity: 0, y: -10 }}
+      className={cn("fixed top-0 z-50 w-full border-b backdrop-blur-md transition-slow motion-reduce:transition-none", headerClasses)}
+      initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: motionTokens.slow, ease: motionTokens.easeOut }}
     >
       <div className="section flex items-center justify-between gap-4 px-4 py-3 md:py-4">
         {/* Left: Logo */}
-        <Link href="/" aria-label="Parent Helper home" className="flex items-center">
+        <LinkComponent 
+          href="/" 
+          aria-label="Parent Helper home" 
+          className="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
+          tabIndex={0}
+        >
           <motion.div
-            whileHover={{ scale: 1.05, rotate: -2 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.05, rotate: -2 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { type: "spring", stiffness: 200, damping: 15 }}
             className="cursor-pointer"
           >
-            <Image
-              src="/images/logo.png"
-              alt="Parent Helper"
-              width={80}
-              height={80}
-              priority
-              className="h-12 w-auto transition-transform duration-300 md:h-14"
-            />
+            {(() => {
+              const { src, alt } = safeImage({ src: "/images/logo.png", alt: "Parent Helper" });
+              return (
+                <Image
+                  src={src}
+                  alt={alt}
+                  width={80}
+                  height={80}
+                  priority
+                  className="h-12 w-auto motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-in-out motion-reduce:transition-none md:h-14"
+                />
+              );
+            })()}
           </motion.div>
-        </Link>
+        </LinkComponent>
 
         {/* Center navigation */}
-        <nav className="ml-4 hidden items-center gap-6 md:ml-10 md:flex">
+        <nav aria-label="Main navigation" className="ml-4 hidden items-center gap-6 md:ml-10 md:flex">
           {NAV_ITEMS.map((item) => {
             const active = activeMap.get(item.label);
             const hasDropdown = Boolean(item.dropdown);
 
             if (item.newsletter) {
               return (
-                <button
+                <Button
                   key={item.label}
                   type="button"
                   onClick={(event) => handleNewsletterClick(event)}
-                  className="text-sm text-charcoal/80 transition-colors hover:text-sage"
+                  size="default"
+                  variant="ghost"
+                  className="text-charcoal/80 hover:text-sage"
+                  aria-label={`${item.label} - Open newsletter signup`}
+                  tabIndex={0}
                 >
                   {item.label}
-                </button>
+                </Button>
               );
             }
 
@@ -195,51 +240,41 @@ export default function Header() {
                 onMouseEnter={hasDropdown ? () => handleDesktopEnter(item.label) : undefined}
                 onMouseLeave={hasDropdown ? handleDesktopLeave : undefined}
               >
-                <Link
+                <LinkComponent
                   href={item.href}
-                  className={`inline-flex items-center gap-1 text-sm transition-colors ${
-                    active
-                      ? "font-semibold text-sage"
-                      : "text-charcoal/80 hover:text-sage"
-                  }`}
+                  className={cn(
+                    "inline-flex items-center gap-1 text-small transition-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2",
+                    active ? "font-semibold text-sage" : "text-charcoal/80 hover:text-sage"
+                  )}
+                  tabIndex={0}
+                  aria-expanded={hasDropdown ? isDropdownOpen : undefined}
+                  aria-haspopup={hasDropdown ? "true" : undefined}
                 >
                   {item.label}
                   {hasDropdown && (
-                    <svg
-                      aria-hidden
-                      viewBox="0 0 12 12"
-                      className="h-3 w-3 text-current"
-                    >
-                      <path
-                        d="M2 4.5L6 8l4-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <ChevronDown size={iconSize.sm} className="" aria-hidden="true" focusable="false" />
                   )}
-                </Link>
+                </LinkComponent>
 
                 {hasDropdown && item.dropdown && (
                   <motion.div
                     className="absolute left-1/2 top-full z-40 mt-3 w-52 -translate-x-1/2"
                     initial={{ opacity: 0, y: 8, pointerEvents: "none" }}
                     animate={isDropdownOpen ? { opacity: 1, y: 0, pointerEvents: "auto" } : { opacity: 0, y: 8, pointerEvents: "none" }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: motionTokens.fast }}
                     onMouseEnter={() => handleDesktopEnter(item.label)}
                     onMouseLeave={handleDesktopLeave}
                   >
                     <div className="overflow-hidden rounded-xl border border-sage/25 bg-cream py-2 shadow-lg">
                       {item.dropdown.map((link) => (
-                        <Link
+                        <LinkComponent
                           key={link.href}
                           href={link.href}
-                          className="block px-4 py-2 text-sm text-charcoal/80 transition-colors hover:bg-sage/10 hover:text-sage"
+                          className="block px-4 py-2 text-small text-charcoal/80 transition-standard hover:bg-sage/10 hover:text-sage focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
+                          tabIndex={0}
                         >
                           {link.label}
-                        </Link>
+                        </LinkComponent>
                       ))}
                     </div>
                   </motion.div>
@@ -251,46 +286,47 @@ export default function Header() {
 
         {/* Right CTA + mobile toggle */}
         <div className="flex items-center gap-3">
-          <Link
+          <LinkComponent
+            href={`/admin?key=${process.env.NEXT_PUBLIC_ADMIN_KEY || "your-admin-cookie"}`}
+            className="hidden text-small text-text-tertiary transition-standard hover:text-sage md:inline-flex"
+            style={
+              (SHOW_ADMIN_LINK ? undefined : { display: "none" }) as CSSProperties | undefined
+            }
+            aria-hidden={SHOW_ADMIN_LINK ? undefined : true}
+            tabIndex={SHOW_ADMIN_LINK ? undefined : -1}
+            data-visible={SHOW_ADMIN_LINK ? "true" : "false"}
+          >
+            Admin
+          </LinkComponent>
+          <LinkComponent
             href={ProviderLogin.href}
-            className="hidden items-center rounded-full bg-sage px-4 py-1.5 text-sm font-medium text-white transition hover:bg-sage/90 hover:text-[#C97C5C] md:inline-flex"
+            className="hidden items-center rounded-full bg-sage px-4 py-1.5 text-small font-medium text-white transition-standard hover:bg-sage/90 hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2 md:inline-flex"
+            tabIndex={0}
           >
             {ProviderLogin.label}
-          </Link>
+          </LinkComponent>
 
-          <button
-            type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-sage/40 bg-white text-charcoal transition-colors hover:border-sage md:hidden"
-            onClick={toggleMobile}
+          <IconButton
+            icon={
+              mobileOpen ? (
+                <Close size={iconSize.md} aria-hidden="true" />
+              ) : (
+                <MenuIcon size={iconSize.md} aria-hidden="true" />
+              )
+            }
             aria-label="Toggle navigation menu"
             aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? (
-              <svg viewBox="0 0 20 20" className="h-5 w-5" aria-hidden>
-                <path
-                  d="M5 5l10 10M15 5L5 15"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 20 20" className="h-5 w-5" aria-hidden>
-                <path
-                  d="M4 6h12M4 10h12M4 14h12"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-              </svg>
-            )}
-          </button>
+            variant="outline"
+            className="md:hidden"
+            onClick={toggleMobile}
+            tabIndex={0}
+          />
         </div>
       </div>
 
       {/* Mobile navigation */}
       {mobileOpen && (
-        <div className="md:hidden">
+        <nav aria-label="Main navigation" className="md:hidden">
           <div className="section pb-5">
             <div className="rounded-2xl border border-sage/30 bg-cream/95 p-4 shadow-lg">
               {NAV_ITEMS.map((item) => {
@@ -299,30 +335,34 @@ export default function Header() {
 
                 if (item.newsletter) {
                   return (
-                    <button
+                    <Button
                       key={item.label}
                       type="button"
                       onClick={(event) => handleNewsletterClick(event, true)}
-                      className="block w-full rounded-xl px-4 py-3 text-left text-sm text-charcoal/80 transition-colors hover:bg-sage/10 hover:text-sage"
+                      size="default"
+                      variant="ghost"
+                      className="w-full justify-start text-charcoal/80 hover:bg-sage/10 hover:text-sage rounded-xl"
+                      aria-label={`${item.label} - Open newsletter signup`}
+                      tabIndex={0}
                     >
                       {item.label}
-                    </button>
+                    </Button>
                   );
                 }
 
                 if (!hasDropdown || !item.dropdown) {
                   return (
-                    <Link
+                    <LinkComponent
                       key={item.label}
                       href={item.href}
-                      className={`block rounded-xl px-4 py-3 text-sm transition-colors ${
-                        active
-                          ? "font-semibold text-sage"
-                          : "text-charcoal/80 hover:bg-sage/10 hover:text-sage"
-                      }`}
+                      className={cn(
+                        "block rounded-xl px-4 py-3 text-small transition-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50",
+                        active ? "font-semibold text-sage" : "text-charcoal/80 hover:bg-sage/10 hover:text-sage"
+                      )}
+                      tabIndex={0}
                     >
                       {item.label}
-                    </Link>
+                    </LinkComponent>
                   );
                 }
 
@@ -330,43 +370,38 @@ export default function Header() {
 
                 return (
                   <div key={item.label} className="border-t border-sage/10 first:border-t-0">
-                    <button
+                    <Button
                       type="button"
-                      className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm transition-colors ${
-                        active
-                          ? "font-semibold text-sage"
-                          : "text-charcoal/80 hover:text-sage"
-                      }`}
+                      className={cn(
+                        "w-full justify-between gap-2 px-4 py-3 text-left rounded-xl",
+                        active ? "font-semibold text-sage" : "text-charcoal/80 hover:text-sage"
+                      )}
                       onClick={() => handleDropdownToggle(item.label)}
+                      size="default"
+                      variant="ghost"
+                      aria-label={`${item.label} menu`}
+                      aria-expanded={isOpen}
+                      aria-haspopup="true"
+                      tabIndex={0}
                     >
                       <span>{item.label}</span>
-                      <svg
-                        aria-hidden
-                        viewBox="0 0 12 12"
-                        className={`h-3 w-3 transition-transform ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      >
-                        <path
-                          d="M2 4.5L6 8l4-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
+                      <ChevronDown
+                        size={iconSize.sm}
+                        className={cn("transition-standard", isOpen && "rotate-180")}
+                        aria-hidden="true"
+                      />
+                    </Button>
                     {isOpen && (
                       <div className="space-y-2 pb-3 pl-6">
                         {item.dropdown.map((link) => (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            className="block rounded-lg px-3 py-2 text-sm text-charcoal/80 transition-colors hover:bg-sage/10 hover:text-sage"
-                          >
-                            {link.label}
-                          </Link>
+                    <LinkComponent
+                      key={link.href}
+                      href={link.href}
+                      className="block rounded-lg px-3 py-2 text-small text-charcoal/80 transition-standard hover:bg-sage/10 hover:text-sage focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
+                      tabIndex={0}
+                    >
+                      {link.label}
+                    </LinkComponent>
                         ))}
                       </div>
                     )}
@@ -375,16 +410,29 @@ export default function Header() {
               })}
 
               <div className="mt-4">
-                <Link
+                <LinkComponent
                   href={ProviderLogin.href}
-                  className="inline-flex w-full items-center justify-center rounded-full bg-sage px-4 py-2 text-sm font-medium text-white transition hover:bg-sage/90 hover:text-[#C97C5C]"
+                  className="inline-flex w-full items-center justify-center rounded-full bg-sage px-4 py-2 text-small font-medium text-white transition-standard hover:bg-sage/90 hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
+                  tabIndex={0}
                 >
                   {ProviderLogin.label}
-                </Link>
+                </LinkComponent>
               </div>
+              <LinkComponent
+                href={`/admin?key=${process.env.NEXT_PUBLIC_ADMIN_KEY || "your-admin-cookie"}`}
+                className="mt-3 block rounded-xl px-4 py-3 text-small text-charcoal/80 transition-colors hover:bg-sage/10 hover:text-sage"
+                style={
+                  (SHOW_ADMIN_LINK ? undefined : { display: "none" }) as CSSProperties | undefined
+                }
+                aria-hidden={SHOW_ADMIN_LINK ? undefined : true}
+                tabIndex={SHOW_ADMIN_LINK ? undefined : -1}
+                data-visible={SHOW_ADMIN_LINK ? "true" : "false"}
+              >
+                Admin
+              </LinkComponent>
             </div>
           </div>
-        </div>
+        </nav>
       )}
     </motion.header>
   );

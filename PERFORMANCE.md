@@ -107,14 +107,7 @@ npm run images:blur
 
 ### Map Lazy Loading
 
-The Leaflet map is dynamically imported to prevent blocking the main bundle:
-
-```tsx
-const ResultsSplitMap = dynamic(() => import('./ResultsSplitMap'), {
-  ssr: false,
-  loading: () => <div className="h-[60vh] rounded-2xl bg-cream/40 animate-pulse" />
-});
-```
+Leaflet-heavy components are isolated behind client-only wrappers so that server components never import them directly. This keeps the server tree minimal while still deferring map execution until the browser is ready.
 
 **Benefits:**
 - Map code only loads when needed

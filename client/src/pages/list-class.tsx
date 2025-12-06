@@ -58,7 +58,7 @@ export default function ListClass() {
         description: "Thank you for your submission. We'll review it and get back to you soon.",
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       toast({
         title: "Submission failed",
         description: "Please try again or contact us directly.",
@@ -83,7 +83,7 @@ export default function ListClass() {
                   Thank You!
                 </h1>
                 <p className="text-lg text-gray-600 mb-8">
-                  Your class has been submitted successfully. We'll review the details and get back to you within 2 business days.
+                  Your class has been submitted successfully. We&apos;ll review the details and get back to you within 2 business days.
                 </p>
                 <Link href="/">
                   <Button size="lg" className="gap-2">
@@ -116,7 +116,7 @@ export default function ListClass() {
             <CardHeader>
               <CardTitle>Class Details</CardTitle>
               <CardDescription>
-                Tell us about your baby or toddler class and we'll add it to our directory
+                Tell us about your baby or toddler class and we&apos;ll add it to our directory
               </CardDescription>
             </CardHeader>
             <CardContent>

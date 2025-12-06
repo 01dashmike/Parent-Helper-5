@@ -1,6 +1,11 @@
 "use client";
 
+import { useMemo, useCallback, memo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { iconSize } from "@/lib/icons/tokens";
+import { Button } from "@/components/ui/button";
+import { FilterToggleButton } from "./Filters/FilterToggleButton";
 
 const CATS = [
   { key: "Sensory", label: "Sensory", icon: "🧸" },
@@ -12,51 +17,95 @@ const CATS = [
   { key: "Arts", label: "Arts", icon: "🎨" },
   { key: "Storytime", label: "Story", icon: "📚" },
   { key: "Sports", label: "Sports", icon: "⚽" },
-];
+] as const;
 
-export default function CategoryRail() {
+const CategoryRail = memo(function CategoryRail(): React.ReactNode {
   const params = useSearchParams();
   const router = useRouter();
   const active = params?.get("category") ?? "";
+  const [isFiltering, setIsFiltering] = useState(false);
 
-  const setCategory = (key: string) => {
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      active ||
+      params?.get("day") ||
+      params?.get("fromTime") ||
+      params?.get("toTime") ||
+      (params?.get("radiusKm") && params?.get("radiusKm") !== "20")
+    );
+  }, [active, params]);
+
+  // Detect when filters are being applied (URL is changing)
+  useEffect(() => {
+    setIsFiltering(true);
+    const timer = setTimeout(() => {
+      setIsFiltering(false);
+    }, 500); // Show loader for 500ms after filter change
+    return () => clearTimeout(timer);
+  }, [active, params?.get("day"), params?.get("fromTime"), params?.get("toTime"), params?.get("radiusKm")]);
+
+  const setCategory = useCallback((key: string): void => {
     const next = new URLSearchParams(params?.toString() ?? "");
     if (active === key) next.delete("category");
     else next.set("category", key);
     router.push(`/search?${next.toString()}`);
-  };
+  }, [active, params, router]);
+
+  const clearAllFilters = useCallback((): void => {
+    const next = new URLSearchParams();
+    // Preserve search query and town if they exist
+    const query = params?.get("q");
+    const town = params?.get("town");
+    if (query) next.set("q", query);
+    if (town) next.set("town", town);
+    router.push(`/search?${next.toString()}`);
+  }, [params, router]);
 
   return (
-    <nav 
-      className="flex gap-2 overflow-x-auto py-2"
-      role="navigation"
-      aria-label="Filter classes by category"
-    >
-      {CATS.map((cat) => {
-        const isActive = cat.key === active;
-        return (
-          <button
-            key={cat.key}
-            onClick={() => setCategory(cat.key)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setCategory(cat.key);
-              }
-            }}
-            aria-pressed={isActive}
-            aria-label={`${isActive ? "Remove" : "Filter by"} ${cat.label} classes`}
-            className={`shrink-0 inline-flex items-center gap-2 rounded-full border px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-sage/50 ${
-              isActive
-                ? "bg-sage text-white border-sage"
-                : "border-sage/30 bg-white/70 text-charcoal hover:bg-cream"
-            }`}
-          >
-            <span aria-hidden="true">{cat.icon}</span>
-            <span className="text-sm font-medium">{cat.label}</span>
-          </button>
-        );
-      })}
-    </nav>
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <nav 
+        className="flex gap-2 overflow-x-auto py-2 -mx-4 px-4 sm:mx-0 sm:px-0"
+        role="navigation"
+        aria-label="Filter classes by category"
+        aria-busy={isFiltering ? "true" : "false"}
+      >
+        {isFiltering && (
+          <div className="flex items-center gap-2 px-2" role="status" aria-live="polite" aria-label="Applying filters">
+            <Loader2 size={iconSize.sm} className="motion-safe:animate-spin motion-reduce:animate-none text-sage" aria-hidden="true" />
+            <span className="sr-only">Applying filters</span>
+          </div>
+        )}
+        {CATS.map((cat, index) => {
+          const isActive = cat.key === active;
+          return (
+            <FilterToggleButton
+              key={cat.key}
+              isActive={isActive}
+              label={`${cat.label} classes`}
+              icon={cat.icon}
+              onClick={() => setCategory(cat.key)}
+              index={index}
+              ariaLabel={`${isActive ? "Remove" : "Filter by"} ${cat.label} classes`}
+            />
+          );
+        })}
+      </nav>
+      {hasActiveFilters && (
+        <Button
+          type="button"
+          onClick={clearAllFilters}
+          size="sm"
+          variant="outline"
+          className="shrink-0 rounded-xl sm:self-center"
+          aria-label="Clear all filters"
+        >
+          Clear all
+        </Button>
+      )}
+    </div>
   );
-}
+});
+
+CategoryRail.displayName = "CategoryRail";
+
+export default CategoryRail;

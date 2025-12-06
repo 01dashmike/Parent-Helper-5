@@ -18,6 +18,8 @@ SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=public_anon_key
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
 STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+APP_URL=https://your-production-domain
 SENDGRID_API_KEY=your_sendgrid_api_key
 ```
 

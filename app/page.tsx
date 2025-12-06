@@ -4,6 +4,7 @@ import Link from "next/link";
 import Carousel from "@/components/Carousel";
 import NewsletterModal from "@/components/NewsletterModal";
 import HeroSection from "@/components/HeroSection";
+import { safeImage } from "@/lib/images";
 
 export const metadata: Metadata = {
   title: "Parent Helper — Discover magical days",
@@ -24,56 +25,56 @@ const CATEGORIES = [
     description:
       "Sing-alongs, percussion circles, and rhythm adventures to spark confidence.",
     tags: ["Baby choirs", "Toddler bands"],
-    image: "/images/categories/music.jpg",
+    image: "/images/categories/music.webp",
   },
   {
     title: "Movement & Yoga",
     description:
       "Stretch, balance, and giggle through family yoga and mini dance classes.",
     tags: ["Mindful movement", "Parent-child"],
-    image: "/images/categories/yoga.jpg",
+    image: "/images/categories/yoga.webp",
   },
   {
     title: "Outdoor Explorers",
     description:
       "Forest school sessions and buggy meetups to celebrate the changing seasons.",
     tags: ["Nature trails", "Fresh air"],
-    image: "/images/categories/explorer.jpg",
+    image: "/images/categories/explorer.webp",
   },
   {
     title: "Creative Studios",
     description:
       "Art, drama, and storytelling guided by inspiring local facilitators.",
     tags: ["Confidence building", "Small groups"],
-    image: "/images/categories/arts.jpg",
+    image: "/images/categories/arts.webp",
   },
   {
     title: "Community Support",
     description:
       "Warm hubs with peer conversations, feeding support, and expert advice.",
     tags: ["Drop-in", "Supportive"],
-    image: "/images/categories/outdoor.jpg",
+    image: "/images/categories/outdoor.webp",
   },
   {
     title: "Family Photography",
     description:
       "Capture timeless moments with your loved ones through warm, family-focused photography sessions.",
     tags: ["Photo shoots", "Milestones"],
-    image: "/images/categories/photographer.jpg",
+    image: "/images/categories/photographer.webp",
   },
   {
     title: "Postnatal Fitness",
     description:
       "Join gentle fitness sessions to regain strength, balance, and confidence after birth.",
     tags: ["Rebuild core", "Mother & baby"],
-    image: "/images/categories/postnatal.jpg",
+    image: "/images/categories/postnatal.webp",
   },
   {
     title: "Storytime",
     description:
       "Engaging story sessions that spark imagination and early literacy skills.",
     tags: ["Reading fun", "Language growth"],
-    image: "/images/categories/storytime.jpg",
+    image: "/images/categories/storytime.webp",
   },
 ];
 
@@ -106,8 +107,8 @@ export default function Home() {
             >
               <div className="-mx-6 -mt-6 mb-4 overflow-hidden rounded-t-2xl">
                 <Image
-                  src={category.image}
-                  alt={category.title}
+                  src={safeImage({ src: category.image, alt: category.title }).src}
+                  alt={safeImage({ src: category.image, alt: category.title }).alt}
                   width={400}
                   height={260}
                   className={`h-48 w-full transition duration-300 ease-out ${

@@ -1,5 +1,35 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "ignoreCommand": "echo 'Skipping...'"
+  "ignoreCommand": "echo 'Skipping...'",
+  "crons": [
+    {
+      "path": "/api/search/alerts/weekly",
+      "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/admin/insights/generate",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/admin/insights/digest",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/rewards-expiration",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/referral-reminders",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/rewards-monthly-summary",
+      "schedule": "0 7 1 * *"
+    },
+    {
+      "path": "/api/cron/geosearch-refresh",
+      "schedule": "*/10 * * * *"
+    }
+  ]
 }

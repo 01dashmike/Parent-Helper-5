@@ -1,16 +1,42 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { motionTokens } from "@/lib/motion/tokens";
+import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { hasSupabaseBrowserEnv, supabaseBrowser } from "@/lib/supabase";
+import LinkComponent from "@/components/ui/link";
+import { usePathname } from "next/navigation";
+import { isBrowser } from "@/lib/env/isBrowser";
+import { hasSupabaseBrowserEnv } from "@/lib/env";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { safeImage } from "@/lib/images";
+import { getCurrentYear } from "@/lib/utils/date";
+
+function normalizePath(path: string): string {
+  return path.split("?")[0].split("#")[0];
+}
+
+function isLinkActive(pathname: string, href: string): boolean {
+  const normalizedHref = normalizePath(href);
+  const normalizedPathname = normalizePath(pathname);
+  
+  if (normalizedHref === "/") {
+    return normalizedPathname === "/";
+  }
+  
+  return normalizedPathname.startsWith(normalizedHref);
+}
 
 export default function Footer() {
+  const pathname = usePathname();
+  const currentPath = pathname ?? "/";
   const [showScroll, setShowScroll] = useState(false);
   const [latestPosts, setLatestPosts] = useState<Array<{ title: string; slug: string }>>([]);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (!isBrowser()) return;
     const onScroll = () => setShowScroll(window.scrollY > 400);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
@@ -18,81 +44,119 @@ export default function Footer() {
 
   useEffect(() => {
     if (!hasSupabaseBrowserEnv()) return;
-    const supabase = supabaseBrowser();
+    
     let isMounted = true;
+    const abortController = new AbortController();
 
     (async () => {
       try {
+        const supabase = createSupabaseBrowserClient();
+        
         const { data } = await supabase
           .from("blog_posts_ai")
           .select("title,slug")
           .eq("status", "published")
           .order("created_at", { ascending: false })
-          .limit(3);
-        if (isMounted && Array.isArray(data)) {
+          .limit(3)
+          .abortSignal(abortController.signal);
+        
+        if (!isMounted || abortController.signal.aborted) return;
+        
+        if (Array.isArray(data)) {
           setLatestPosts(data as Array<{ title: string; slug: string }>);
         }
       } catch (error) {
-        console.info("Supabase footer fetch skipped", error);
+        if (abortController.signal.aborted || !isMounted) return;
+        // Silently handle blog posts fetch error
+        console.error("[Footer] Error fetching latest posts:", error);
       }
     })();
 
     return () => {
       isMounted = false;
+      abortController.abort();
     };
   }, []);
 
   const scrollToTop = () => {
-    if (typeof window !== "undefined") {
+    if (isBrowser()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   return (
-    <footer className="relative bg-charcoal py-12 px-6 text-cream md:px-12">
+    <footer role="contentinfo" className="relative bg-charcoal py-12 px-6 text-cream md:px-12">
       <motion.div
         className="mx-auto grid max-w-7xl grid-cols-1 gap-10 md:grid-cols-3"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+        whileInView={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: motionTokens.slow, ease: motionTokens.easeOut }}
         viewport={{ once: true }}
       >
         <div className="flex flex-col items-center space-y-3 text-center md:items-start md:text-left">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+            whileInView={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: motionTokens.slow, ease: motionTokens.easeOut }}
           >
-            <Image src="/images/logo.png" alt="Parent Helper logo" width={120} height={48} className="h-12 w-auto" />
+            {(() => {
+              const { src, alt } = safeImage({ src: "/images/logo.png", alt: "Parent Helper logo" });
+              return <Image src={src} alt={alt} width={120} height={48} className="h-12 w-auto" />;
+            })()}
           </motion.div>
-          <p className="max-w-sm text-sm text-cream/70">
+          <p className="max-w-sm text-small text-cream/70">
             Parent Helper is your companion for finding joyful family classes, guides, and warm community spaces near you.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-card text-small md:grid-cols-4">
           <div className="space-y-2">
             <h3 className="mb-3 font-semibold text-cream/90">Explore</h3>
             <ul className="space-y-1">
               <li>
-                <Link href="/classes" className="transition-colors hover:text-sage">
+                <LinkComponent 
+                  href="/classes" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/classes") ? "page" : undefined}
+                >
                   Classes
-                </Link>
+                </LinkComponent>
               </li>
               <li>
-                <Link href="/search" className="transition-colors hover:text-sage">
+                <LinkComponent 
+                  href="/search" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/search") ? "page" : undefined}
+                >
                   Search
-                </Link>
+                </LinkComponent>
               </li>
               <li>
-                <Link href="/about" className="transition-colors hover:text-sage">
+                <LinkComponent 
+                  href="/about" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/about") ? "page" : undefined}
+                >
                   About Us
-                </Link>
+                </LinkComponent>
               </li>
               <li>
-                <Link href="/contact" className="transition-colors hover:text-sage">
+                <LinkComponent 
+                  href="/contact" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/contact") ? "page" : undefined}
+                >
                   Contact
-                </Link>
+                </LinkComponent>
+              </li>
+              <li>
+                <LinkComponent 
+                  href="/referrals/info" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/referrals/info") ? "page" : undefined}
+                >
+                  Referral Program
+                </LinkComponent>
               </li>
             </ul>
           </div>
@@ -101,14 +165,55 @@ export default function Footer() {
             <h3 className="mb-3 font-semibold text-cream/90">For Providers</h3>
             <ul className="space-y-1">
               <li>
-                <Link href="/providers/login" className="transition-colors hover:text-sage">
+                <LinkComponent 
+                  href="/provider/(auth)/login" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/provider/(auth)/login") ? "page" : undefined}
+                >
                   Login
-                </Link>
+                </LinkComponent>
               </li>
               <li>
-                <Link href="/providers/register" className="transition-colors hover:text-sage">
+                <LinkComponent 
+                  href="/providers/register" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/providers/register") ? "page" : undefined}
+                >
                   Join Parent Helper
-                </Link>
+                </LinkComponent>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="mb-3 font-semibold text-cream/90">Legal</h3>
+            <ul className="space-y-1">
+              <li>
+                <LinkComponent 
+                  href="/legal/terms" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/legal/terms") ? "page" : undefined}
+                >
+                  Terms of Service
+                </LinkComponent>
+              </li>
+              <li>
+                <LinkComponent 
+                  href="/legal/privacy" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/legal/privacy") ? "page" : undefined}
+                >
+                  Privacy Policy
+                </LinkComponent>
+              </li>
+              <li>
+                <LinkComponent 
+                  href="/legal/cookies" 
+                  className="transition-standard hover:text-sage"
+                  aria-current={isLinkActive(currentPath, "/legal/cookies") ? "page" : undefined}
+                >
+                  Cookie Policy
+                </LinkComponent>
               </li>
             </ul>
           </div>
@@ -117,13 +222,20 @@ export default function Footer() {
             <h3 className="mb-3 font-semibold text-cream/90">Journal</h3>
             <ul className="space-y-1">
               {latestPosts.length ? (
-                latestPosts.map((item) => (
-                  <li key={item.slug}>
-                    <Link href={`/blog/${item.slug}`} className="transition-colors hover:text-sage">
-                      {item.title}
-                    </Link>
-                  </li>
-                ))
+                latestPosts.map((item) => {
+                  const blogHref = `/blog/${item.slug}`;
+                  return (
+                    <li key={item.slug}>
+                      <LinkComponent 
+                        href={blogHref} 
+                        className="transition-standard hover:text-sage"
+                        aria-current={isLinkActive(currentPath, blogHref) ? "page" : undefined}
+                      >
+                        {item.title}
+                      </LinkComponent>
+                    </li>
+                  );
+                })
               ) : (
                 <li className="text-cream/60">Fresh stories arriving soon.</li>
               )}
@@ -133,7 +245,7 @@ export default function Footer() {
 
         <div className="space-y-3">
           <h3 className="mb-3 font-semibold text-cream/90">Stay in the loop</h3>
-          <p className="text-sm text-cream/70">
+          <p className="text-small text-cream/70">
             Subscribe for curated updates, new classes, and parenting inspiration.
           </p>
           <form className="flex flex-col gap-3 sm:flex-row">
@@ -144,7 +256,7 @@ export default function Footer() {
             />
             <button
               type="submit"
-              className="rounded-full bg-sage px-6 py-2 font-medium text-white transition-all hover:bg-sage/90 hover:text-[#C97C5C]"
+              className="inline-flex items-center justify-center rounded-md px-4 py-2 text-small font-medium bg-sage text-white transition-standard hover:bg-sage/90 hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
             >
               Subscribe
             </button>
@@ -152,15 +264,30 @@ export default function Footer() {
         </div>
       </motion.div>
 
-      <div className="mt-10 flex flex-col items-center gap-2 border-t border-[#444] pt-6 text-xs text-cream/60 md:flex-row md:justify-between">
-        <p>© {new Date().getFullYear()} Parent Helper. All rights reserved.</p>
+      <div className="mt-10 flex flex-col items-center gap-2 border-t border-charcoal-darker pt-6 text-small text-cream/60 opacity-70 md:flex-row md:justify-between">
+        <p>© {getCurrentYear()} Parent Helper. All rights reserved.</p>
         <div className="flex gap-4">
-          <Link href="/privacy" className="transition-colors hover:text-sage">
+          <LinkComponent 
+            href="/legal/privacy" 
+            className="transition-colors hover:text-sage"
+            aria-current={isLinkActive(currentPath, "/legal/privacy") ? "page" : undefined}
+          >
             Privacy Policy
-          </Link>
-          <Link href="/terms" className="transition-colors hover:text-sage">
-            Terms of Use
-          </Link>
+          </LinkComponent>
+          <LinkComponent 
+            href="/legal/terms" 
+            className="transition-colors hover:text-sage"
+            aria-current={isLinkActive(currentPath, "/legal/terms") ? "page" : undefined}
+          >
+            Terms of Service
+          </LinkComponent>
+          <LinkComponent 
+            href="/legal/cookies" 
+            className="transition-colors hover:text-sage"
+            aria-current={isLinkActive(currentPath, "/legal/cookies") ? "page" : undefined}
+          >
+            Cookies
+          </LinkComponent>
         </div>
       </div>
 
@@ -168,7 +295,7 @@ export default function Footer() {
         <button
           type="button"
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 rounded-full bg-sage p-3 text-white shadow-md transition-all hover:bg-sage/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/40"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-small font-medium fixed bottom-6 right-6 bg-sage text-white shadow-md transition-standard hover:bg-sage/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
           aria-label="Scroll to top"
         >
           ↑

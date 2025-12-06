@@ -34,7 +34,7 @@ function getSessionId(): string {
       localStorage.setItem(SESSION_KEY, sessionId);
     }
     return sessionId;
-  } catch (error) {
+  } catch {
     // localStorage might be blocked - generate temporary ID
     return uuidv4();
   }
@@ -55,9 +55,8 @@ async function flushEvents() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ events }),
     });
-  } catch (error) {
+  } catch {
     // Silent fail - analytics should never break the app
-    console.debug("Analytics event failed:", error);
   }
 }
 
@@ -67,51 +66,151 @@ async function flushEvents() {
 function queueEvent(eventType: string, payload: any) {
   if (typeof window === "undefined") return;
 
-  // Add session ID to payload
-  const enrichedPayload = {
-    ...payload,
-    sessionId: getSessionId(),
-    timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent,
-    viewport: {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    },
-  };
+  try {
+    // Add session ID to payload
+    const enrichedPayload = {
+      ...payload,
+      sessionId: getSessionId(),
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
+    };
 
-  eventQueue.push({ eventType, payload: enrichedPayload });
+    eventQueue.push({ eventType, payload: enrichedPayload });
 
-  // Clear existing timer and set new one
-  if (batchTimer) clearTimeout(batchTimer);
-  batchTimer = setTimeout(flushEvents, BATCH_DELAY);
+    // Clear existing timer and set new one
+    if (batchTimer) clearTimeout(batchTimer);
+    batchTimer = setTimeout(flushEvents, BATCH_DELAY);
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 // ========================================
 // PUBLIC API
 // ========================================
 
+const isTruthy = <T>(value: T | null | undefined): value is T => Boolean(value);
+
+const sanitizeString = (value?: string | null) =>
+  typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+
+const isFeaturedActive = (flags?: {
+  budgetOk?: boolean;
+  windowActive?: boolean;
+  isBoosted?: boolean;
+  listingStatus?: string | null;
+}) => {
+  if (!flags) return false;
+  if (!flags.budgetOk) return false;
+  if (!flags.windowActive) return false;
+  return Boolean(flags.isBoosted || flags.listingStatus === "active");
+};
+
 /**
- * Log a search query
- * Tracks what parents are searching for to improve recommendations
+ * Log a search query result set
  */
-export function logSearch(params: {
-  query?: string;
-  location?: string;
-  category?: string;
-  ageRange?: string;
-  dayOfWeek?: string;
+export function logSearchPerformed(params: {
+  query?: string | null;
+  location?: string | null;
+  category?: string | null;
+  ageRange?: string | null;
   resultCount: number;
+  featuredCount?: number;
 }) {
-  queueEvent("search", {
-    // Anonymize: only track search patterns, not exact queries
-    hasQuery: !!params.query,
-    queryLength: params.query?.length || 0,
-    location: params.location || null,
-    category: params.category || null,
-    ageRange: params.ageRange || null,
-    dayOfWeek: params.dayOfWeek || null,
-    resultCount: params.resultCount,
-  });
+  try {
+    queueEvent("search_performed", {
+      hasQuery: isTruthy(params.query),
+      queryLength: params.query?.length ?? 0,
+      location: sanitizeString(params.location),
+      category: sanitizeString(params.category),
+      ageRange: sanitizeString(params.ageRange),
+      resultCount: Math.max(0, Number.isFinite(params.resultCount) ? params.resultCount : 0),
+      featuredCount: Math.max(
+        0,
+        Number.isFinite(params.featuredCount ?? 0) ? params.featuredCount ?? 0 : 0,
+      ),
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
+}
+
+// Backwards compatibility for older imports
+export const logSearch = logSearchPerformed;
+
+/**
+ * Log when a class result is viewed from the split view or map
+ */
+export function logClassViewed(params: {
+  classId: number | string;
+  title?: string | null;
+  category?: string | null;
+  location?: string | null;
+  isFeatured?: boolean;
+  searchScore?: number | null;
+}) {
+  try {
+    queueEvent("class_viewed", {
+      classId: String(params.classId),
+      title: sanitizeString(params.title),
+      category: sanitizeString(params.category),
+      location: sanitizeString(params.location),
+      isFeatured: Boolean(params.isFeatured),
+      searchScore: Number.isFinite(params.searchScore ?? NaN)
+        ? params.searchScore
+        : undefined,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
+}
+
+/**
+ * Log the start of the provider signup journey
+ */
+export function logProviderSignupStarted(params: {
+  source?: string | null;
+  referrer?: string | null;
+}) {
+  try {
+    queueEvent("provider_signup_started", {
+      source: sanitizeString(params.source) ?? "providers/register",
+      referrer: sanitizeString(params.referrer) ?? (typeof document !== "undefined" ? document.referrer : null),
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
+}
+
+/**
+ * Log successful submission of the provider signup form
+ */
+export function logProviderSignupSubmitted(params: {
+  source?: string | null;
+  categoriesCount: number;
+  newsletterOptIn: boolean;
+  attachmentsUploaded?: number;
+}) {
+  try {
+    queueEvent("provider_signup_submitted", {
+      source: sanitizeString(params.source) ?? "providers/register",
+      categoriesCount: Math.max(
+        0,
+        Number.isFinite(params.categoriesCount) ? params.categoriesCount : 0,
+      ),
+      newsletterOptIn: Boolean(params.newsletterOptIn),
+      attachmentsUploaded: Math.max(
+        0,
+        Number.isFinite(params.attachmentsUploaded ?? 0) ? params.attachmentsUploaded ?? 0 : 0,
+      ),
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 /**
@@ -129,25 +228,29 @@ export function logMapInteraction(params: {
     west: number;
   };
 }) {
-  queueEvent("map_interaction", {
-    action: params.action,
-    zoom: params.zoom,
-    // Round coordinates to 2 decimal places for privacy
-    center: params.center
-      ? {
+  try {
+    queueEvent("map_interaction", {
+      action: params.action,
+      zoom: params.zoom,
+      // Round coordinates to 2 decimal places for privacy
+      center: params.center
+        ? {
           lat: Math.round(params.center.lat * 100) / 100,
           lng: Math.round(params.center.lng * 100) / 100,
         }
-      : null,
-    bounds: params.bounds
-      ? {
+        : null,
+      bounds: params.bounds
+        ? {
           north: Math.round(params.bounds.north * 100) / 100,
           south: Math.round(params.bounds.south * 100) / 100,
           east: Math.round(params.bounds.east * 100) / 100,
           west: Math.round(params.bounds.west * 100) / 100,
         }
-      : null,
-  });
+        : null,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 /**
@@ -160,12 +263,16 @@ export function logBlogView(params: {
   category?: string;
   timeOnPage?: number;
 }) {
-  queueEvent("blog_view", {
-    slug: params.slug,
-    title: params.title,
-    category: params.category || null,
-    timeOnPage: params.timeOnPage || 0,
-  });
+  try {
+    queueEvent("blog_view", {
+      slug: params.slug,
+      title: params.title,
+      category: params.category || null,
+      timeOnPage: params.timeOnPage || 0,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 /**
@@ -177,13 +284,24 @@ export function logClassInteraction(params: {
   classId: number;
   category: string;
   location?: string;
+  featured?: {
+    budgetOk?: boolean;
+    windowActive?: boolean;
+    isBoosted?: boolean;
+    listingStatus?: string | null;
+  };
 }) {
-  queueEvent("class_interaction", {
-    action: params.action,
-    classId: params.classId,
-    category: params.category,
-    location: params.location || null,
-  });
+  try {
+    queueEvent("class_interaction", {
+      action: params.action,
+      classId: params.classId,
+      category: params.category,
+      location: params.location || null,
+      isFeatured: isFeaturedActive(params.featured),
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 /**
@@ -194,10 +312,14 @@ export function logFilterChange(params: {
   filterType: "day" | "time" | "distance" | "age" | "category";
   value: string | number;
 }) {
-  queueEvent("filter_change", {
-    filterType: params.filterType,
-    value: params.value,
-  });
+  try {
+    queueEvent("filter_change", {
+      filterType: params.filterType,
+      value: params.value,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 /**
@@ -205,10 +327,14 @@ export function logFilterChange(params: {
  * Basic navigation tracking
  */
 export function logPageView(params: { path: string; referrer?: string }) {
-  queueEvent("page_view", {
-    path: params.path,
-    referrer: params.referrer || document.referrer || null,
-  });
+  try {
+    queueEvent("page_view", {
+      path: params.path,
+      referrer: params.referrer || (typeof document !== "undefined" ? document.referrer : null) || null,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 /**
@@ -222,13 +348,53 @@ export function logBlogPublishedFromTrend(params: {
   trendSource: string;
   category: string;
 }) {
-  queueEvent("blog_published_from_trend", {
-    postId: params.postId,
-    slug: params.slug,
-    title: params.title,
-    trendSource: params.trendSource,
-    category: params.category,
-  });
+  try {
+    queueEvent("blog_published_from_trend", {
+      postId: params.postId,
+      slug: params.slug,
+      title: params.title,
+      trendSource: params.trendSource,
+      category: params.category,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
+}
+
+/**
+ * Log experiment variant assignment
+ */
+export function logExperimentAssignment(params: {
+  experiment: string;
+  variant: "A" | "B";
+}) {
+  try {
+    queueEvent("experiment_assignment", {
+      experiment: params.experiment,
+      variant: params.variant,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
+}
+
+/**
+ * Log CTA click with variant context
+ */
+export function logCtaClick(params: {
+  variant: "A" | "B";
+  ctaType: string;
+  location?: string;
+}) {
+  try {
+    queueEvent("cta_click", {
+      variant: params.variant,
+      ctaType: params.ctaType,
+      location: params.location || null,
+    });
+  } catch {
+    // Silent fail - analytics should never break the app
+  }
 }
 
 /**

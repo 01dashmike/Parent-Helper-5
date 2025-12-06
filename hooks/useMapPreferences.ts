@@ -34,10 +34,21 @@ export function useMapPreferences() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load preferences from localStorage on mount
+  // Only runs on client to prevent hydration mismatches
   useEffect(() => {
+    let isMounted = true;
+    
+    // Guard against SSR
+    if (typeof window === 'undefined') {
+      if (isMounted) {
+        setIsLoaded(true);
+      }
+      return;
+    }
+    
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.mapPreferences);
-      if (stored) {
+      if (stored && isMounted) {
         const parsed = JSON.parse(stored) as MapPreferences;
         setPreferences(parsed);
       }
@@ -45,8 +56,14 @@ export function useMapPreferences() {
       console.warn("Failed to load map preferences:", error);
       // Keep default preferences if parsing fails
     } finally {
-      setIsLoaded(true);
+      if (isMounted) {
+        setIsLoaded(true);
+      }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Save preferences to localStorage

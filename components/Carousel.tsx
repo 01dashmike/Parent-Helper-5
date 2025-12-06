@@ -1,102 +1,140 @@
 "use client";
 
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
-import type { Swiper as SwiperType } from "swiper";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { HOMEPAGE_CATEGORIES } from "@/components/home/categories";
 
-type Item = {
-  slug: string;
+type CarouselItem = {
   title: string;
-  blurb: string;
-  image: string; // path under /public
-  cta?: string;
+  image: string;
+  description: string;
+  position?: string;
 };
 
-const DEFAULT_ITEMS: Item[] = [
-  { slug: "arts",      title: "Arts & Crafts",  blurb: "Paint, glue, glitter, create.", image: "/images/categories/arts.jpg" },
-  { slug: "music",     title: "Music & Rhythm", blurb: "Sing, shake, and play together.", image: "/images/categories/music.jpg" },
-  { slug: "dance",     title: "Dance & Drama",  blurb: "Confidence through movement.",   image: "/images/categories/dance.jpg" },
-  { slug: "outdoor",   title: "Outdoor",        blurb: "Fresh air and nature play.",     image: "/images/categories/outdoor.jpg" },
-  { slug: "sports",    title: "Sports",         blurb: "Burn energy, build skills.",     image: "/images/categories/sports.jpg" },
-  { slug: "stem",      title: "STEM",           blurb: "Curious minds, hands-on fun.",   image: "/images/categories/stem.jpg" },
-];
+type CarouselProps = {
+  items?: CarouselItem[];
+};
 
-export default function Carousel({ items = DEFAULT_ITEMS }: { items?: Item[] }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const swiperRef = useRef<SwiperType | null>(null);
+const fallbackItems: CarouselItem[] = HOMEPAGE_CATEGORIES.map(({ title, description, image }) => {
+  // Map category titles to their optimal object-position values
+  const positionMap: Record<string, string> = {
+    "Music & Movement": "center top",
+    "Baby Yoga": "center top",
+    "Drama & Play": "center center",
+    "Outdoor Play": "center center",
+    "Postnatal Wellness": "center top",
+    "Storytime": "center center",
+    "Kids Photography": "center center",
+    "Mindfulness": "center center",
+    "Arts & Crafts": "center center",
+  };
 
-  // simple reveal-on-mount helper for .fade-in
+  return {
+    title,
+    description,
+    image,
+    position: positionMap[title] || "center center",
+  };
+});
+
+const AUTO_PLAY_INTERVAL = 4000; // 4 seconds feels more alive on desktop
+
+export default function Carousel({ items = fallbackItems }: CarouselProps) {
+  const slides = items?.length ? items : fallbackItems;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const scrollToIndex = useCallback((index: number) => {
+    if (!scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const slideWidth = container.scrollWidth / slides.length;
+    container.scrollTo({
+      left: slideWidth * index,
+      behavior: "smooth",
+    });
+    setCurrentIndex(index);
+  }, [slides.length]);
+
+  const handleNext = useCallback(() => {
+    const nextIndex = (currentIndex + 1) % slides.length;
+    scrollToIndex(nextIndex);
+  }, [currentIndex, slides.length, scrollToIndex]);
+
+  // Detect slides per view for responsive behavior
+  const [slidesPerView, setSlidesPerView] = useState(1);
+
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const on = () => el.classList.add("visible");
-    requestAnimationFrame(on);
+    const updateSlidesPerView = () => {
+      const width = window.innerWidth;
+      if (width >= 1024) setSlidesPerView(4);
+      else if (width >= 768) setSlidesPerView(3);
+      else if (width >= 640) setSlidesPerView(2);
+      else setSlidesPerView(1);
+    };
+
+    updateSlidesPerView();
+    window.addEventListener("resize", updateSlidesPerView);
+    return () => window.removeEventListener("resize", updateSlidesPerView);
   }, []);
 
-  return (
-    <section className="section my-14">
-      <div
-        ref={containerRef}
-        className="fade-in"
-        onMouseEnter={() => swiperRef.current?.autoplay?.stop()}
-        onMouseLeave={() => swiperRef.current?.autoplay?.start()}
-      >
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Featured categories</h2>
-        <p className="text-slate-600 mb-6">Swipe through the experiences trending right now across our most loved towns.</p>
+  // Autoplay effect
+  useEffect(() => {
+    if (slides.length <= slidesPerView || isHovered) {
+      return;
+    }
 
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay]}
-          navigation
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 1800, disableOnInteraction: false }}
-          onSwiper={(swiper) => {
-            swiperRef.current = swiper;
-          }}
-          onTouchStart={() => swiperRef.current?.autoplay?.stop()}
-          onTouchEnd={() => swiperRef.current?.autoplay?.start()}
-          spaceBetween={20}
-          slidesPerView={1.1}
-          breakpoints={{ 640: { slidesPerView: 1.4 }, 768: { slidesPerView: 2 }, 1024: { slidesPerView: 2.4 } }}
-          className="!pb-10"
-        >
-          {items.map((it) => (
-            <SwiperSlide key={it.slug}>
-              <motion.article
-                className="group overflow-hidden rounded-2xl shadow-soft transition-transform duration-200 ease-out hover:scale-[1.02] hover:shadow-glow"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                viewport={{ once: true }}
-              >
-                <div className="relative h-[240px] sm:h-[280px]">
-                  <Image
-                    src={it.image}
-                    alt={it.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover"
-                    priority={false}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/15 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-3 p-5 text-white">
-                    <div className="text-sm leading-relaxed opacity-95">{it.blurb}</div>
-                    <Link
-                      href={`/classes/${it.slug}`}
-                      className="inline-flex w-fit items-center rounded-full bg-sage px-4 py-2 text-sm font-semibold text-white transition-transform duration-200 ease-out hover:scale-105 hover:text-[#C97C5C]"
-                    >
-                      Explore {it.title.toLowerCase()}
-                    </Link>
-                  </div>
-                </div>
-              </motion.article>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+    const id = window.setInterval(handleNext, AUTO_PLAY_INTERVAL);
+    return () => window.clearInterval(id);
+  }, [handleNext, isHovered, slides.length, slidesPerView]);
+
+  return (
+    <div
+      className="relative mt-8"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div
+        ref={scrollContainerRef}
+        className="flex gap-section overflow-x-auto scroll-smooth snap-x snap-mandatory snap-center pb-4 carousel-transition"
+        style={{
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {slides.map((item, index) => (
+          <div
+            key={`${item.title}-${index}`}
+            className="relative aspect-[4/3] w-[85%] shrink-0 overflow-hidden rounded-3xl bg-cream shadow-card transition-standard hover:shadow-md snap-center sm:w-[50%] lg:w-[25%]"
+          >
+            <div
+              className="relative w-full aspect-[4/3] overflow-hidden"
+              style={{ "--pos": item.position || "center center" } as React.CSSProperties}
+            >
+              <Image
+                src={item.image}
+                alt={item.title || "Carousel image"}
+                fill
+                className="w-full h-full object-cover rounded-xl"
+                style={{ objectPosition: item.position || "center center" }}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-1 p-4 text-white pointer-events-none">
+              <h3 className="text-lg font-semibold leading-tight">{item.title}</h3>
+              <p className="text-sm opacity-90">{item.description}</p>
+            </div>
+          </div>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }
+
+
+
+
+
+
+
+

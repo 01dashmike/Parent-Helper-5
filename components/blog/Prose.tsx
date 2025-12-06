@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { ReactNode } from "react";
 
 export default function Prose({ children }: { children: ReactNode }) {
   return (

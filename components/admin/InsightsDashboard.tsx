@@ -1,46 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
   BarChart,
   Bar,
   PieChart,
   Pie,
-  LineChart,
-  Line,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  Cell,
 } from "recharts";
-import { motion } from "framer-motion";
-
-// Brand colors
-const COLORS = {
-  sage: "#9BAE82",
-  sageLight: "#A8B8A8",
-  sageDark: "#7C8F67",
-  terracotta: "#C97C5C",
-  cream: "#F5F3F0",
-  charcoal: "#3D3D3D",
-};
+import { motionTokens } from "@/lib/motion/tokens";
+import { formatMonthDay, formatDate } from "@/lib/utils/date";
+import { themeColors } from "@/lib/theme-colors";
 
 const CHART_COLORS = [
-  COLORS.sage,
-  COLORS.sageLight,
-  COLORS.terracotta,
-  COLORS.sageDark,
-  "#B8C9A8",
-  "#8FA97C",
+  themeColors.sage.alt,
+  themeColors.sage.light,
+  themeColors.terracotta,
+  themeColors.sage.dark,
+  themeColors.sage.lighter,
+  themeColors.sage.lightest,
 ];
 
 interface AnalyticsEvent {
   id: string;
   event_type: string;
-  payload: any;
+  payload: Record<string, unknown>;
   created_at: string;
 }
 
@@ -49,97 +42,189 @@ interface InsightsDashboardProps {
 }
 
 export default function InsightsDashboard({ events }: InsightsDashboardProps) {
-  const [lastUpdated] = useState(new Date());
+  // Use lazy initialization to prevent hydration mismatches (server/client time differences)
+  const [lastUpdated] = useState(() => new Date());
 
   // Calculate time since last update
   const minutesAgo = Math.floor((Date.now() - lastUpdated.getTime()) / 60000);
 
   // Aggregate data
   const insights = useMemo(() => {
-    // Top searched categories
     const categories: Record<string, number> = {};
     const locations: Record<string, number> = {};
     const blogPosts: Record<string, { title: string; count: number }> = {};
     const dailySearches: Record<string, number> = {};
+    const weeklyEngagementMap = new Map<
+      string,
+      {
+        label: string;
+        startTimestamp: number;
+        searches: number;
+        classViews: number;
+        providerSignups: number;
+        mapInteractions: number;
+      }
+    >();
     let totalMapInteractions = 0;
-    let uniqueSessions = new Set<string>();
+    const uniqueSessions = new Set<string>();
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
 
+    let searchesLast7Days = 0;
+    let classViewsLast7Days = 0;
+    let providerSignupsLast7Days = 0;
+
+    const getStartOfWeek = (date: Date) => {
+      const monday = new Date(date);
+      const day = monday.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      monday.setDate(monday.getDate() + diff);
+      monday.setHours(0, 0, 0, 0);
+      return monday;
+    };
+
+    const bumpWeekly = (
+      date: Date,
+      field: "searches" | "classViews" | "providerSignups" | "mapInteractions",
+    ) => {
+      const startOfWeek = getStartOfWeek(date);
+      const weekKey = startOfWeek.toISOString().slice(0, 10);
+      const entry =
+        weeklyEngagementMap.get(weekKey) ||
+        {
+          label: formatMonthDay(startOfWeek),
+          startTimestamp: startOfWeek.getTime(),
+          searches: 0,
+          classViews: 0,
+          providerSignups: 0,
+          mapInteractions: 0,
+        };
+
+      entry[field] += 1;
+      weeklyEngagementMap.set(weekKey, entry);
+    };
+
+    if (!Array.isArray(events)) {
+      // Return empty insights if events is not an array
+      return {
+        topCategories: [],
+        topLocations: [],
+        topBlogPosts: [],
+        searchTrend: [],
+        weeklyEngagement: [],
+        totalEvents: 0,
+        uniqueSessions: 0,
+        avgMapInteractions: "0",
+        searchesLast7Days: 0,
+        classViewsLast7Days: 0,
+        providerSignupsLast7Days: 0,
+      };
+    }
+    
     events.forEach((event) => {
       const { event_type, payload, created_at } = event;
-      
-      // Track unique sessions
-      if (payload.sessionId) {
+      const eventDate = created_at ? new Date(created_at) : new Date();
+      const isoDate = eventDate.toISOString().slice(0, 10);
+
+      if (payload?.sessionId && typeof payload.sessionId === "string") {
         uniqueSessions.add(payload.sessionId);
       }
 
-      // Track searches
-      if (event_type === "search") {
-        if (payload.category) {
+      if (event_type === "search" || event_type === "search_performed") {
+        if (payload?.category && typeof payload.category === "string") {
           categories[payload.category] = (categories[payload.category] || 0) + 1;
         }
-        if (payload.location) {
+        if (payload?.location && typeof payload.location === "string") {
           locations[payload.location] = (locations[payload.location] || 0) + 1;
         }
+        dailySearches[isoDate] = (dailySearches[isoDate] || 0) + 1;
 
-        // Daily searches
-        const date = new Date(created_at).toLocaleDateString();
-        dailySearches[date] = (dailySearches[date] || 0) + 1;
+        if (eventDate >= sevenDaysAgo) {
+          searchesLast7Days += 1;
+        }
+
+        bumpWeekly(eventDate, "searches");
       }
 
-      // Track blog views
+      if (
+        event_type === "class_viewed" ||
+        (event_type === "class_interaction" && payload?.action === "view")
+      ) {
+        if (eventDate >= sevenDaysAgo) {
+          classViewsLast7Days += 1;
+        }
+
+        bumpWeekly(eventDate, "classViews");
+      }
+
+      if (event_type === "provider_signup_submitted") {
+        if (eventDate >= sevenDaysAgo) {
+          providerSignupsLast7Days += 1;
+        }
+
+        bumpWeekly(eventDate, "providerSignups");
+      }
+
       if (event_type === "blog_view") {
-        const slug = payload.slug;
-        if (slug) {
+        const slug = payload?.slug;
+        if (slug && typeof slug === "string") {
+          const title = payload?.title && typeof payload.title === "string" ? payload.title : slug;
           if (!blogPosts[slug]) {
-            blogPosts[slug] = { title: payload.title || slug, count: 0 };
+            blogPosts[slug] = { title, count: 0 };
           }
-          blogPosts[slug].count++;
+          blogPosts[slug].count += 1;
         }
       }
 
-      // Track map interactions
       if (event_type === "map_interaction") {
-        totalMapInteractions++;
+        totalMapInteractions += 1;
+        bumpWeekly(eventDate, "mapInteractions");
       }
     });
 
-    // Top 10 categories
     const topCategories = Object.entries(categories)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([name, value]) => ({ name, value }));
 
-    // Top 10 locations
     const topLocations = Object.entries(locations)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([name, value]) => ({ name, value }));
 
-    // Top 10 blog posts
     const topBlogPosts = Object.entries(blogPosts)
       .sort(([, a], [, b]) => b.count - a.count)
       .slice(0, 10)
-      .map(([slug, data]) => ({
+      .map(([_slug, data]) => ({
         name: data.title,
         value: data.count,
       }));
 
-    // Daily search trend (last 7 days)
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
-      return date.toLocaleDateString();
+      date.setHours(0, 0, 0, 0);
+      return date;
     });
 
     const searchTrend = last7Days.map((date) => ({
-      date: new Date(date).toLocaleDateString("en-GB", {
-        month: "short",
-        day: "numeric",
-      }),
-      searches: dailySearches[date] || 0,
+      date: formatMonthDay(date),
+      searches: dailySearches[date.toISOString().slice(0, 10)] || 0,
     }));
 
-    // Average map interactions per session
+    const weeklyEngagement = Array.from(weeklyEngagementMap.values())
+      .sort((a, b) => a.startTimestamp - b.startTimestamp)
+      .slice(-8)
+      .map((entry) => ({
+        label: entry.label,
+        searches: entry.searches,
+        classViews: entry.classViews,
+        providerSignups: entry.providerSignups,
+        mapInteractions: entry.mapInteractions,
+      }));
+
     const avgMapInteractions =
       uniqueSessions.size > 0
         ? (totalMapInteractions / uniqueSessions.size).toFixed(1)
@@ -150,9 +235,13 @@ export default function InsightsDashboard({ events }: InsightsDashboardProps) {
       topLocations,
       topBlogPosts,
       searchTrend,
-      totalEvents: events.length,
+      weeklyEngagement,
+      totalEvents: Array.isArray(events) ? events.length : 0,
       uniqueSessions: uniqueSessions.size,
       avgMapInteractions,
+      searchesLast7Days,
+      classViewsLast7Days,
+      providerSignupsLast7Days,
     };
   }, [events]);
 
@@ -160,88 +249,140 @@ export default function InsightsDashboard({ events }: InsightsDashboardProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: motionTokens.slow }}
       className="space-y-6"
     >
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-card md:grid-cols-4">
         <StatCard
-          title="Total Events"
-          value={insights.totalEvents.toLocaleString()}
-          subtitle="Last 30 days"
+          title="Searches (7 days)"
+          value={insights.searchesLast7Days.toLocaleString()}
+          subtitle="Organic + keyword queries"
         />
         <StatCard
-          title="Unique Sessions"
+          title="Class Views (7 days)"
+          value={insights.classViewsLast7Days.toLocaleString()}
+          subtitle="Result opens from search"
+        />
+        <StatCard
+          title="Provider Signups (7 days)"
+          value={insights.providerSignupsLast7Days.toLocaleString()}
+          subtitle="Completed onboarding submissions"
+        />
+        <StatCard
+          title="Unique Sessions (30 days)"
           value={insights.uniqueSessions.toLocaleString()}
-          subtitle="Anonymous visitors"
-        />
-        <StatCard
-          title="Map Interactions"
-          value={insights.avgMapInteractions}
-          subtitle="Per session avg"
-        />
-        <StatCard
-          title="Last Updated"
-          value={minutesAgo === 0 ? "Just now" : `${minutesAgo}m ago`}
-          subtitle={lastUpdated.toLocaleTimeString()}
+          subtitle={`Map interactions / session: ${insights.avgMapInteractions}`}
         />
       </div>
+      <p className="text-small text-slateSoft">
+        Data refreshed {minutesAgo === 0 ? "just now" : `${minutesAgo}m ago`} •{" "}
+        {formatDate(lastUpdated, "time")}
+      </p>
 
       {/* Daily Search Trend */}
       <ChartCard title="Search Activity (Last 7 Days)">
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={insights.searchTrend}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8E5E0" />
+            <CartesianGrid strokeDasharray="3 3" stroke={themeColors.cream.lighter} />
             <XAxis
               dataKey="date"
-              stroke={COLORS.charcoal}
+              stroke={themeColors.charcoal.dark}
               fontSize={12}
               tickLine={false}
             />
-            <YAxis stroke={COLORS.charcoal} fontSize={12} tickLine={false} />
+            <YAxis stroke={themeColors.charcoal.dark} fontSize={12} tickLine={false} />
             <Tooltip
               contentStyle={{
-                backgroundColor: COLORS.cream,
-                border: `1px solid ${COLORS.sage}`,
+                backgroundColor: themeColors.cream.DEFAULT,
+                border: `1px solid ${themeColors.sage.alt}`,
                 borderRadius: "8px",
               }}
             />
             <Line
               type="monotone"
               dataKey="searches"
-              stroke={COLORS.sage}
+              stroke={themeColors.sage.alt}
               strokeWidth={3}
-              dot={{ fill: COLORS.sage, r: 4 }}
+              dot={{ fill: themeColors.sage.alt, r: 4 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
 
+      {/* Weekly Engagement */}
+      <ChartCard title="Weekly Engagement (Last 8 Weeks)">
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={insights.weeklyEngagement}>
+            <CartesianGrid strokeDasharray="3 3" stroke={themeColors.cream.lighter} />
+            <XAxis
+              dataKey="label"
+              stroke={themeColors.charcoal.dark}
+              fontSize={12}
+              tickLine={false}
+            />
+            <YAxis stroke={themeColors.charcoal.dark} fontSize={12} tickLine={false} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: themeColors.cream.DEFAULT,
+                border: `1px solid ${themeColors.sage.alt}`,
+                borderRadius: "8px",
+              }}
+            />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Bar
+              dataKey="searches"
+              name="Searches"
+              fill={themeColors.sage.alt}
+              radius={[8, 8, 0, 0]}
+            />
+            <Bar
+              dataKey="classViews"
+              name="Class views"
+              fill={themeColors.terracotta}
+              radius={[8, 8, 0, 0]}
+            />
+            <Bar
+              dataKey="providerSignups"
+              name="Provider signups"
+              fill={themeColors.sage.dark}
+              radius={[8, 8, 0, 0]}
+            />
+            <Bar
+              dataKey="mapInteractions"
+              name="Map interactions"
+              fill={themeColors.sage.lighter}
+              radius={[8, 8, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-section">
         {/* Top Categories */}
         <ChartCard title="Top 10 Searched Categories">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={insights.topCategories}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8E5E0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={themeColors.cream.lighter} />
               <XAxis
                 dataKey="name"
-                stroke={COLORS.charcoal}
+                stroke={themeColors.charcoal.dark}
                 fontSize={12}
                 angle={-45}
                 textAnchor="end"
                 height={80}
               />
-              <YAxis stroke={COLORS.charcoal} fontSize={12} />
+              <YAxis stroke={themeColors.charcoal.dark} fontSize={12} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: COLORS.cream,
-                  border: `1px solid ${COLORS.sage}`,
+                  backgroundColor: themeColors.cream.DEFAULT,
+                  border: `1px solid ${themeColors.sage.alt}`,
                   borderRadius: "8px",
                 }}
               />
-              <Bar dataKey="value" fill={COLORS.sage} radius={[8, 8, 0, 0]} />
+              <Bar dataKey="value" fill={themeColors.sage.alt} radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -255,24 +396,24 @@ export default function InsightsDashboard({ events }: InsightsDashboardProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) =>
+                label={({ name, percent }: { name: string; percent: number }) =>
                   `${name} (${(percent * 100).toFixed(0)}%)`
                 }
                 outerRadius={100}
-                fill="#8884d8"
+                fill={themeColors.purple[500]}
                 dataKey="value"
               >
                 {insights.topLocations.map((entry, index) => (
                   <Cell
-                    key={`cell-${index}`}
+                    key={entry.name}
                     fill={CHART_COLORS[index % CHART_COLORS.length]}
                   />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: COLORS.cream,
-                  border: `1px solid ${COLORS.sage}`,
+                  backgroundColor: themeColors.cream.DEFAULT,
+                  border: `1px solid ${themeColors.sage.alt}`,
                   borderRadius: "8px",
                 }}
               />
@@ -284,25 +425,25 @@ export default function InsightsDashboard({ events }: InsightsDashboardProps) {
         <ChartCard title="Most Read Blog Posts">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={insights.topBlogPosts} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8E5E0" />
-              <XAxis type="number" stroke={COLORS.charcoal} fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke={themeColors.cream.lighter} />
+              <XAxis type="number" stroke={themeColors.charcoal.dark} fontSize={12} />
               <YAxis
                 type="category"
                 dataKey="name"
-                stroke={COLORS.charcoal}
+                stroke={themeColors.charcoal.dark}
                 fontSize={11}
                 width={150}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: COLORS.cream,
-                  border: `1px solid ${COLORS.sage}`,
+                  backgroundColor: themeColors.cream.DEFAULT,
+                  border: `1px solid ${themeColors.sage.alt}`,
                   borderRadius: "8px",
                 }}
               />
               <Bar
                 dataKey="value"
-                fill={COLORS.terracotta}
+                fill={themeColors.terracotta}
                 radius={[0, 8, 8, 0]}
               />
             </BarChart>
@@ -311,10 +452,10 @@ export default function InsightsDashboard({ events }: InsightsDashboardProps) {
 
         {/* Privacy Notice */}
         <div className="rounded-2xl border border-sage/20 bg-white p-6">
-          <h3 className="text-lg font-semibold text-charcoal mb-3">
+          <h3 className="text-title font-semibold text-charcoal mb-3">
             🔒 Privacy-First Analytics
           </h3>
-          <ul className="space-y-2 text-sm text-slateSoft">
+          <ul className="space-y-2 text-small text-slateSoft">
             <li className="flex items-start gap-2">
               <span className="text-sage">✓</span>
               <span>No personal data collected</span>
@@ -355,12 +496,12 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: motionTokens.medium }}
       className="rounded-2xl border border-sage/20 bg-white p-6 shadow-sm"
     >
-      <p className="text-sm text-slateSoft mb-1">{title}</p>
-      <p className="text-3xl font-bold text-charcoal mb-1">{value}</p>
-      <p className="text-xs text-slateSoft">{subtitle}</p>
+      <p className="text-small text-slateSoft mb-1">{title}</p>
+      <p className="text-display-2 font-bold text-charcoal mb-1">{value}</p>
+      <p className="text-small text-slateSoft">{subtitle}</p>
     </motion.div>
   );
 }
@@ -376,10 +517,10 @@ function ChartCard({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: motionTokens.slow }}
       className="rounded-2xl border border-sage/20 bg-white p-6 shadow-sm"
     >
-      <h2 className="text-lg font-semibold text-charcoal mb-4">{title}</h2>
+      <h2 className="text-title font-semibold text-charcoal mb-4">{title}</h2>
       {children}
     </motion.div>
   );
