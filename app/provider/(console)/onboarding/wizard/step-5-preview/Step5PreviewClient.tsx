@@ -2,6 +2,7 @@
 
 import { useFormState } from "react-dom";
 import { useEffect } from "react";
+import Image from "next/image";
 import { saveStep5Preview } from "../actions";
 import type { OnboardingFormState } from "../../_lib/types";
 import { WizardShell } from "../../components/WizardShell";
@@ -67,10 +68,13 @@ export function Step5PreviewClient({ providerId, providerData, classData }: Step
           <CardContent className="space-y-3">
             {providerData.logoUrl && (
               <div className="mb-4">
-                <img
+                <Image
                   src={providerData.logoUrl}
                   alt={`${providerData.name} logo`}
+                  width={64}
+                  height={64}
                   className="h-16 w-auto object-contain"
+                  unoptimized
                 />
               </div>
             )}
@@ -127,11 +131,13 @@ export function Step5PreviewClient({ providerId, providerData, classData }: Step
             {classData.imageUrls && classData.imageUrls.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                 {classData.imageUrls.slice(0, 6).map((url, index) => (
-                  <div key={index} className="aspect-square rounded-lg overflow-hidden border border-sage/20">
-                    <img
+                  <div key={index} className="aspect-square rounded-lg overflow-hidden border border-sage/20 relative">
+                    <Image
                       src={url}
                       alt={`Class photo ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                   </div>
                 ))}

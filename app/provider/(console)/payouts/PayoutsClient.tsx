@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { Download, Calendar, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/emptystate";
@@ -76,7 +76,7 @@ export default function PayoutsClient({ providerId: _providerId }: { providerId:
     setToDate(format(lastMonthEnd, "yyyy-MM-dd"));
   }, []);
 
-  const fetchPayouts = async () => {
+  const fetchPayouts = useCallback(async () => {
     if (!fromDate || !toDate) return;
 
     setLoading(true);
@@ -101,13 +101,13 @@ export default function PayoutsClient({ providerId: _providerId }: { providerId:
     } finally {
       setLoading(false);
     }
-  };
+  }, [fromDate, toDate]);
 
   useEffect(() => {
     if (fromDate && toDate) {
       fetchPayouts();
     }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, fetchPayouts]);
 
   const formatCurrency = (amountCents: number, currency: string = "gbp") => {
     return new Intl.NumberFormat("en-GB", {

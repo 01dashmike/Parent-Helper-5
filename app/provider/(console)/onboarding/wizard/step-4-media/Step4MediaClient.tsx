@@ -2,6 +2,7 @@
 
 import { useFormState } from "react-dom";
 import { useEffect, useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import { saveStep4Media } from "../actions";
 import type { OnboardingFormState } from "../../_lib/types";
@@ -41,61 +42,7 @@ export function Step4MediaClient({ providerId, initialData }: Step4MediaClientPr
   const [existingLogoUrl, setExistingLogoUrl] = useState(initialData.logoUrl || "");
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(initialData.imageUrls || []);
 
-  // Logo dropzone
-  const onLogoDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (!file) return;
-
-    const preview = URL.createObjectURL(file);
-    setLogoFile({
-      file,
-      preview,
-      status: "uploading",
-    });
-
-    // Upload logo
-    uploadLogo(file);
-  }, []);
-
-  const { getRootProps: getLogoRootProps, getInputProps: getLogoInputProps, isDragActive: isLogoDragActive } = useDropzone({
-    onDrop: onLogoDrop,
-    accept: {
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-      "image/webp": [".webp"],
-    },
-    maxFiles: 1,
-    maxSize: 5 * 1024 * 1024, // 5MB
-  });
-
-  // Gallery dropzone
-  const onGalleryDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      status: "uploading" as const,
-    }));
-
-    setGalleryFiles((prev) => [...prev, ...newFiles]);
-
-    // Upload each file with correct index
-    newFiles.forEach((uploadingFile, relativeIndex) => {
-      const absoluteIndex = galleryFiles.length + relativeIndex;
-      uploadGalleryImage(uploadingFile.file, absoluteIndex);
-    });
-  }, [galleryFiles.length]);
-
-  const { getRootProps: getGalleryRootProps, getInputProps: getGalleryInputProps, isDragActive: isGalleryDragActive } = useDropzone({
-    onDrop: onGalleryDrop,
-    accept: {
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-      "image/webp": [".webp"],
-    },
-    maxSize: 5 * 1024 * 1024, // 5MB
-  });
-
-  const uploadLogo = async (file: File) => {
+  const uploadLogo = useCallback(async (file: File) => {
     try {
       const formData = new FormData();
       formData.append("logo", file);
@@ -118,15 +65,15 @@ export function Step4MediaClient({ providerId, initialData }: Step4MediaClientPr
     } catch (error) {
       setLogoFile((prev) => prev ? { ...prev, status: "error", error: "Upload failed" } : null);
     }
-  };
+  }, [providerId]);
 
-  const uploadGalleryImage = async (file: File, fileIndex: number) => {
+  const uploadGalleryImage = useCallback(async (file: File, fileIndex: number) => {
     try {
       const formData = new FormData();
       formData.append("image", file);
       formData.append("providerId", providerId.toString());
       formData.append("type", "gallery");
-      formData.append("index", fileIndex.toString());
+      formData.append("fileIndex", fileIndex.toString());
 
       const response = await fetch("/api/provider/upload", {
         method: "POST",
@@ -138,24 +85,17 @@ export function Step4MediaClient({ providerId, initialData }: Step4MediaClientPr
       if (result.success && result.url) {
         setGalleryFiles((prev) => {
           const updated = [...prev];
-          const actualIndex = prev.findIndex((f, i) => i === fileIndex);
-          if (actualIndex >= 0) {
-            updated[actualIndex] = { ...updated[actualIndex], status: "success", url: result.url };
+          if (updated[fileIndex]) {
+            updated[fileIndex] = { ...updated[fileIndex], status: "success", url: result.url };
           }
           return updated;
         });
-        setExistingImageUrls((prev) => {
-          if (!prev.includes(result.url)) {
-            return [...prev, result.url];
-          }
-          return prev;
-        });
+        setExistingImageUrls((prev) => [...prev, result.url]);
       } else {
         setGalleryFiles((prev) => {
           const updated = [...prev];
-          const actualIndex = prev.findIndex((f, i) => i === fileIndex);
-          if (actualIndex >= 0) {
-            updated[actualIndex] = { ...updated[actualIndex], status: "error", error: result.error || "Upload failed" };
+          if (updated[fileIndex]) {
+            updated[fileIndex] = { ...updated[fileIndex], status: "error", error: result.error || "Upload failed" };
           }
           return updated;
         });
@@ -163,14 +103,69 @@ export function Step4MediaClient({ providerId, initialData }: Step4MediaClientPr
     } catch (error) {
       setGalleryFiles((prev) => {
         const updated = [...prev];
-        const actualIndex = prev.findIndex((f, i) => i === fileIndex);
-        if (actualIndex >= 0) {
-          updated[actualIndex] = { ...updated[actualIndex], status: "error", error: "Upload failed" };
+        if (updated[fileIndex]) {
+          updated[fileIndex] = { ...updated[fileIndex], status: "error", error: "Upload failed" };
         }
         return updated;
       });
     }
-  };
+  }, [providerId]);
+
+  // Logo dropzone
+  const onLogoDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    const preview = URL.createObjectURL(file);
+    setLogoFile({
+      file,
+      preview,
+      status: "uploading",
+    });
+
+    // Upload logo
+    uploadLogo(file);
+  }, [uploadLogo]);
+
+  const { getRootProps: getLogoRootProps, getInputProps: getLogoInputProps, isDragActive: isLogoDragActive } = useDropzone({
+    onDrop: onLogoDrop,
+    accept: {
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+    },
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024, // 5MB
+  });
+
+  // Gallery dropzone
+  const onGalleryDrop = useCallback((acceptedFiles: File[]) => {
+    const newFiles = acceptedFiles.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      status: "uploading" as const,
+    }));
+
+    setGalleryFiles((prev) => {
+      const updated = [...prev, ...newFiles];
+      // Upload each file with correct index
+      newFiles.forEach((uploadingFile, relativeIndex) => {
+        const absoluteIndex = prev.length + relativeIndex;
+        uploadGalleryImage(uploadingFile.file, absoluteIndex);
+      });
+      return updated;
+    });
+  }, [uploadGalleryImage]);
+
+  const { getRootProps: getGalleryRootProps, getInputProps: getGalleryInputProps, isDragActive: isGalleryDragActive } = useDropzone({
+    onDrop: onGalleryDrop,
+    accept: {
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+    },
+    maxSize: 5 * 1024 * 1024, // 5MB
+  });
 
   const removeLogo = () => {
     if (logoFile?.preview) {
@@ -255,6 +250,7 @@ export function Step4MediaClient({ providerId, initialData }: Step4MediaClientPr
                     src={logoFile?.preview || existingLogoUrl}
                     alt="Logo preview"
                     className="h-24 w-auto object-contain rounded"
+                    // Using img for blob URLs (preview) - Next.js Image doesn't support blob URLs
                   />
                   {logoFile?.status === "uploading" && (
                     <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded">
@@ -332,10 +328,12 @@ export function Step4MediaClient({ providerId, initialData }: Step4MediaClientPr
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="relative aspect-square rounded-lg overflow-hidden border border-sage/20 group"
                 >
-                  <img
+                  <Image
                     src={url}
                     alt={`Gallery ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                   <Button
                     type="button"
@@ -363,6 +361,7 @@ export function Step4MediaClient({ providerId, initialData }: Step4MediaClientPr
                     src={uploadingFile.preview}
                     alt={`Upload ${index + 1}`}
                     className="w-full h-full object-cover"
+                    // Using img for blob URLs (preview) - Next.js Image doesn't support blob URLs
                   />
                   {uploadingFile.status === "uploading" && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

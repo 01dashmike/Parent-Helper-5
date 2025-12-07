@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, ElementType } from "react";
+import { forwardRef, ElementType, ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
 
 export interface CardContainerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -127,23 +127,27 @@ export const CardContainer = forwardRef<HTMLDivElement, CardContainerProps>(
       onKeyDown?.(event);
     };
 
+    const componentProps = {
+      role: interactive ? "button" : undefined,
+      "aria-label": interactive && ariaLabel ? ariaLabel : undefined,
+      tabIndex: interactive ? 0 : undefined,
+      onClick,
+      onKeyDown: handleKeyDown,
+      className: cn(
+        baseClasses,
+        variantClasses[variant || "default"],
+        bgClasses[bgVariant || "white"],
+        interactiveClasses,
+        selectedClasses,
+        className
+      ),
+      ...props,
+    } as ComponentPropsWithoutRef<ElementType>;
+
     return (
       <Component
         ref={ref}
-        role={interactive ? "button" : undefined}
-        aria-label={interactive && ariaLabel ? ariaLabel : undefined}
-        tabIndex={interactive ? 0 : undefined}
-        onClick={onClick}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          baseClasses,
-          variantClasses[variant || "default"],
-          bgClasses[bgVariant || "white"],
-          interactiveClasses,
-          selectedClasses,
-          className
-        )}
-        {...props}
+        {...componentProps}
       >
         {children}
       </Component>

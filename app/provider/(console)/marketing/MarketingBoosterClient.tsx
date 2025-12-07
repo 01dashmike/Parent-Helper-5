@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useProviderSession } from "../_components/ProviderContext";
 
 type SeoScore = {
@@ -55,13 +55,7 @@ export function MarketingBoosterClient() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (providerId) {
-      loadData();
-    }
-  }, [providerId]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!providerId) return;
 
     setLoading(true);
@@ -95,7 +89,13 @@ export function MarketingBoosterClient() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [providerId]);
+
+  useEffect(() => {
+    if (providerId) {
+      loadData();
+    }
+  }, [providerId, loadData]);
 
   async function generateInsights(type: "seo" | "meta" | "tiktok") {
     if (!providerId) return;
