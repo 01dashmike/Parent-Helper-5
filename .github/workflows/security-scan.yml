@@ -72,7 +72,48 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.event_name == 'schedule'
     steps:
+
       - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy-key' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'http://localhost:54321' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'dummy-key' }}
+
+      - name: Start server
+        run: npm start &
+        env:
+          PORT: 3000
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy-key' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'http://localhost:54321' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'dummy-key' }}
+
+      - name: Wait for server
+        run: |
+          timeout=60
+          elapsed=0
+          while ! curl -f http://localhost:3000 > /dev/null 2>&1; do
+            if [ $elapsed -ge $timeout ]; then
+              echo "Server failed to start"
+              exit 1
+            fi
+            sleep 2
+            elapsed=$((elapsed + 2))
+          done
+          echo "Server is ready"
 
       - name: ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.11.0
