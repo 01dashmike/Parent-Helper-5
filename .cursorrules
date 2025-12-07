@@ -1,0 +1,47 @@
+# Project overview
+
+- This is a React 18.2 + Next.js + TypeScript app.
+
+- It uses Supabase for auth, database, and storage.
+
+- Goal: reliable booking / directory platform for pre‑primary classes.
+
+
+
+# Coding style
+
+- Always assume React 18.2.0 patterns and functional components.
+
+- Prefer TypeScript with strict types and explicit return types.
+
+- Keep components small and focused; extract helpers to /lib or /utils.
+
+- Follow existing folder conventions instead of inventing new ones.
+
+
+
+# Supabase auth and data
+
+- Use Supabase client from the existing helper file (do not re‑initialize clients in random components).
+
+- Handle auth state centrally; do not add ad‑hoc `onAuthStateChange` listeners in UI components.
+
+- When writing queries, reuse existing RPCs or helper functions if they exist.
+
+
+
+# Safety and performance
+
+- Prefer incremental changes over giant rewrites; keep diffs small.
+
+- Avoid pulling huge logs or JSON blobs into prompts; summarize instead.
+
+- If a change would touch more than 5–10 files, propose a plan first.
+
+
+
+# How to respond
+
+- When unsure, ask a brief clarifying question before editing many files.
+
+- Explain migrations or schema changes before applying them.

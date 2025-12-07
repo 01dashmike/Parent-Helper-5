@@ -1,0 +1,20 @@
+{
+  "experiments": {
+    "homepage_hero": {
+      "enabled": true,
+      "variants": ["A", "B"],
+      "description": "Test different hero layouts and messaging on homepage"
+    },
+    "search_layout": {
+      "enabled": true,
+      "variants": ["A", "B"],
+      "description": "Test different search bar layouts and placements"
+    },
+    "class_card_layout": {
+      "enabled": true,
+      "variants": ["A", "B"],
+      "description": "Test different class card designs and information density"
+    }
+  }
+}
+

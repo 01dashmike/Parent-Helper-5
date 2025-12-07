@@ -1,0 +1,26 @@
+You're all set! 🎉
+
+Welcome to Parent Helper's personalised newsletter
+
+Hi there,
+
+Great to have you! We're excited to help you discover amazing activities for your little ones.
+
+What to expect:
+• Local class recommendations tailored to your area
+• Age-appropriate activities based on your children's ages
+• Early access to new classes and special offers
+• Parent tips and activity ideas for busy families
+
+Next step: Tell us a bit more about your children so we can personalise your newsletter even more. It only takes a minute!
+
+Tell us about your children: {{profileLink}}
+
+Don't worry if you're busy right now – you can always update your preferences later. We'll send you our first newsletter next week with great local activities near you.
+
+Your privacy matters: We only use your information to send you relevant class recommendations and never share your data with third parties. You can update your preferences or unsubscribe anytime. Read our privacy policy: {{privacyLink}}
+
+---
+Parent Helper
+Unsubscribe: {{unsubscribeLink}} | Update preferences: {{preferencesLink}}
+

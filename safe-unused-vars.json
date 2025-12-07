@@ -1,0 +1,366 @@
+Safe files to fix: 33
+Skipped files (server actions): 4
+[
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/calendar-sync/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 47,
+        "message": "'error' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/calendar/_components/CalendarSyncClient.tsx",
+    "issues": 3,
+    "messages": [
+      {
+        "line": 13,
+        "message": "'_isLoading' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      },
+      {
+        "line": 13,
+        "message": "'_setIsLoading' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      },
+      {
+        "line": 37,
+        "message": "'_err' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/calendar/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 40,
+        "message": "'error' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/dashboard/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 103,
+        "message": "'error' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/notifications/NotificationsClient.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 3,
+        "message": "'useEffect' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/referrals/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 46,
+        "message": "'randomBytes' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/rewards/_components/RewardsClient.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 188,
+        "message": "'_redeemedValue' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/wallet/WalletBalance.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 19,
+        "message": "'err' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/account/wallet/WalletClient.tsx",
+    "issues": 2,
+    "messages": [
+      {
+        "line": 85,
+        "message": "'mockErr' is defined but never used."
+      },
+      {
+        "line": 243,
+        "message": "'isAdjustment' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/admin/analytics/insights/_components/AIInsightsClient.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 53,
+        "message": "'_data' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/admin/bookings/BookingsTable.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 116,
+        "message": "'searchParams' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/admin/questions/AdminQuestionsClient.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 3,
+        "message": "'useEffect' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/booking/thanks/ReferralPrompt.tsx",
+    "issues": 2,
+    "messages": [
+      {
+        "line": 12,
+        "message": "'bookingId' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "line": 12,
+        "message": "'userEmail' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/booking/thanks/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 4,
+        "message": "'notFound' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/class/[id]/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 334,
+        "message": "'index' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/family/planner/FamilyPlannerClient.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 32,
+        "message": "'setCurrentDate' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/parents/NewsletterSignup.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 33,
+        "message": "'error' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/provider/(console)/analytics/components/GrowthScoreWidget.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 34,
+        "message": "'_setTrend' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/provider/(console)/classes/[id]/occurrences/OccurrencesManager.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 164,
+        "message": "'classId' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/provider/(console)/classes/[id]/schedule/BulkSchedulingDrawer.tsx",
+    "issues": 2,
+    "messages": [
+      {
+        "line": 4,
+        "message": "'formatDayOfWeek' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      },
+      {
+        "line": 4,
+        "message": "'parseDayOfWeek' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/provider/(console)/payouts/PayoutsClient.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 61,
+        "message": "'providerId' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/provider/(console)/reviews/ReviewsClient.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 33,
+        "message": "'providerId' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/r/[code]/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 22,
+        "message": "'referrerName' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/referrals/info/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 91,
+        "message": "'baseUrl' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/send/classes/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 39,
+        "message": "'error' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/app/studio/videos/page.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 1,
+        "message": "'cookies' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/client/src/pages/list-class.tsx",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 61,
+        "message": "'error' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/e2e/provider-referrals.spec.ts",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 31,
+        "message": "'context' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/lib/marketing/automation.ts",
+    "issues": 2,
+    "messages": [
+      {
+        "line": 277,
+        "message": "'error' is defined but never used."
+      },
+      {
+        "line": 292,
+        "message": "'error' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/lib/recommendations/buildRecommendations.ts",
+    "issues": 2,
+    "messages": [
+      {
+        "line": 202,
+        "message": "'childAgeMonths' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "line": 235,
+        "message": "'postcode' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/lib/referrals/createStripeCoupon.ts",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 39,
+        "message": "'retrieveError' is defined but never used."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/lib/supabase.ts",
+    "issues": 2,
+    "messages": [
+      {
+        "line": 1,
+        "message": "'hasSupabaseBrowserEnv' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      },
+      {
+        "line": 1,
+        "message": "'hasSupabaseServerEnv' is defined but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+      }
+    ]
+  },
+  {
+    "file": "/Users/mike/Documents/Parent-Helper-5/lib/utils/recommendation-engine.ts",
+    "issues": 1,
+    "messages": [
+      {
+        "line": 223,
+        "message": "'className' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  }
+]

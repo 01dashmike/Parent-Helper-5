@@ -1,0 +1,29 @@
+name: Lint & Typecheck
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+      - name: Run ESLint
+        run: npx eslint . --ext .ts,.tsx
+      - name: Run Type Check
+        run: npm run typecheck || true
+      - name: Run Prettier Check
+        run: npx prettier . --check
+

@@ -1,0 +1,73 @@
+{
+  "blogPosts": [
+    {
+      "title": "Understanding SEND: A Parent's Guide",
+      "excerpt": "Learn about special educational needs and disabilities, and how to navigate the system.",
+      "href": "/blog/understanding-send"
+    },
+    {
+      "title": "Finding the Right Class for Your Child",
+      "excerpt": "Tips for identifying classes that will support your child's needs and interests.",
+      "href": "/blog/finding-send-classes"
+    },
+    {
+      "title": "Accessibility Checklist for Parents",
+      "excerpt": "What to look for when choosing activities and venues for your child.",
+      "href": "/blog/accessibility-checklist"
+    }
+  ],
+  "localGroups": [
+    {
+      "name": "Manchester SEND Support Group",
+      "location": "Manchester",
+      "description": "Monthly meetups for parents and carers of children with SEND.",
+      "website": "https://example.com/manchester-send"
+    },
+    {
+      "name": "Birmingham Parent Network",
+      "location": "Birmingham",
+      "description": "Local support network offering advice and friendship.",
+      "website": "https://example.com/birmingham-parents"
+    }
+  ],
+  "nationalCharities": [
+    {
+      "name": "Contact",
+      "description": "Supporting families with disabled children.",
+      "website": "https://contact.org.uk"
+    },
+    {
+      "name": "Scope",
+      "description": "Disability equality charity in England and Wales.",
+      "website": "https://scope.org.uk"
+    },
+    {
+      "name": "Mencap",
+      "description": "Supporting people with learning disabilities.",
+      "website": "https://mencap.org.uk"
+    },
+    {
+      "name": "National Autistic Society",
+      "description": "Leading UK charity for people on the autism spectrum.",
+      "website": "https://autism.org.uk"
+    }
+  ],
+  "legalAid": [
+    {
+      "title": "EHCP Support",
+      "description": "Information about Education, Health and Care Plans and how to get support.",
+      "link": "https://www.gov.uk/children-with-special-educational-needs"
+    },
+    {
+      "title": "Disability Living Allowance",
+      "description": "Financial support for children with disabilities.",
+      "link": "https://www.gov.uk/disability-living-allowance-children"
+    },
+    {
+      "title": "Legal Aid Finder",
+      "description": "Find free legal advice and representation.",
+      "link": "https://www.gov.uk/legal-aid"
+    }
+  ]
+}
+

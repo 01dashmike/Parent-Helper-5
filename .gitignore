@@ -1,3 +1,113 @@
+# Dependencies
 node_modules
+/.pnp
+.pnp.js
 
+# Testing
+/coverage
+/.nyc_output
+
+# Next.js
+/.next/
+/.next 2/
+/out/
+/build
+/dist
+
+# Production
+/build
+/dist
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# Local env files
 .env
+.env*.local
+.env.local
+.env.dev
+.env.production
+.env.*.backup
+.env.local.backup
+
+# Vercel
+.vercel
+
+# Turbo
+.turbo
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Cursor (optional - uncomment if you don't want to track)
+# .cursorrules
+
+# Backups
+node_modules.backup/
+node_modules_backup*/
+app-backup/
+backups/
+*.backup
+*_backup_*
+*backup*.sql
+*backup*.csv
+*backup*.json
+
+# Duplicate numbered files (like "ci 2.yml", "ci 3.yml")
+.github/workflows/* [0-9]*.yml
+
+# Temporary and test files
+/temp/
+/test-results/
+*.tmp
+*.temp
+
+# Husky (if not tracking git hooks)
+.husky/_/
+
+# Pa11y config (if not needed in repo)
+.pa11yci.json
+
+# Numbered duplicate files (e.g., "file 2.tsx", "file 3.ts")
+* [0-9].tsx
+* [0-9].ts
+* [0-9].yml
+* [0-9].sql
+* [0-9].md
+* [0-9].mjs
+* [0-9].json
+* [0-9].js
+* [0-9].cjs
+
+# TypeScript/ESLint error reports and temp files
+tsc-errors.txt
+tsc-*.txt
+eslint-*.json
+eslint-*.txt
+unused-vars*.json
+*-report.json
+*-report.txt
+
+# Standalone HTML test files
+*.standalone.html
+parent-helper*.html
+minimal-test.html
+index.html
+major-mercury/

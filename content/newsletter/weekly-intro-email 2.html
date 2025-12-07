@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Weekly Local Activities</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f3f0;">
+  
+  <!-- Header -->
+  <div style="background: white; border-radius: 8px; padding: 30px 20px; margin-bottom: 20px; text-align: center;">
+    <h1 style="margin: 0; color: #3d3d3d; font-size: 24px;">Your weekly local activities 📍</h1>
+    <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Handpicked for families in {{location}}</p>
+  </div>
+
+  <!-- Personalised Greeting -->
+  <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px;">
+    <p style="margin: 0 0 15px; color: #3d3d3d; font-size: 16px;">
+      Hi {{firstName}},
+    </p>
+    
+    <p style="margin: 0 0 15px; color: #3d3d3d; font-size: 16px;">
+      We've found {{classCount}} {{ageGroup}} classes near you this week that your little ones will love. Here are our top picks:
+    </p>
+  </div>
+
+  <!-- Featured Classes -->
+  <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px;">
+    <h2 style="margin: 0 0 20px; color: #3d3d3d; font-size: 20px;">✨ This week's highlights</h2>
+    
+    {{#each featuredClasses}}
+    <div style="border-bottom: 1px solid #e0e0e0; padding-bottom: 20px; margin-bottom: 20px;">
+      <h3 style="margin: 0 0 8px; color: #3d3d3d; font-size: 18px;">{{name}}</h3>
+      <p style="margin: 0 0 8px; color: #666; font-size: 14px;">📍 {{location}} • 👶 Ages {{ageRange}}</p>
+      <p style="margin: 0 0 12px; color: #666; font-size: 14px; line-height: 1.6;">{{description}}</p>
+      <a href="{{classLink}}" style="display: inline-block; padding: 8px 16px; background: #9bae82; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 600;">View class →</a>
+    </div>
+    {{/each}}
+  </div>
+
+  <!-- Local Tip -->
+  <div style="background: #fff9e6; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+    <p style="margin: 0; color: #3d3d3d; font-size: 14px; line-height: 1.6;">
+      <strong>💡 Local tip:</strong> {{localTip}}
+    </p>
+  </div>
+
+  <!-- CTA -->
+  <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; text-align: center;">
+    <p style="margin: 0 0 20px; color: #3d3d3d; font-size: 16px;">
+      Want to see more? Browse all {{category}} classes in {{location}}:
+    </p>
+    <a href="{{browseLink}}" style="display: inline-block; padding: 14px 28px; background: #9bae82; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">Browse all classes →</a>
+  </div>
+
+  <!-- Quick Links -->
+  <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+    <p style="margin: 0 0 12px; color: #3d3d3d; font-size: 14px; font-weight: 600;">Quick links:</p>
+    <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px;">
+      <li style="margin-bottom: 6px;"><a href="{{savedSearchesLink}}" style="color: #9bae82;">Your saved searches</a></li>
+      <li style="margin-bottom: 6px;"><a href="{{upcomingBookingsLink}}" style="color: #9bae82;">Upcoming bookings</a></li>
+      <li style="margin-bottom: 6px;"><a href="{{preferencesLink}}" style="color: #9bae82;">Update preferences</a></li>
+    </ul>
+  </div>
+
+  <!-- Privacy Reminder -->
+  <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
+    <p style="margin: 0; color: #666; font-size: 12px; line-height: 1.5;">
+      We only use your location and children's ages to show you relevant classes. Your data stays private and secure. 
+      <a href="{{privacyLink}}" style="color: #9bae82;">Learn more</a>.
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align: center; padding: 20px 0; color: #999; font-size: 12px;">
+    <p style="margin: 0 0 10px;">Parent Helper</p>
+    <p style="margin: 0;">
+      <a href="{{unsubscribeLink}}" style="color: #999; text-decoration: underline;">Unsubscribe</a> | 
+      <a href="{{preferencesLink}}" style="color: #999; text-decoration: underline;">Update preferences</a>
+    </p>
+  </div>
+
+</body>
+</html>
+

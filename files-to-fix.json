@@ -1,0 +1,35 @@
+{
+  "components/LocalPhoto.tsx": [
+    {
+      "line": 69,
+      "column": 16,
+      "message": "'_error' is defined but never used."
+    }
+  ],
+  "components/SearchFields.tsx": [
+    {
+      "line": 79,
+      "column": 16,
+      "message": "'_geoError' is defined but never used."
+    },
+    {
+      "line": 91,
+      "column": 14,
+      "message": "'_error' is defined but never used."
+    }
+  ],
+  "components/home/PersonalizedRecommendations.tsx": [
+    {
+      "line": 35,
+      "column": 16,
+      "message": "'_error' is defined but never used."
+    }
+  ],
+  "components/provider/ReferralsDashboard.tsx": [
+    {
+      "line": 58,
+      "column": 13,
+      "message": "'_providerData' is assigned a value but never used. Allowed unused vars must match /^(?:_|[A-Z].*)$/u."
+    }
+  ]
+}

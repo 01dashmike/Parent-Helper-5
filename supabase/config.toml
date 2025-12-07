@@ -1,0 +1,6 @@
+# Supabase CLI Configuration
+# This file configures the Supabase CLI to use .env.dev instead of .env.local
+
+[project]
+env = ".env.dev"
+

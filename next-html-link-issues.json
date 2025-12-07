@@ -1,0 +1,47 @@
+[
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/admin/page.tsx",
+    "line": 23,
+    "message": "Do not use an `<a>` element to navigate to `/admin/leads/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/admin/page.tsx",
+    "line": 28,
+    "message": "Do not use an `<a>` element to navigate to `/admin/settings/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/book/thank-you/page.tsx",
+    "line": 159,
+    "message": "Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/book/thank-you/page.tsx",
+    "line": 159,
+    "message": "Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/onboarding/premium/page.tsx",
+    "line": 269,
+    "message": "Do not use an `<a>` element to navigate to `/onboarding/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/r/[code]/ReferralLandingClient.tsx",
+    "line": 96,
+    "message": "Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/r/[code]/ReferralLandingClient.tsx",
+    "line": 96,
+    "message": "Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/app/r/[code]/ReferralLandingClient.tsx",
+    "line": 101,
+    "message": "Do not use an `<a>` element to navigate to `/referrals/info/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  },
+  {
+    "filePath": "/Users/mike/Documents/Parent-Helper-5/components/search/ResultsSplit.tsx",
+    "line": 219,
+    "message": "Do not use an `<a>` element to navigate to `/search/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages"
+  }
+]

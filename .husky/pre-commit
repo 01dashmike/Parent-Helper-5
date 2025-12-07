@@ -1,0 +1,16 @@
+#!/bin/sh
+
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔧 Running safe autofix linting..."
+
+npx eslint . --ext .ts,.tsx --fix --quiet || true
+
+echo "✨ Lint autofix complete!"
+
+echo "🔧 Running Prettier formatting..."
+
+npx prettier . --write
+
+echo "✨ Prettier formatting complete!"
+

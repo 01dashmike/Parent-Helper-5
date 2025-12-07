@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "cacheVersion": "parent-helper-v2",
+  "staticAssets": {
+    "icons": [
+      "/images/categories/logo.png",
+      "/images/categories/logo.webp",
+      "/images/categories/logo.avif",
+      "/images/logo.png"
+    ],
+    "fonts": [
+      "/fonts/inter/inter-regular.woff2",
+      "/fonts/inter/inter-bold.woff2",
+      "/fonts/poppins/poppins-regular.woff2",
+      "/fonts/poppins/poppins-semibold.woff2"
+    ],
+    "criticalImages": [
+      "/images/categories/family-hero.png",
+      "/images/categories/messy-play.webp"
+    ],
+    "pages": [
+      "/",
+      "/search",
+      "/account"
+    ]
+  },
+  "imageFallbacks": {
+    "/images/providers/": "/images/categories/logo.png",
+    "/images/categories/": "/images/categories/logo.png",
+    "/images/classes/": "/images/categories/logo.png"
+  },
+  "preload": {
+    "images": [
+      "/images/categories/logo.png",
+      "/images/categories/logo.webp",
+      "/images/categories/family-hero.png"
+    ],
+    "fonts": [
+      "/fonts/inter/inter-regular.woff2",
+      "/fonts/inter/inter-bold.woff2",
+      "/fonts/poppins/poppins-regular.woff2",
+      "/fonts/poppins/poppins-semibold.woff2"
+    ]
+  }
+}
+

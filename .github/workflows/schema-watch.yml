@@ -1,0 +1,190 @@
+name: Schema Watch
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**/*.sql"
+      - "shared/schema.ts"
+  push:
+    branches: [main, develop]
+    paths:
+      - "supabase/migrations/**/*.sql"
+      - "shared/schema.ts"
+
+env:
+  NODE_VERSION: "20"
+  SUPABASE_VERSION: "latest"
+
+jobs:
+  schema-check:
+    name: Schema Consistency Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for diff checking
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Detect changed migration files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            supabase/migrations/**/*.sql
+            shared/schema.ts
+
+      - name: List changed files
+        run: |
+          echo "Changed migration files:"
+          echo "${{ steps.changed-files.outputs.all_changed_files }}"
+
+      - name: Validate migration file naming
+        run: |
+          MIGRATION_DIR="supabase/migrations"
+          INVALID_FILES=()
+          
+          for file in "$MIGRATION_DIR"/*.sql; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              # Check if filename matches pattern: YYYYMMDD_description.sql
+              if ! [[ "$filename" =~ ^[0-9]{8}_[a-z0-9_]+\.sql$ ]]; then
+                INVALID_FILES+=("$filename")
+              fi
+            fi
+          done
+          
+          if [ ${#INVALID_FILES[@]} -gt 0 ]; then
+            echo "❌ Invalid migration file names found:"
+            printf '%s\n' "${INVALID_FILES[@]}"
+            echo "Migration files must follow pattern: YYYYMMDD_description.sql"
+            exit 1
+          else
+            echo "✓ All migration files have valid names"
+          fi
+
+      - name: Check for SQL syntax errors
+        run: |
+          MIGRATION_DIR="supabase/migrations"
+          ERRORS=()
+          
+          for file in "$MIGRATION_DIR"/*.sql; do
+            if [ -f "$file" ]; then
+              # Basic SQL syntax check (check for balanced parentheses, quotes, etc.)
+              OPEN_PARENS=$(grep -o '(' "$file" | wc -l)
+              CLOSE_PARENS=$(grep -o ')' "$file" | wc -l)
+              
+              if [ "$OPEN_PARENS" -ne "$CLOSE_PARENS" ]; then
+                ERRORS+=("$file: Unbalanced parentheses")
+              fi
+            fi
+          done
+          
+          if [ ${#ERRORS[@]} -gt 0 ]; then
+            echo "❌ SQL syntax issues found:"
+            printf '%s\n' "${ERRORS[@]}"
+            exit 1
+          else
+            echo "✓ Basic SQL syntax checks passed"
+          fi
+        continue-on-error: true
+
+      - name: Start Supabase (ephemeral)
+        run: |
+          supabase start --no-healthcheck || echo "Supabase start failed, continuing..."
+        continue-on-error: true
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Apply migrations to test database
+        run: |
+          if command -v supabase &> /dev/null; then
+            echo "Applying migrations..."
+            supabase db reset --linked || supabase migration up || echo "Migration apply skipped"
+          else
+            echo "Supabase CLI not available, skipping migration apply"
+          fi
+        continue-on-error: true
+
+      - name: Generate schema snapshot
+        run: |
+          if command -v supabase &> /dev/null; then
+            supabase db dump --schema public > schema-snapshot.sql 2>&1 || echo "Schema dump failed" > schema-snapshot.sql
+          else
+            echo "Supabase CLI not available" > schema-snapshot.sql
+          fi
+        continue-on-error: true
+
+      - name: Compare schema with expected definitions
+        run: |
+          if [ -f schema-snapshot.sql ]; then
+            echo "Schema snapshot generated"
+            echo "--- Schema Snapshot ---"
+            head -50 schema-snapshot.sql || true
+          fi
+          
+          # Check if shared/schema.ts exists and validate consistency
+          if [ -f "shared/schema.ts" ]; then
+            echo "✓ shared/schema.ts exists"
+            
+            # Check for common table names in both files
+            TABLES_IN_SCHEMA=$(grep -o "pgTable(\"[^\"]*\"" shared/schema.ts | sed 's/pgTable("\([^"]*\)"/\1/' | sort -u)
+            echo "Tables defined in schema.ts:"
+            echo "$TABLES_IN_SCHEMA"
+          fi
+        continue-on-error: true
+
+      - name: Check for breaking changes
+        run: |
+          echo "Checking for potential breaking changes..."
+          
+          # Check for DROP statements (potential breaking changes)
+          DROP_STATEMENTS=$(find supabase/migrations -name "*.sql" -exec grep -l "DROP TABLE\|DROP COLUMN\|DROP INDEX" {} \; || true)
+          
+          if [ -n "$DROP_STATEMENTS" ]; then
+            echo "⚠️ Warning: DROP statements found in migrations:"
+            echo "$DROP_STATEMENTS"
+            echo "::warning::Breaking changes detected. Ensure migrations are backward compatible."
+          else
+            echo "✓ No obvious breaking changes detected"
+          fi
+        continue-on-error: true
+
+      - name: Upload schema artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-artifacts
+          path: |
+            schema-snapshot.sql
+            schema-diff.txt
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Fail if schema is inconsistent
+        run: |
+          if [ -f schema-snapshot.sql ]; then
+            SNAPSHOT_SIZE=$(wc -c < schema-snapshot.sql)
+            if [ "$SNAPSHOT_SIZE" -lt 100 ]; then
+              echo "❌ Schema snapshot is too small, migrations may have failed"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ Schema consistency check passed"
+

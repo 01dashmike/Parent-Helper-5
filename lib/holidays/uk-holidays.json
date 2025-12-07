@@ -1,0 +1,80 @@
+[
+  {
+    "name": "Easter Holidays",
+    "start": "2024-03-29",
+    "end": "2024-04-14",
+    "region": "england",
+    "year": 2024
+  },
+  {
+    "name": "Summer Holidays",
+    "start": "2024-07-22",
+    "end": "2024-09-02",
+    "region": "england",
+    "year": 2024
+  },
+  {
+    "name": "Autumn Half Term",
+    "start": "2024-10-28",
+    "end": "2024-11-03",
+    "region": "england",
+    "year": 2024
+  },
+  {
+    "name": "Christmas Holidays",
+    "start": "2024-12-20",
+    "end": "2025-01-06",
+    "region": "england",
+    "year": 2024
+  },
+  {
+    "name": "Spring Half Term",
+    "start": "2025-02-17",
+    "end": "2025-02-23",
+    "region": "england",
+    "year": 2025
+  },
+  {
+    "name": "Easter Holidays",
+    "start": "2025-04-11",
+    "end": "2025-04-27",
+    "region": "england",
+    "year": 2025
+  },
+  {
+    "name": "Summer Holidays",
+    "start": "2025-07-21",
+    "end": "2025-09-01",
+    "region": "england",
+    "year": 2025
+  },
+  {
+    "name": "Easter Holidays",
+    "start": "2024-03-29",
+    "end": "2024-04-15",
+    "region": "scotland",
+    "year": 2024
+  },
+  {
+    "name": "Summer Holidays",
+    "start": "2024-06-28",
+    "end": "2024-08-19",
+    "region": "scotland",
+    "year": 2024
+  },
+  {
+    "name": "Easter Holidays",
+    "start": "2024-03-29",
+    "end": "2024-04-14",
+    "region": "wales",
+    "year": 2024
+  },
+  {
+    "name": "Summer Holidays",
+    "start": "2024-07-22",
+    "end": "2024-09-02",
+    "region": "wales",
+    "year": 2024
+  }
+]
+

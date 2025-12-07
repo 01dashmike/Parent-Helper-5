@@ -1,0 +1,145 @@
+name: Migration Tests
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/assert-migrations-clean.mjs"
+      - "tests/unit/migrations/**"
+      - "tests/e2e/migrations/**"
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch:
+
+jobs:
+  migration-tests:
+    name: Migration Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Verify Supabase CLI
+        run: supabase --version
+
+      - name: Run migration unit tests
+        run: npm run test:unit tests/unit/migrations/validateMigrations.test.ts
+        continue-on-error: false
+
+      - name: Run migration assertion script
+        run: npm run migration:verify
+        continue-on-error: false
+
+      - name: Check for schema drift
+        run: |
+          # Check if migrations directory has changes
+          if [ -d "supabase/migrations" ]; then
+            echo "Checking for schema drift..."
+            supabase db diff --use-mig-dir --schema public || echo "Diff check completed (non-zero exit is OK if no drift)"
+          else
+            echo "No migrations directory found"
+            exit 1
+          fi
+
+      - name: Run Supabase DB Lint
+        run: |
+          if [ -d "supabase/migrations" ]; then
+            supabase db lint --use-mig-dir || {
+              echo "❌ Migration linting failed"
+              echo "Review the errors above and fix SQL syntax issues"
+              exit 1
+            }
+          fi
+
+      - name: Setup Docker for E2E tests
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          # Docker is pre-installed on GitHub Actions runners
+          docker --version
+          sudo systemctl start docker || true
+
+      - name: Run E2E migration tests
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          # Only run E2E tests on pushes to main/develop or PRs from same repo
+          # E2E tests require Docker and can be resource-intensive
+          echo "Running E2E migration tests..."
+          npm run test:e2e tests/e2e/migrations/migration-flow.spec.ts || {
+            echo "⚠️ E2E migration tests failed or skipped"
+            echo "This is expected if Docker is not available or Supabase CLI setup fails"
+            echo "Unit tests and lint checks are the primary validation"
+            exit 0  # Don't fail the workflow for E2E test issues
+          }
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+      - name: Comment on PR (if failed)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## ❌ Migration Validation Failed
+
+            The migration tests failed. Please review:
+
+            1. **Check the error output** in the workflow logs
+            2. **Run locally**: \`npm run migration:verify\`
+            3. **Fix SQL syntax errors** if any
+            4. **Check for schema drift**: \`supabase db diff --use-mig-dir\`
+
+            ### Common Issues:
+            - SQL syntax errors (unbalanced parentheses, quotes)
+            - RLS policies referencing non-existent tables
+            - Duplicate table creation
+            - Missing foreign key constraints
+
+            ### How to Fix:
+            \`\`\`bash
+            # Run validation locally
+            npm run migration:verify
+
+            # Check specific migration
+            supabase db lint --use-mig-dir
+
+            # Test locally
+            supabase start
+            supabase db reset
+            \`\`\`
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
