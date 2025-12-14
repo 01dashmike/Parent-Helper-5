@@ -116,3 +116,6 @@ create trigger user_class_preferences_updated_at before update on user_class_pre
 
 
 
+
+
+

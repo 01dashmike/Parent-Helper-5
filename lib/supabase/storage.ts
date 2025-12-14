@@ -101,6 +101,43 @@ export async function uploadClassImage(
 }
 
 /**
+ * Upload blog image (hero or content)
+ */
+export async function uploadBlogImage(
+  postId: string,
+  file: File,
+  imageType: "hero" | "content"
+): Promise<UploadResult> {
+  const timestamp = Date.now();
+  const extension = file.name.split(".").pop() || "jpg";
+  // Sanitize filename - remove special characters, keep only alphanumeric, dash, underscore
+  const sanitizedName = file.name
+    .replace(/\.[^/.]+$/, "") // Remove extension
+    .replace(/[^a-zA-Z0-9-_]/g, "-") // Replace special chars with dash
+    .substring(0, 50); // Limit length
+  const path = `blog/${postId}/${imageType}/${timestamp}-${sanitizedName}.${extension}`;
+  return uploadFile("blog", path, file);
+}
+
+/**
+ * Upload about page image (story section)
+ */
+export async function uploadAboutPageImage(
+  file: File,
+  imageType: "story" | "general" = "story"
+): Promise<UploadResult> {
+  const timestamp = Date.now();
+  const extension = file.name.split(".").pop() || "jpg";
+  // Sanitize filename - remove special characters, keep only alphanumeric, dash, underscore
+  const sanitizedName = file.name
+    .replace(/\.[^/.]+$/, "") // Remove extension
+    .replace(/[^a-zA-Z0-9-_]/g, "-") // Replace special chars with dash
+    .substring(0, 50); // Limit length
+  const path = `about-page/${imageType}/${timestamp}-${sanitizedName}.${extension}`;
+  return uploadFile("about-page", path, file);
+}
+
+/**
  * Delete file from Supabase Storage
  */
 export async function deleteFile(bucket: string, path: string): Promise<boolean> {
@@ -112,6 +149,9 @@ export async function deleteFile(bucket: string, path: string): Promise<boolean>
     return false;
   }
 }
+
+
+
 
 
 

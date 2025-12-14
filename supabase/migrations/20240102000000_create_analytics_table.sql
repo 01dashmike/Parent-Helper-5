@@ -9,25 +9,31 @@ CREATE TABLE IF NOT EXISTS analytics_events (
 );
 
 -- Index for fast queries
-CREATE INDEX idx_analytics_event_type ON analytics_events(event_type);
-CREATE INDEX idx_analytics_created_at ON analytics_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_analytics_created_at ON analytics_events(created_at DESC);
 
 -- RLS Policy: Prevent public writes (only server can insert)
 ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 
 -- Only allow service role to insert (no public access)
-CREATE POLICY "Service role can insert analytics"
-  ON analytics_events
-  FOR INSERT
-  TO service_role
-  WITH CHECK (true);
+DO $$ BEGIN
+  CREATE POLICY "Service role can insert analytics"
+    ON analytics_events
+    FOR INSERT
+    TO service_role
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Admin can read (add your admin check here)
-CREATE POLICY "Admin can read analytics"
-  ON analytics_events
-  FOR SELECT
-  TO authenticated
-  USING (true);
+DO $$ BEGIN
+  CREATE POLICY "Admin can read analytics"
+    ON analytics_events
+    FOR SELECT
+    TO authenticated
+    USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Function to automatically delete events older than 90 days
 CREATE OR REPLACE FUNCTION delete_old_analytics_events()

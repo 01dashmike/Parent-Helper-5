@@ -2,12 +2,36 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import {
     createSupabaseServerActionClient,
     createSupabaseServerComponentClient,
 } from "@/lib/supabase";
 import type { AuthActionState } from "./state";
+
+/**
+ * Gets the current origin from headers or environment variable.
+ * This works for localhost, production, and Cursor browser preview.
+ */
+function getOrigin(): string {
+    try {
+        const headersList = headers();
+        const host = headersList.get("host");
+        const protocol = headersList.get("x-forwarded-proto") || 
+                        (process.env.NODE_ENV === "production" ? "https" : "http");
+        
+        if (host) {
+            return `${protocol}://${host}`;
+        }
+    } catch (error) {
+        // Headers might not be available in some contexts
+        console.warn("[getOrigin] Could not get origin from headers:", error);
+    }
+    
+    // Fallback to environment variable or default
+    return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+}
 
 const emailSchema = z
     .string()
@@ -45,13 +69,18 @@ export async function requestOtpAction(
         console.log("[requestOtpAction] Requesting OTP for email:", email);
         const supabase = createSupabaseServerActionClient();
 
+        // Get dynamic origin to support browser preview and different environments
+        const origin = getOrigin();
+        const redirectUrl = `${origin}/provider/login`;
+
         const { data: otpData, error } = await supabase.auth.signInWithOtp({
             email,
             options: {
                 shouldCreateUser: true,
                 // For OTP flow, emailRedirectTo is used for magic links if user clicks email link
                 // For OTP, users enter the code manually, so this is a fallback
-                emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/auth/callback?next=/provider`,
+                // Use dynamic origin to support browser preview
+                emailRedirectTo: redirectUrl,
             },
         });
 

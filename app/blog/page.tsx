@@ -2,6 +2,7 @@ import PostCard from "@/components/blog/PostCard";
 import { hasSupabaseServerEnv } from "@/lib/env";
 import { getSupabaseServer } from "@/lib/supabase.server";
 import Link from "next/link";
+import Image from "next/image";
 
 export const revalidate = 3600;
 
@@ -54,18 +55,41 @@ export default async function BlogIndex({
 
   return (
     <div className="bg-cream text-charcoal">
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <header className="mb-8 space-y-3 text-center">
-          <h1 className="text-3xl md:text-4xl font-semibold">Parent Helper Journal</h1>
-          <p className="text-slateSoft">
+      {/* Branded Hero Header */}
+      <div className="bg-gradient-to-r from-[#9CAF88] via-[#9CAF88]/90 to-[#C97C5C]/40 py-12">
+        <div className="mx-auto max-w-6xl px-4 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-white/90 shadow-lg">
+              <Image
+                src="/images/logo.png"
+                alt="Parent Helper"
+                fill
+                className="object-contain p-2"
+              />
+            </div>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-semibold text-white">Parent Helper Blog</h1>
+          <p className="mt-2 text-white/90 max-w-xl mx-auto">
             Stories, guides, and gentle advice for families exploring the UK together.
           </p>
-          {!supabase && (
-            <p className="text-sm text-terracotta">
+          {/* Color palette display */}
+          <div className="mt-4 flex justify-center items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#9CAF88] shadow-sm"></span>
+            <span className="w-3 h-3 rounded-full bg-[#C97C5C] shadow-sm"></span>
+            <span className="w-3 h-3 rounded-full bg-[#F5F3F0] border border-white/30 shadow-sm"></span>
+            <span className="w-3 h-3 rounded-full bg-[#3A3A3A] shadow-sm"></span>
+          </div>
+        </div>
+      </div>
+
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        {!supabase && (
+          <div className="mb-8 text-center">
+            <p className="text-sm text-[#C97C5C]">
               Supabase environment variables are not configured, so articles will appear once the connection is set up.
             </p>
-          )}
-        </header>
+          </div>
+        )}
 
         <div className="mb-8 flex flex-wrap justify-center gap-3">
           <form className="flex flex-wrap gap-3">

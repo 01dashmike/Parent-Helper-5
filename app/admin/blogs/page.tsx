@@ -28,7 +28,7 @@ export default async function AdminBlogsPage() {
     <div className="min-h-screen bg-cream px-4 py-10 text-charcoal">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold">AI Drafts & Journal</h1>
+          <h1 className="text-3xl font-semibold">AI Drafts & Blog</h1>
           <p className="text-slateSoft text-sm">
             Review AI-generated drafts, tweak metadata, and approve once ready for parents.
           </p>

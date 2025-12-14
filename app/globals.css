@@ -29,15 +29,42 @@ body {
 }
 
 @layer components {
-  .ph-input { @apply rounded-full border border-sage/30 bg-white px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-sage/40 focus:border-transparent transition; }
-  .ph-btn { @apply rounded-full px-5 py-2 bg-sage text-white hover:bg-sage/90 hover:text-[#C97C5C] transition; }
-  .text-slateSoft { @apply text-slate-600; }
-  .bg-cream { background: #F5F3F0; }
-  .bg-sage { background: #9CAF88; }
-  .text-charcoal { color: #3A3A3A; }
-  .text-terracotta { color: #C97C5C; }
-  .bg-terracotta { background: #C97C5C; }
-  .border-sage { border-color: #9CAF88; }
+  .ph-input {
+    @apply rounded-full border border-sage/30 bg-white px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-sage/40 focus:border-transparent transition;
+  }
+
+  .ph-btn {
+    @apply rounded-full px-5 py-2 bg-sage text-white hover:bg-sage/90 hover:text-[#C97C5C] transition;
+  }
+
+  .text-slateSoft {
+    @apply text-slate-600;
+  }
+
+  .bg-cream {
+    background: #F5F3F0;
+  }
+
+  .bg-sage {
+    background: #9CAF88;
+  }
+
+  .text-charcoal {
+    color: #3A3A3A;
+  }
+
+  .text-terracotta {
+    color: #C97C5C;
+  }
+
+  .bg-terracotta {
+    background: #C97C5C;
+  }
+
+  .border-sage {
+    border-color: #9CAF88;
+  }
+
   /* Header / Navigation */
   .navbar {
     @apply bg-sage/20 text-charcoal border-b border-sage/30 shadow-sm;
@@ -186,3 +213,145 @@ a:hover {
   color: rgba(154, 175, 136, 0.8);
 }
 
+/* Fix nextjs-portal positioning */
+nextjs-portal {
+  left: 0 !important;
+  top: 0 !important;
+}
+
+/* Print Styles for Wellness Plans */
+@media print {
+
+  /* Hide navigation and non-essential elements */
+  .hide-on-print,
+  header,
+  footer,
+  .no-print,
+  button:not(.print-button),
+  nav {
+    display: none !important;
+  }
+
+  /* Reset page layout */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  /* Improve print quality */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Container adjustments */
+  .section {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Card styles for print */
+  .shadow-soft,
+  .shadow-soft-lg,
+  .shadow-md,
+  .shadow-lg {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  /* Spacing improvements */
+  .space-y-8>*+* {
+    margin-top: 1.5rem !important;
+  }
+
+  .space-y-6>*+* {
+    margin-top: 1rem !important;
+  }
+
+  /* Avoid page breaks inside important elements */
+  .rounded-2xl,
+  .bg-white,
+  h3,
+  h4,
+  .border-l-4 {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Recipe/Exercise cards */
+  .rounded-2xl.bg-white {
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+
+  /* Shopping list checkboxes - make visible */
+  input[type="checkbox"] {
+    -webkit-appearance: checkbox;
+    appearance: checkbox;
+  }
+
+  /* Headers and titles */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Links */
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  /* Day selectors - show all in print */
+  .hide-on-print {
+    display: none !important;
+  }
+
+  /* Ensure readability */
+  .text-charcoal,
+  .text-charcoal\/70,
+  .text-charcoal\/80,
+  .text-charcoal\/90 {
+    color: #000 !important;
+  }
+
+  /* Background colors for print */
+  .bg-sage\/10,
+  .bg-sage\/5,
+  .bg-terracotta\/5,
+  .bg-terracotta\/10 {
+    background-color: #f5f5f5 !important;
+  }
+
+  /* Border colors */
+  .border-sage,
+  .border-sage\/20,
+  .border-sage\/30 {
+    border-color: #999 !important;
+  }
+
+  .border-terracotta\/30,
+  .border-terracotta\/40 {
+    border-color: #c97c5c !important;
+  }
+
+  /* Make disclaimers stand out */
+  .border-terracotta\/40 {
+    border-width: 2px !important;
+    padding: 0.75rem !important;
+  }
+}

@@ -1,1 +1,2 @@
-npm run dev
+-- This migration is consolidated in 20250301_mega_parent_helper_migration.sql
+-- This file is kept for migration history tracking

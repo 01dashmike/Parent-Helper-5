@@ -5,6 +5,14 @@ const nextConfig = {
     // required to be an object, not boolean
     serverActions: {},
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

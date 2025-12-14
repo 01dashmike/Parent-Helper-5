@@ -27,6 +27,11 @@ export function AdminLoginForm() {
     defaultValues: { email: "", password: "" },
   });
 
+  // Watch form values to determine if button should be shown
+  const email = form.watch("email");
+  const password = form.watch("password");
+  const hasCredentials = Boolean(email && password);
+
   const onSubmit = form.handleSubmit(async (data) => {
     setIsSubmitting(true);
     setError(null);
@@ -92,13 +97,15 @@ export function AdminLoginForm() {
         />
       </FormField>
 
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full"
-      >
-        {isSubmitting ? "Signing in..." : "Sign in"}
-      </Button>
+      {hasCredentials && (
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          {isSubmitting ? "Signing in..." : "Sign in"}
+        </Button>
+      )}
 
       <p className="text-xs text-charcoal/60 text-center">
         Use the credentials from the seed script or your admin account.
