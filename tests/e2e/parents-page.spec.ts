@@ -143,7 +143,7 @@ test.describe("Parents Landing Page", () => {
     await page.goto("/parents");
 
     // Blog section may or may not be visible depending on data
-    const blogHeading = page.getByRole("heading", { name: /From Our Journal/i });
+    const blogHeading = page.getByRole("heading", { name: /From Our Blog/i });
     const isVisible = await blogHeading.isVisible().catch(() => false);
 
     if (isVisible) {

@@ -419,3 +419,6 @@ psql $DATABASE_URL -f supabase/migrations/20250222000500_booking_system.sql
 
 
 
+
+
+

@@ -73,13 +73,19 @@ export async function requireAdminServerComponent(): Promise<AdminAuthResult> {
     .single();
 
   if (userError || !userData) {
-    console.log("[requireAdminServerComponent] User not found in users table:", user.id);
+    // Don't log user IDs in production
+    if (process.env.NODE_ENV === "development") {
+      console.log("[requireAdminServerComponent] User not found in users table");
+    }
     redirect("/admin/not-authorised");
   }
 
   // Check if user is admin
   if (userData.role !== "admin") {
-    console.log("[requireAdminServerComponent] User is not admin, role:", userData.role);
+    // Don't log user roles in production
+    if (process.env.NODE_ENV === "development") {
+      console.log("[requireAdminServerComponent] User does not have admin role");
+    }
     redirect("/admin/not-authorised");
   }
 

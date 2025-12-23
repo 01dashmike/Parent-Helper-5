@@ -6304,7 +6304,7 @@ create index if not exists franchise_invites_franchise_idx on franchise_invites 
 -- ============================================
 -- Migration: 20240101000000_init_core_schema.sql
 -- ============================================
-npm run dev
+-- Note: Original file contained 'npm run dev' - skipped (no SQL to execute)
 
 -- ============================================
 -- Migration: 20240102000000_create_analytics_table.sql

@@ -1,30 +1,64 @@
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getSupabaseServer } from "@/lib/supabase.server";
+import { publicApiLimiter, applyRateLimit } from "@/lib/ratelimit";
 
-export async function GET(req: Request) {
+// Input validation schema with security limits
+const searchParamsSchema = z.object({
+  q: z.string().max(200, "Search query too long").optional().default(""),
+  category: z.string().max(50, "Category too long").optional().default(""),
+  day: z.coerce.number().int().min(0).max(6).optional(),
+  minAge: z.coerce.number().int().min(0).max(240).optional(),
+  maxAge: z.coerce.number().int().min(0).max(240).optional(),
+  fromTime: z.string().max(10).regex(/^([0-9]{2}:[0-9]{2})?$/, "Invalid time format").optional().default(""),
+  toTime: z.string().max(10).regex(/^([0-9]{2}:[0-9]{2})?$/, "Invalid time format").optional().default(""),
+  lat: z.coerce.number().min(-90).max(90).optional().default(0),
+  lng: z.coerce.number().min(-180).max(180).optional().default(0),
+  radiusKm: z.coerce.number().min(1).max(100).optional().default(20),
+});
+
+export async function GET(req: NextRequest) {
+  // Apply rate limiting
+  const rateLimitError = await applyRateLimit(req, publicApiLimiter);
+  if (rateLimitError) {
+    return rateLimitError;
+  }
+
   const supabase = getSupabaseServer();
   if (!supabase) {
     return NextResponse.json(
-      { error: "Supabase not configured" },
+      { error: "Service unavailable" },
       { status: 500 },
     );
   }
+
+  // Parse and validate search parameters
   const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q") ?? "";
-  const category = searchParams.get("category") ?? "";
-  const day = searchParams.get("day");
-  const minAgeRaw = searchParams.get("minAge");
-  const maxAgeRaw = searchParams.get("maxAge");
-  const minAge = minAgeRaw ? Number(minAgeRaw) : undefined;
-  const maxAge = maxAgeRaw ? Number(maxAgeRaw) : undefined;
-  const fromTime = searchParams.get("fromTime") ?? "";
-  const toTime = searchParams.get("toTime") ?? "";
-  const centerLat = Number(searchParams.get("lat") ?? "0");
-  const centerLng = Number(searchParams.get("lng") ?? "0");
-  const radiusKm = Number(searchParams.get("radiusKm") ?? "20");
+  const rawParams = {
+    q: searchParams.get("q") ?? undefined,
+    category: searchParams.get("category") ?? undefined,
+    day: searchParams.get("day") ?? undefined,
+    minAge: searchParams.get("minAge") ?? undefined,
+    maxAge: searchParams.get("maxAge") ?? undefined,
+    fromTime: searchParams.get("fromTime") ?? undefined,
+    toTime: searchParams.get("toTime") ?? undefined,
+    lat: searchParams.get("lat") ?? undefined,
+    lng: searchParams.get("lng") ?? undefined,
+    radiusKm: searchParams.get("radiusKm") ?? undefined,
+  };
+
+  const validation = searchParamsSchema.safeParse(rawParams);
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: "Invalid search parameters", details: validation.error.issues },
+      { status: 400 },
+    );
+  }
+
+  const { q, category, day, minAge, maxAge, fromTime, toTime, lat: centerLat, lng: centerLng, radiusKm } = validation.data;
 
   let query = supabase.from("classes_test_andover").select("*");
 

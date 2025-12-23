@@ -18,14 +18,14 @@ type CarouselProps = {
 const fallbackItems: CarouselItem[] = HOMEPAGE_CATEGORIES.map(({ title, description, image }) => {
   // Map category titles to their optimal object-position values
   const positionMap: Record<string, string> = {
-    "Music & Movement": "center top",
+    "Music & Movement": "center 10%",
     "Baby Yoga": "center top",
     "Drama & Play": "center center",
     "Outdoor Play": "center center",
     "Postnatal Wellness": "center top",
-    "Storytime": "center center",
-    "Kids Photography": "center center",
-    "Mindfulness": "center center",
+    "Storytime": "center 20%",
+    "Kids Photography": "center 20%",
+    "Mindfulness": "center 10%",
     "Arts & Crafts": "center center",
   };
 
@@ -130,6 +130,9 @@ export default function Carousel({ items = fallbackItems }: CarouselProps) {
     </div>
   );
 }
+
+
+
 
 
 

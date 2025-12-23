@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FormProvider } from "react-hook-form";
-import { Sparkles, Eye, Edit } from "lucide-react";
+import { Sparkles, Eye, Edit, Wand2, Search, ImageIcon, ExternalLink, Upload, Calendar, X } from "lucide-react";
 import Image from "next/image";
 import { slugify } from "@/lib/slug";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import MarkdownImage from "@/components/blog/MarkdownImage";
+import CustomBlockquote from "@/components/blog/CustomBlockquote";
+import Prose from "@/components/blog/Prose";
+import SEOScorePanel from "@/components/blog/SEOScorePanel";
+import ImageManager from "@/components/blog/ImageManager";
 
 type BlogPost = {
   id: string;
@@ -31,6 +37,8 @@ type BlogPost = {
   seo_title?: string | null;
   seo_description?: string | null;
   body_markdown?: string | null;
+  scheduled_for?: string | null;
+  status?: string | null;
 };
 
 type BlogPostUpdate = {
@@ -50,8 +58,10 @@ interface AdminEditorDrawerProps {
   open: boolean;
   post: BlogPost | null;
   onClose: () => void;
-  onSave: (updates: BlogPostUpdate) => Promise<void>;
+  onSave: (updates: BlogPostUpdate & { scheduled_for?: string | null }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onPublish?: (id: string) => Promise<void>;
+  onSchedule?: (id: string, scheduledFor: string) => Promise<void>;
   onPostGenerated?: (post: BlogPost) => void;
 }
 
@@ -70,7 +80,7 @@ const blogPostFormSchema = z.object({
 
 type BlogPostFormData = z.infer<typeof blogPostFormSchema>;
 
-export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelete, onPostGenerated }: AdminEditorDrawerProps) {
+export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelete, onPublish, onSchedule, onPostGenerated }: AdminEditorDrawerProps) {
   const form = useForm<BlogPostFormData>({
     resolver: zodResolver(blogPostFormSchema),
     defaultValues: {
@@ -90,9 +100,66 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
   const [markdownPreview, setMarkdownPreview] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("09:00");
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiEditing, setAiEditing] = useState(false);
+  const [findingImage, setFindingImage] = useState(false);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+  const [fixingImages, setFixingImages] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
+  const [editInstructions, setEditInstructions] = useState("");
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [showImageManager, setShowImageManager] = useState(false);
+  const heroImageFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePublish = async () => {
+    console.log("[handlePublish] Called, post:", post?.id, "onPublish:", !!onPublish);
+    if (!post || !onPublish) {
+      console.log("[handlePublish] Early return - missing post or onPublish");
+      return;
+    }
+    setPublishing(true);
+    setAiError(null);
+    setAnnouncement('Publishing...');
+    try {
+      console.log("[handlePublish] Calling onPublish...");
+      await onPublish(post.id);
+      console.log("[handlePublish] Success!");
+      setAnnouncement('Published successfully!');
+      onClose();
+    } catch (error) {
+      console.error("[handlePublish] Error:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to publish post");
+      setAnnouncement('Error publishing');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!post || !onSchedule || !scheduleDate) return;
+    setScheduling(true);
+    setAiError(null);
+    setAnnouncement('Scheduling...');
+    try {
+      const scheduledFor = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+      await onSchedule(post.id, scheduledFor);
+      setAnnouncement('Scheduled successfully!');
+      setShowScheduleModal(false);
+      onClose();
+    } catch (error) {
+      console.error("Error scheduling:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to schedule post");
+      setAnnouncement('Error scheduling');
+    } finally {
+      setScheduling(false);
+    }
+  };
 
   // Reset form when post changes
   useEffect(() => {
@@ -143,6 +210,14 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
     return slug || `post-${Date.now()}`;
   }, [titleValue]);
 
+  // Count images in markdown content
+  const imageCount = useMemo(() => {
+    const markdown = form.watch("body_markdown") || "";
+    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+    const matches = markdown.match(imageRegex);
+    return matches ? matches.length : 0;
+  }, [form.watch("body_markdown")]);
+
   const onSubmit = async (data: BlogPostFormData) => {
     if (!post) {
       setAiError("Please select a post to edit or generate a new one with AI");
@@ -152,12 +227,18 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
     setAiError(null);
     setAnnouncement('Submitting…');
     try {
+      // Preserve existing hero_image if field is empty (don't overwrite with empty string)
+      const heroImageValue = data.hero_image?.trim();
+      const heroImage = heroImageValue !== undefined && heroImageValue !== "" 
+        ? heroImageValue 
+        : (post.hero_image || "");
+      
       const updates: BlogPostUpdate = {
         title: data.title.trim() || "Untitled Post",
         excerpt: data.excerpt?.trim() || "",
         category: data.category.trim() || "Parenting Advice",
         tags: data.tags?.split(",").map((t) => t.trim()).filter(Boolean) || [],
-        hero_image: data.hero_image?.trim() || "",
+        hero_image: heroImage,
         locality: data.locality?.trim() || "",
         postcode_prefix: data.postcode_prefix?.trim() || "",
         seo_title: data.seo_title?.trim() || data.title.trim() || "Untitled Post",
@@ -240,6 +321,211 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
     } finally {
       setAiGenerating(false);
     }
+  };
+
+  const handleAIEdit = async () => {
+    if (!post || !editInstructions.trim()) return;
+
+    setAiEditing(true);
+    setAiError(null);
+    try {
+      const response = await fetch("/api/blog/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId: post.id,
+          instructions: editInstructions,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Failed to edit post" }));
+        throw new Error(errorData.error || "Failed to edit post");
+      }
+
+      const result = await response.json();
+      if (!result.ok || !result.post) {
+        throw new Error("Invalid response from API");
+      }
+
+      const edited = result.post;
+
+      // Update form with edited content
+      form.setValue("body_markdown", edited.body_markdown || form.getValues("body_markdown"));
+      if (edited.title) form.setValue("title", edited.title);
+      if (edited.excerpt) form.setValue("excerpt", edited.excerpt);
+
+      // Update the post object
+      if (onPostGenerated) {
+        onPostGenerated({
+          ...post,
+          body_markdown: edited.body_markdown || post.body_markdown,
+          title: edited.title || post.title,
+          excerpt: edited.excerpt || post.excerpt,
+        });
+      }
+
+      setEditInstructions("");
+      setShowEditPanel(false);
+      setAnnouncement("Edits applied successfully");
+    } catch (error) {
+      console.error("[AdminEditorDrawer] AI edit error:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to edit post");
+    } finally {
+      setAiEditing(false);
+    }
+  };
+
+  const handleFindImage = async () => {
+    const title = form.watch("title");
+    if (!title?.trim()) {
+      setAiError("Please enter a title first to search for images");
+      return;
+    }
+
+    setFindingImage(true);
+    setAiError(null);
+    try {
+      const response = await fetch("/api/blog/find-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          topic: form.watch("category") || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Failed to find image" }));
+        throw new Error(errorData.error || "Failed to find image");
+      }
+
+      const result = await response.json();
+      if (!result.ok || !result.imageUrl) {
+        throw new Error("No image found");
+      }
+
+      // Update the hero image field with the found image (replaces existing)
+      form.setValue("hero_image", result.imageUrl);
+      setAnnouncement("Image found and added");
+    } catch (error) {
+      console.error("[AdminEditorDrawer] Find image error:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to find image");
+    } finally {
+      setFindingImage(false);
+    }
+  };
+
+  const handleUploadHeroImage = async (file: File) => {
+    if (!post?.id) {
+      setAiError("Please select a post first");
+      return;
+    }
+
+    setUploadingHeroImage(true);
+    setAiError(null);
+    setAnnouncement('Uploading image…');
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("postId", post.id);
+      formData.append("imageType", "hero");
+
+      const response = await fetch("/api/blog/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Failed to upload image" }));
+        throw new Error(errorData.error || "Failed to upload image");
+      }
+
+      const result = await response.json();
+      if (!result.ok || !result.url) {
+        throw new Error("Upload failed - no URL returned");
+      }
+
+      // Update the hero image field with the uploaded image URL (replaces existing)
+      form.setValue("hero_image", result.url);
+      setAnnouncement("Image uploaded successfully");
+    } catch (error) {
+      console.error("[AdminEditorDrawer] Upload hero image error:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to upload image");
+      setAnnouncement('Error uploading image');
+    } finally {
+      setUploadingHeroImage(false);
+    }
+  };
+
+  const handleHeroImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleUploadHeroImage(file);
+    }
+    // Reset input so same file can be selected again
+    if (heroImageFileInputRef.current) {
+      heroImageFileInputRef.current.value = "";
+    }
+  };
+
+  const handleFixImages = async () => {
+    const markdown = form.watch("body_markdown");
+    if (!markdown?.trim()) {
+      setAiError("No content to fix images in");
+      return;
+    }
+
+    setFixingImages(true);
+    setAiError(null);
+    try {
+      const response = await fetch("/api/blog/fix-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markdown }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Failed to fix images" }));
+        throw new Error(errorData.error || "Failed to fix images");
+      }
+
+      const result = await response.json();
+      if (!result.ok || !result.markdown) {
+        throw new Error("Failed to process images");
+      }
+
+      // Update the markdown content with fixed images
+      form.setValue("body_markdown", result.markdown);
+      setAnnouncement("Images fixed successfully");
+    } catch (error) {
+      console.error("[AdminEditorDrawer] Fix images error:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to fix images");
+    } finally {
+      setFixingImages(false);
+    }
+  };
+
+  const handleFullPreview = () => {
+    const formData = form.getValues();
+    const previewData = {
+      title: formData.title || "Untitled Post",
+      excerpt: formData.excerpt || "",
+      category: formData.category || "Parenting Advice",
+      hero_image: formData.hero_image || "",
+      body_markdown: formData.body_markdown || "",
+      reading_time_minutes: Math.max(1, Math.round((formData.body_markdown || "").split(/\s+/).length / 225)),
+      locality: formData.locality || undefined,
+      sources: [],
+      created_at: new Date().toISOString(),
+    };
+
+    // Store in sessionStorage for the preview page to read
+    sessionStorage.setItem("blog_preview_data", JSON.stringify(previewData));
+
+    // Open preview in new tab
+    window.open("/blog/preview", "_blank");
   };
 
   // Safe preview values that won't crash on empty fields
@@ -341,7 +627,75 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
                 error={form.formState.errors.hero_image?.message}
                 id="hero_image"
               >
-                <Input {...form.register("hero_image")} type="url" />
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input {...form.register("hero_image")} type="url" className="flex-1" />
+                    <button
+                      type="button"
+                      onClick={() => heroImageFileInputRef.current?.click()}
+                      disabled={uploadingHeroImage || !post?.id}
+                      className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-4 py-2 text-small font-medium text-forest transition hover:bg-sage/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Upload image from your computer"
+                    >
+                      {uploadingHeroImage ? (
+                        <>
+                          <LoadingSpinner size="sm" label="Uploading image" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4" aria-hidden="true" />
+                          <span>Upload</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFindImage}
+                      disabled={findingImage || !form.watch("title")?.trim()}
+                      className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-4 py-2 text-small font-medium text-forest transition hover:bg-sage/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Find image from Unsplash"
+                    >
+                      {findingImage ? (
+                        <>
+                          <LoadingSpinner size="sm" label="Searching for image" />
+                          <span>Finding...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Search className="h-4 w-4" aria-hidden="true" />
+                          <span>Find Image</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <input
+                    ref={heroImageFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleHeroImageFileChange}
+                    className="hidden"
+                    aria-label="Select image file to upload"
+                  />
+                  {form.watch("hero_image")?.trim() && (
+                    <div className="relative w-full h-48 rounded-lg border border-sage/20 bg-cream/40 overflow-hidden">
+                      <Image
+                        src={form.watch("hero_image")!}
+                        alt="Hero image preview"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement?.classList.add('bg-cream/60');
+                        }}
+                      />
+                      <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        {form.watch("hero_image")?.includes("unsplash.com") ? "Unsplash" : "Uploaded"}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </FormField>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <FormField
@@ -381,29 +735,79 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
               <div className="border-t border-sage/20 pt-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-small font-semibold text-charcoal">Blog Content</h3>
-                  <button
-                    type="button"
-                    onClick={() => setMarkdownPreview(!markdownPreview)}
-                    className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-3 py-1.5 text-small font-medium text-forest transition hover:bg-sage/10"
-                  >
-                    {markdownPreview ? (
-                      <>
-                        <Edit className="h-4 w-4" aria-hidden="true" />
-                        <span>Edit</span>
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-4 w-4" aria-hidden="true" />
-                        <span>Preview</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleFullPreview}
+                      disabled={!form.watch("body_markdown")?.trim()}
+                      className="flex items-center gap-2 rounded-full border border-[#9CAF88] bg-[#9CAF88] px-3 py-1.5 text-small font-medium text-white transition hover:bg-[#9CAF88]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Open full preview in new tab"
+                    >
+                      <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                      <span>Full Preview</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMarkdownPreview(!markdownPreview)}
+                      className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-3 py-1.5 text-small font-medium text-forest transition hover:bg-sage/10"
+                    >
+                      {markdownPreview ? (
+                        <>
+                          <Edit className="h-4 w-4" aria-hidden="true" />
+                          <span>Edit</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                          <span>Preview</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 {markdownPreview ? (
-                  <div className="min-h-[400px] rounded-lg border border-sage/20 bg-white p-4 prose prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {form.watch("body_markdown") || "*No content yet. Generate a blog post with AI or start writing.*"}
-                    </ReactMarkdown>
+                  <div className="min-h-[400px] rounded-lg border-2 border-[#9CAF88]/40 bg-cream overflow-hidden">
+                    {/* Branded Header */}
+                    <div className="bg-gradient-to-r from-[#9CAF88] via-[#9CAF88]/90 to-[#C97C5C]/30 py-2 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-white/90 shadow-sm">
+                          <Image
+                            src="/images/logo.png"
+                            alt="Parent Helper"
+                            fill
+                            className="object-contain p-0.5"
+                          />
+                        </div>
+                        <span className="text-white font-medium text-xs">Parent Helper Blog</span>
+                      </div>
+                    </div>
+                    
+                    {/* Content Preview */}
+                    <div className="p-6 bg-cream">
+                      <Prose>
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            img: MarkdownImage,
+                            blockquote: CustomBlockquote,
+                          }}
+                        >
+                          {form.watch("body_markdown") || "*No content yet. Generate a blog post with AI or start writing.*"}
+                        </ReactMarkdown>
+                      </Prose>
+                    </div>
+                    
+                    {/* Branded Footer */}
+                    <div className="border-t border-[#9CAF88]/20 bg-white/50 px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[#3A3A3A]/70">Preview</span>
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#9CAF88]"></span>
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#C97C5C]"></span>
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#F5F3F0] border border-[#3A3A3A]/20"></span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <FormField
@@ -411,12 +815,114 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
                     error={form.formState.errors.body_markdown?.message}
                     id="body_markdown"
                   >
-                    <Textarea
-                      {...form.register("body_markdown")}
-                      rows={20}
-                      placeholder="Blog content in Markdown format. Use the 'Generate with AI' button to create content automatically."
-                      className="font-mono text-sm"
-                    />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-small text-charcoal">Content</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowImageManager(!showImageManager)}
+                            className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-3 py-1.5 text-small font-medium text-forest transition hover:bg-sage/10 relative"
+                            aria-label="Manage individual images in content"
+                          >
+                            <ImageIcon className="h-4 w-4" aria-hidden="true" />
+                            <span>Manage Images</span>
+                            {imageCount > 0 && (
+                              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#C97C5C] text-xs font-semibold text-white">
+                                {imageCount}
+                              </span>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleFixImages}
+                            disabled={fixingImages || !form.watch("body_markdown")?.trim()}
+                            className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-3 py-1.5 text-small font-medium text-forest transition hover:bg-sage/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Fix placeholder images with real photos"
+                          >
+                            {fixingImages ? (
+                              <>
+                                <LoadingSpinner size="sm" label="Fixing images" />
+                                <span>Fixing...</span>
+                              </>
+                            ) : (
+                              <>
+                                <ImageIcon className="h-4 w-4" aria-hidden="true" />
+                                <span>Fix Images</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowEditPanel(!showEditPanel)}
+                            className="flex items-center gap-2 rounded-full border border-sage/30 bg-white px-3 py-1.5 text-small font-medium text-forest transition hover:bg-sage/10"
+                          >
+                            <Wand2 className="h-4 w-4" aria-hidden="true" />
+                            <span>AI Edit</span>
+                          </button>
+                        </div>
+                      </div>
+                      {showEditPanel && (
+                        <div className="rounded-lg border border-sage/20 bg-white/50 p-4 space-y-3">
+                          <label className="block text-small font-medium text-charcoal">
+                            Edit Instructions
+                          </label>
+                          <Textarea
+                            value={editInstructions}
+                            onChange={(e) => setEditInstructions(e.target.value)}
+                            placeholder="e.g., 'Make the headings more engaging', 'Change formatting to use more bullet points', 'Add a section about safety tips'"
+                            rows={3}
+                            className="text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAIEdit}
+                            disabled={aiEditing || !editInstructions.trim() || !post}
+                            className="flex items-center gap-2 rounded-full border border-sage/30 bg-sage px-4 py-2 text-small font-medium text-white transition hover:bg-sage/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {aiEditing ? (
+                              <>
+                                <LoadingSpinner size="sm" label="Applying edits" />
+                                <span>Applying...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Wand2 className="h-4 w-4" aria-hidden="true" />
+                                <span>Apply Edits</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Image Manager Panel */}
+                      {showImageManager && (
+                        <div className="rounded-lg border-2 border-[#9CAF88]/40 bg-white/80 p-4 shadow-sm">
+                          <div className="mb-3 flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-charcoal">Content Images</h4>
+                            <button
+                              type="button"
+                              onClick={() => setShowImageManager(false)}
+                              className="text-xs text-slateSoft hover:text-charcoal"
+                            >
+                              Hide
+                            </button>
+                          </div>
+                          <ImageManager
+                            markdown={form.watch("body_markdown") || ""}
+                            onUpdateMarkdown={(newMarkdown) => form.setValue("body_markdown", newMarkdown)}
+                            postId={post?.id}
+                          />
+                        </div>
+                      )}
+                      
+                      <Textarea
+                        {...form.register("body_markdown")}
+                        rows={20}
+                        placeholder="Blog content in Markdown format. Use the 'Generate with AI' button to create content automatically."
+                        className="font-mono text-sm"
+                      />
+                    </div>
                   </FormField>
                 )}
               </div>
@@ -426,22 +932,110 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
                 type="button"
                 className="text-small text-terracotta hover:underline"
                 onClick={() => post && onDelete(post.id)}
-                disabled={loading || aiGenerating}
+                disabled={loading || aiGenerating || publishing || scheduling}
               >
                 Delete
               </button>
             )}
             {!post && <div />}
-            <Button
-              type="submit"
-              loading={loading}
-              loadingLabel="Saving changes"
-              disabled={loading || aiGenerating || !post}
-              aria-label={loading ? "Saving changes" : post ? "Save changes" : "Generate a post with AI first"}
-            >
-              {loading ? "Saving..." : post ? "Save changes" : "Generate a post with AI first"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="submit"
+                loading={loading}
+                loadingLabel="Saving changes"
+                disabled={loading || aiGenerating || publishing || scheduling || !post}
+                aria-label={loading ? "Saving changes" : post ? "Save changes" : "Generate a post with AI first"}
+              >
+                {loading ? "Saving..." : post ? "Save" : "Generate a post with AI first"}
+              </Button>
+              {post && onSchedule && post.status !== "published" && (
+                <Button
+                  type="button"
+                  onClick={() => setShowScheduleModal(true)}
+                  disabled={loading || aiGenerating || publishing || scheduling}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  aria-label="Schedule this post"
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Schedule
+                </Button>
+              )}
+              {post && onPublish && post.status !== "published" && (
+                <Button
+                  type="button"
+                  onClick={handlePublish}
+                  loading={publishing}
+                  loadingLabel="Publishing"
+                  disabled={loading || aiGenerating || publishing || scheduling}
+                  className="bg-emerald-700 hover:bg-emerald-800"
+                  aria-label="Publish this post now"
+                >
+                  {publishing ? "Publishing..." : "Publish Now"}
+                </Button>
+              )}
+            </div>
               </div>
+
+          {/* Schedule Modal */}
+          {showScheduleModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+              <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-charcoal">Schedule Publication</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowScheduleModal(false)}
+                    className="rounded-full p-1 text-slateSoft transition hover:bg-sage/10 hover:text-charcoal"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <p className="mb-4 text-small text-slateSoft">
+                  Choose when this post should be automatically published.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-small font-medium text-charcoal">Date</label>
+                    <input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full rounded-lg border border-sage/30 px-3 py-2 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-small font-medium text-charcoal">Time</label>
+                    <input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="w-full rounded-lg border border-sage/30 px-3 py-2 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowScheduleModal(false)}
+                    className="rounded-full border border-sage/30 bg-white px-4 py-2 text-small font-medium text-charcoal transition hover:bg-sage/10"
+                  >
+                    Cancel
+                  </button>
+                  <Button
+                    type="button"
+                    onClick={handleSchedule}
+                    loading={scheduling}
+                    loadingLabel="Scheduling"
+                    disabled={!scheduleDate || scheduling}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {scheduling ? "Scheduling..." : "Schedule Post"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
             </form>
           </FormProvider>
         </aside>
@@ -572,6 +1166,18 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
                       </p>
                     </div>
                   </article>
+                </div>
+
+                {/* SEO Score */}
+                <div className="mt-6 rounded-lg border border-sage/20 bg-white p-4">
+                  <SEOScorePanel
+                    title={form.watch("title")}
+                    excerpt={form.watch("excerpt")}
+                    seoTitle={form.watch("seo_title")}
+                    seoDescription={form.watch("seo_description")}
+                    heroImage={form.watch("hero_image")}
+                    bodyMarkdown={form.watch("body_markdown")}
+                  />
                 </div>
               </>
             )}

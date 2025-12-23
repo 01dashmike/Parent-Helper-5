@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { WIZARD_STEPS } from "../wizard/actions";
+import { WIZARD_STEPS } from "../wizard/schema";
 
 interface WizardShellProps {
   title: string;

@@ -114,8 +114,21 @@ export default function Home() {
                   className={`h-48 w-full transition duration-300 ease-out ${
                     category.title === "Family Photography"
                       ? "bg-cream object-contain"
-                      : "object-cover"
+                      : "object-cover object-top"
                   }`}
+                  style={
+                    category.title === "Music & Rhythm"
+                      ? { objectPosition: "center 30%" }
+                      : category.title === "Sensory & Messy Play"
+                      ? { objectPosition: "center 40%" }
+                      : category.title === "Outdoor Explorers"
+                      ? { objectPosition: "center 60%" }
+                      : category.title === "Community Support"
+                      ? { objectPosition: "center 30%" }
+                      : category.title === "Storytime"
+                      ? { objectPosition: "center 20%" }
+                      : undefined
+                  }
                 />
               </div>
               <h3 className="text-lg font-semibold text-charcoal">{category.title}</h3>

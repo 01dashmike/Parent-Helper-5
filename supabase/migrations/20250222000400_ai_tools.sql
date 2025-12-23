@@ -77,3 +77,6 @@ create trigger ai_cached_suggestions_update_last_used before update on ai_cached
 
 
 
+
+
+

@@ -61,16 +61,24 @@ export const FilterToggleButton = memo(function FilterToggleButton({
       aria-pressed={isActive}
       aria-label={ariaLabel || defaultAriaLabel}
       className={cn(
-        "shrink-0 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-small font-medium",
+        // Base styles
+        "shrink-0 inline-flex items-center gap-2 rounded-2xl border-2 px-5 py-2.5 text-small font-semibold",
         // WCAG minimum touch target: 44px x 44px
         "min-h-[44px] min-w-[44px]",
-        "motion-safe:transition-all motion-safe:duration-200",
+        // Smooth transitions
+        "motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
         "motion-reduce:transition-none motion-reduce:animate-none",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2",
-        // Selected state
+        // Focus state
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2",
+        // Selected/Active state - cream with darker border
         isActive
-          ? "bg-accent text-white border-accent shadow-sm ring-2 ring-sage/30"
-          : "border-accent/20 bg-white text-primary hover:bg-surface hover:border-accent/40",
+          ? "bg-cream text-sage-dark border-sage-dark shadow-lg shadow-sage/30 ring-2 ring-sage/40"
+          : [
+              // Inactive state - vibrant sage green
+              "border-sage bg-sage text-white shadow-md shadow-sage/25",
+              // Hover state - transition to cream
+              "hover:border-sage-dark hover:bg-cream hover:text-sage-dark hover:shadow-lg hover:shadow-sage/30",
+            ],
         className
       )}
     >

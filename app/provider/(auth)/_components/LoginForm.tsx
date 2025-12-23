@@ -8,6 +8,7 @@ import { requestOtpAction, verifyOtpAction, signInWithPasswordAction } from "../
 import { FormField } from "@/components/ui/formfield";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const emailSchema = z.object({
   email: z.string().email("Enter a valid email address").min(5, "Email is required"),
@@ -48,7 +49,7 @@ function StatusMessage({ message, isError, id }: { message?: string; isError: bo
 
 export function LoginForm() {
   const isDevelopment = process.env.NODE_ENV === "development";
-  const [loginMode, setLoginMode] = useState<"otp" | "password">("otp");
+  const [activeTab, setActiveTab] = useState<"otp" | "password">("otp");
   const [phase, setPhase] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [requestMessage, setRequestMessage] = useState<string | null>(null);
@@ -79,6 +80,38 @@ export function LoginForm() {
       otpForm.setValue("email", email);
     }
   }, [phase, email, otpForm]);
+
+  // Ensure activeTab is valid (only allow password tab in development)
+  useEffect(() => {
+    if (!isDevelopment && activeTab === "password") {
+      setActiveTab("otp");
+    }
+  }, [isDevelopment, activeTab]);
+
+  // Reset form states when switching tabs
+  const handleTabChange = (value: string) => {
+    const newTab = value as "otp" | "password";
+    setActiveTab(newTab);
+    
+    // Reset all form states
+    setPhase("email");
+    setRequestMessage(null);
+    setRequestError(false);
+    setVerifyMessage(null);
+    setVerifyError(false);
+    setPasswordMessage(null);
+    setPasswordError(false);
+    
+    // Reset form values
+    emailForm.reset();
+    otpForm.reset();
+    passwordForm.reset();
+    
+    // Clear form errors
+    emailForm.clearErrors();
+    otpForm.clearErrors();
+    passwordForm.clearErrors();
+  };
 
   const onEmailSubmit = emailForm.handleSubmit(async (data) => {
     setIsSubmitting(true);
@@ -163,8 +196,13 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
-      {loginMode === "otp" ? (
-        <>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className={isDevelopment ? "grid w-full grid-cols-2" : "w-full"}>
+          <TabsTrigger value="otp">OTP Login</TabsTrigger>
+          {isDevelopment && <TabsTrigger value="password">Password Login</TabsTrigger>}
+        </TabsList>
+
+        <TabsContent value="otp" className="space-y-6 mt-6">
           <div className="rounded-lg border border-sage/30 bg-cream/40 p-4 text-sm text-charcoal/80">
             <p className="font-medium text-charcoal">How it works</p>
             <ol className="mt-3 space-y-2 list-decimal pl-6">
@@ -244,78 +282,62 @@ export function LoginForm() {
               </form>
             )}
           </div>
-        </>
-      ) : (
-        <>
-          <div className="rounded-lg border border-sage/30 bg-cream/40 p-4 text-sm text-charcoal/80">
-            <p className="font-medium text-charcoal">Development Login</p>
-            <p className="mt-2 text-charcoal/70">
-              Use your email and password to sign in. This option is only available in development mode.
-            </p>
-          </div>
+        </TabsContent>
 
-          <form onSubmit={onPasswordSubmit} className="space-y-3">
-            <FormField
-              label="Email address"
-              required
-              error={passwordForm.formState.errors.email?.message}
-              id="provider-password-email"
-            >
-              <Input
-                type="email"
-                autoComplete="email"
-                placeholder="provider-test@parenthelper.co.uk"
-                {...passwordForm.register("email")}
-              />
-            </FormField>
-            <FormField
-              label="Password"
-              required
-              error={passwordForm.formState.errors.password?.message}
-              id="provider-password"
-            >
-              <Input
-                type="password"
-                autoComplete="current-password"
-                placeholder="Enter your password"
-                {...passwordForm.register("password")}
-              />
-            </FormField>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full"
-            >
-              {isSubmitting ? "Signing in…" : "Sign in"}
-            </Button>
-            {passwordMessage && (
-              <StatusMessage 
-                message={passwordMessage} 
-                isError={passwordError} 
-                id="status-provider-password" 
-              />
-            )}
-          </form>
-        </>
-      )}
+        {isDevelopment && (
+          <TabsContent value="password" className="space-y-6 mt-6">
+            <div className="rounded-lg border border-sage/30 bg-cream/40 p-4 text-sm text-charcoal/80">
+              <p className="font-medium text-charcoal">Development Login</p>
+              <p className="mt-2 text-charcoal/70">
+                Use your email and password to sign in. This option is only available in development mode.
+              </p>
+            </div>
 
-      {isDevelopment && (
-        <div className="pt-4 border-t border-sage/20">
-          <button
-            type="button"
-            onClick={() => {
-              setLoginMode(loginMode === "otp" ? "password" : "otp");
-              setPhase("email");
-              setRequestMessage(null);
-              setVerifyMessage(null);
-              setPasswordMessage(null);
-            }}
-            className="text-sm text-sage hover:text-sage/80 underline"
-          >
-            {loginMode === "otp" ? "Use password login instead" : "Use OTP login instead"}
-          </button>
-        </div>
-      )}
+            <form onSubmit={onPasswordSubmit} className="space-y-3">
+              <FormField
+                label="Email address"
+                required
+                error={passwordForm.formState.errors.email?.message}
+                id="provider-password-email"
+              >
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="provider-test@parenthelper.co.uk"
+                  {...passwordForm.register("email")}
+                />
+              </FormField>
+              <FormField
+                label="Password"
+                required
+                error={passwordForm.formState.errors.password?.message}
+                id="provider-password"
+              >
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  {...passwordForm.register("password")}
+                />
+              </FormField>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full"
+              >
+                {isSubmitting ? "Signing in…" : "Sign in"}
+              </Button>
+              {passwordMessage && (
+                <StatusMessage 
+                  message={passwordMessage} 
+                  isError={passwordError} 
+                  id="status-provider-password" 
+                />
+              )}
+            </form>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }

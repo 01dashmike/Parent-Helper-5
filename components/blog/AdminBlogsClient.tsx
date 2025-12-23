@@ -31,6 +31,7 @@ interface PostRecord {
   seo_description?: string | null;
   postcode_prefix?: string | null;
   body_markdown?: string | null;
+  scheduled_for?: string | null;
 }
 
 interface Props {
@@ -76,23 +77,50 @@ export default function AdminBlogsClient({ posts }: Props) {
     );
   }, [posts, filterStatus]);
 
-  const publishPost = (id: string) => {
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/blog/admin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "publish", id }),
-        });
-        if (!response.ok) {
-          console.error("Failed to publish post", await response.text());
-          return;
-        }
-        router.refresh();
-      } catch (err) {
-        console.error("Error publishing post:", err);
+  const publishPost = async (id: string) => {
+    console.log("[publishPost] Starting publish for id:", id);
+    try {
+      const response = await fetch("/api/blog/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "publish", id }),
+      });
+      console.log("[publishPost] Response status:", response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[publishPost] Failed to publish post:", errorText);
+        alert(`Failed to publish: ${errorText}`);
+        throw new Error(errorText || "Failed to publish");
       }
-    });
+      const result = await response.json();
+      console.log("[publishPost] Success:", result);
+      // Force a hard refresh to ensure the list updates
+      window.location.reload();
+    } catch (err) {
+      console.error("[publishPost] Error:", err);
+      alert(`Error publishing: ${err instanceof Error ? err.message : "Unknown error"}`);
+      throw err;
+    }
+  };
+
+  const schedulePost = async (id: string, scheduledFor: string) => {
+    try {
+      const response = await fetch("/api/blog/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "schedule", id, scheduledFor }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to schedule post", errorText);
+        throw new Error(errorText || "Failed to schedule");
+      }
+      // Force a hard refresh to ensure the list updates
+      window.location.reload();
+    } catch (err) {
+      console.error("Error scheduling post:", err);
+      throw err;
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -322,6 +350,7 @@ export default function AdminBlogsClient({ posts }: Props) {
             <tr>
               <th className="px-4 py-3">Title</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Scheduled</th>
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Locality</th>
               <th className="px-4 py-3 text-right">Actions</th>
@@ -334,7 +363,28 @@ export default function AdminBlogsClient({ posts }: Props) {
                   <div className="font-semibold text-primary">{post.title}</div>
                   {post.excerpt && <p className="text-small text-slateSoft line-clamp-1">{post.excerpt}</p>}
                 </td>
-                <td className="px-4 py-3 capitalize">{post.status}</td>
+                <td className="px-4 py-3 capitalize">
+                  <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                    post.status === "published" 
+                      ? "bg-emerald-100 text-emerald-700" 
+                      : post.status === "scheduled"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {post.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-small">
+                  {post.scheduled_for 
+                    ? new Date(post.scheduled_for).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—"}
+                </td>
                 <td className="px-4 py-3">{post.category}</td>
                 <td className="px-4 py-3">{post.locality ?? "—"}</td>
                 <td className="px-4 py-3">
@@ -353,11 +403,11 @@ export default function AdminBlogsClient({ posts }: Props) {
                     {post.status !== "published" && (
                       <button
                         type="button"
-                        className="rounded-full bg-accent px-3 py-1 text-small font-medium text-white transition hover:bg-accent/90 hover:text-terracotta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2"
+                        className="rounded-full bg-emerald-700 px-3 py-1 text-small font-medium text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2"
                         onClick={() => publishPost(post.id)}
                         aria-label={`Approve and publish ${post.title}`}
                       >
-                        Approve
+                        Publish
                       </button>
                     )}
                   </div>
@@ -387,6 +437,8 @@ export default function AdminBlogsClient({ posts }: Props) {
         }}
         onSave={handleSave}
         onDelete={handleDelete}
+        onPublish={publishPost}
+        onSchedule={schedulePost}
         onPostGenerated={(newPost) => {
           // Update selected post and refresh list
           setSelectedPost(newPost as PostRecord);

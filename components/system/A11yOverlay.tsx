@@ -93,7 +93,7 @@ export default function A11yOverlay() {
         // Log warnings if issues were found
         if (issues.length > 0) {
             console.warn(
-                `♿️ A11y Overlay: Auto-fixed ${issues.length} accessibility issue(s):`,
+                `A11y Overlay: Auto-fixed ${issues.length} accessibility issue(s):`,
                 issues
             );
         }
@@ -105,7 +105,7 @@ export default function A11yOverlay() {
             const level = parseInt(heading.tagName[1], 10);
             if (lastLevel > 0 && level - lastLevel > 1) {
                 console.warn(
-                    `♿️ A11y: Skipped heading level: ${heading.tagName} after h${lastLevel}`
+                    `A11y: Skipped heading level: ${heading.tagName} after h${lastLevel}`
                 );
             }
             lastLevel = level;
@@ -121,7 +121,7 @@ export default function A11yOverlay() {
         });
         ids.forEach((count, id) => {
             if (count > 1) {
-                console.warn(`♿️ A11y: Duplicate ID found: ${id} (${count} times)`);
+                console.warn(`A11y: Duplicate ID found: ${id} (${count} times)`);
             }
         });
     }, []);

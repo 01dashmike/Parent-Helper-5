@@ -34,25 +34,25 @@ export default function ReferralSummary({ kpis, loading }: Props) {
         {
             title: "Total Referrals",
             value: kpis.totalReferrals.toLocaleString(),
-            icon: "👥",
+            icon: "",
             color: "text-sage",
         },
         {
             title: "Conversion Rate",
             value: `${kpis.conversionRate.toFixed(1)}%`,
-            icon: "📈",
+            icon: "",
             color: "text-blue-600",
         },
         {
             title: "Total Reward Value",
             value: `£${kpis.totalRewardValue.toFixed(2)}`,
-            icon: "💰",
+            icon: "",
             color: "text-yellow-600",
         },
         {
             title: "Avg Time to Conversion",
             value: `${kpis.avgTimeToConversion.toFixed(1)} days`,
-            icon: "⏱️",
+            icon: "",
             color: "text-purple-600",
         },
     ];

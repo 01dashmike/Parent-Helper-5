@@ -300,3 +300,6 @@ Score = 0.50 × keyword_relevance
 
 
 
+
+
+

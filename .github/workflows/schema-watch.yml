@@ -102,7 +102,6 @@ jobs:
           else
             echo "✓ Basic SQL syntax checks passed"
           fi
-        continue-on-error: true
 
       - name: Start Supabase (ephemeral)
         run: |

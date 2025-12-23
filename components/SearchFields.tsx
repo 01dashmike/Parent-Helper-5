@@ -7,7 +7,6 @@ import { motionTokens } from "@/lib/motion/tokens";
 import { MapPin } from "lucide-react";
 import { iconSize } from "@/lib/icons/tokens";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
-import { isPersonalizationEnabled } from "@/lib/env";
 import { logCtaClick } from "@/lib/analytics/client";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { LoadingSpinner } from "@/components/spinners/LoadingSpinner";
@@ -29,8 +28,6 @@ export default function SearchFields({ initialLocation, variant }: SearchFieldsP
   const [town, setTown] = useState(initialLocation || "");
   const [query, setQuery] = useState("");
   const [age, setAge] = useState("");
-  // Robust flag check - ensure boolean value
-  const personalizationEnabled = !!isPersonalizationEnabled();
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
@@ -56,11 +53,6 @@ export default function SearchFields({ initialLocation, variant }: SearchFieldsP
   }, [params, initialLocation]);
 
   const handleDetectLocation = async (): Promise<void> => {
-    // Only run if personalization is enabled
-    if (!personalizationEnabled) {
-      return;
-    }
-
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       return;
     }
@@ -161,29 +153,27 @@ export default function SearchFields({ initialLocation, variant }: SearchFieldsP
       transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.4, duration: motionTokens.slow, ease: motionTokens.easeOut }}
     >
       <div className="relative flex flex-1 items-center">
-        {personalizationEnabled && (
-          <button
-            type="button"
-            className="absolute left-3 inline-flex items-center justify-center rounded-md px-4 py-2 text-small font-medium gap-1 text-forest md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
-            onClick={handleDetectLocation}
-            disabled={detecting}
-            aria-disabled={detecting}
-            aria-label={detecting ? "Detecting location" : "Use my current location"}
-            tabIndex={0}
-          >
-            {detecting ? (
-              <>
-                <LoadingSpinner size="sm" label="Detecting location" />
-                <span>Detecting...</span>
-              </>
-            ) : (
-              <>
-                <MapPin size={iconSize.sm} aria-hidden="true" focusable="false" />
-                <span>Use my location</span>
-              </>
-            )}
-          </button>
-        )}
+        <button
+          type="button"
+          className="absolute left-3 inline-flex items-center justify-center rounded-md px-4 py-2 text-small font-medium gap-1 text-forest md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2"
+          onClick={handleDetectLocation}
+          disabled={detecting}
+          aria-disabled={detecting}
+          aria-label={detecting ? "Detecting location" : "Use my current location"}
+          tabIndex={0}
+        >
+          {detecting ? (
+            <>
+              <LoadingSpinner size="sm" label="Detecting location" />
+              <span>Detecting...</span>
+            </>
+          ) : (
+            <>
+              <MapPin size={iconSize.sm} aria-hidden="true" focusable="false" />
+              <span>Use my location</span>
+            </>
+          )}
+        </button>
 
         <MapPin size={iconSize.md} className="absolute left-3 hidden text-forest md:block" aria-hidden="true" focusable="false" />
 
@@ -202,29 +192,27 @@ export default function SearchFields({ initialLocation, variant }: SearchFieldsP
           tabIndex={0}
         />
 
-        {personalizationEnabled && (
-          <button
-            type="button"
-            onClick={handleDetectLocation}
-            disabled={detecting}
-            aria-disabled={detecting}
-            className="hidden inline-flex items-center justify-center rounded-md px-4 py-2 text-small font-medium gap-1 whitespace-nowrap text-forest hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2 md:inline-flex"
-            aria-label={detecting ? "Detecting location" : "Use my current location"}
-            tabIndex={0}
-          >
-            {detecting ? (
-              <>
-                <LoadingSpinner size="sm" label="Detecting location" />
-                <span>Detecting...</span>
-              </>
-            ) : (
-              <>
-                <MapPin size={iconSize.sm} aria-hidden="true" focusable="false" />
-                <span>Use my location</span>
-              </>
-            )}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleDetectLocation}
+          disabled={detecting}
+          aria-disabled={detecting}
+          className="hidden inline-flex items-center justify-center rounded-md px-4 py-2 text-small font-medium gap-1 whitespace-nowrap text-forest hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/50 focus-visible:ring-offset-2 md:inline-flex"
+          aria-label={detecting ? "Detecting location" : "Use my current location"}
+          tabIndex={0}
+        >
+          {detecting ? (
+            <>
+              <LoadingSpinner size="sm" label="Detecting location" />
+              <span>Detecting...</span>
+            </>
+          ) : (
+            <>
+              <MapPin size={iconSize.sm} aria-hidden="true" focusable="false" />
+              <span>Use my location</span>
+            </>
+          )}
+        </button>
       </div>
 
       <VisuallyHidden as="label" htmlFor={keywordId}>

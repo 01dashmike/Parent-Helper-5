@@ -52,6 +52,26 @@ export default async function AdminDashboard() {
             </div>
           </Link>
 
+          {/* About Page Editor Card */}
+          <Link
+            href="/admin/about"
+            className="group rounded-2xl border border-sage/30 bg-white p-6 shadow-soft transition-all duration-200 hover:border-sage/50 hover:shadow-md"
+          >
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-charcoal group-hover:text-sage transition-colors">
+                About Page Editor
+              </h2>
+              <p className="text-sm text-charcoal/70">
+                Edit the content and images for the About Parent Helper page.
+              </p>
+              <div className="pt-2">
+                <span className="text-xs font-medium text-sage group-hover:underline">
+                  Edit about page →
+                </span>
+              </div>
+            </div>
+          </Link>
+
           {/* Analytics Insights Card */}
           <Link
             href="/admin/insights"
@@ -71,6 +91,26 @@ export default async function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          {/* Nutrition Content Card */}
+          <Link
+            href="/admin/nutrition"
+            className="group rounded-2xl border border-sage/30 bg-white p-6 shadow-soft transition-all duration-200 hover:border-sage/50 hover:shadow-md"
+          >
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-charcoal group-hover:text-sage transition-colors">
+                Nutrition Content
+              </h2>
+              <p className="text-sm text-charcoal/70">
+                Manage pregnancy and baby nutrition stages, foods, and equipment recommendations.
+              </p>
+              <div className="pt-2">
+                <span className="text-xs font-medium text-sage group-hover:underline">
+                  Manage nutrition →
+                </span>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Quick Actions Section */}
@@ -82,6 +122,18 @@ export default async function AdminDashboard() {
               className="rounded-lg bg-sage/10 px-4 py-2 text-sm font-medium text-sage hover:bg-sage/20 transition-colors"
             >
               Manage Blogs
+            </Link>
+            <Link
+              href="/admin/about"
+              className="rounded-lg bg-sage/10 px-4 py-2 text-sm font-medium text-sage hover:bg-sage/20 transition-colors"
+            >
+              Edit About Page
+            </Link>
+            <Link
+              href="/admin/nutrition"
+              className="rounded-lg bg-sage/10 px-4 py-2 text-sm font-medium text-sage hover:bg-sage/20 transition-colors"
+            >
+              Nutrition Content
             </Link>
             <Link
               href="/admin/insights"

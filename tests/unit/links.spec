@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { resolveInternalLink, replaceInternalLinks } from "../../lib/links";
+import { resolveInternalLink } from "../../lib/links";
+import { replaceInternalLinks } from "../../lib/links.server";
 
 test.describe("internal link helpers", () => {
   test("resolveInternalLink returns mapped url when available", () => {
@@ -11,9 +12,9 @@ test.describe("internal link helpers", () => {
       .toBe("/blog/new-parenting");
   });
 
-  test("replaceInternalLinks converts placeholders to markdown links", () => {
+  test("replaceInternalLinks converts placeholders to markdown links", async () => {
     const source = "Try [link:classes/music] and [link:blog/sleep]";
-    const output = replaceInternalLinks(source);
+    const output = await replaceInternalLinks(source);
     expect(output).toContain("[music](/classes/london?category=music)");
     expect(output).toContain("[sleep](/blog?category=sleep)");
   });

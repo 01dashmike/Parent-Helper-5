@@ -4,7 +4,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB default
+const MAX_ABOUT_PAGE_FILE_SIZE = 15 * 1024 * 1024; // 15MB for about page images
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 export interface UploadResult {
@@ -16,7 +17,7 @@ export interface UploadResult {
 /**
  * Validate file before upload
  */
-export function validateImageFile(file: File): { valid: boolean; error?: string } {
+export function validateImageFile(file: File, maxSize: number = MAX_FILE_SIZE): { valid: boolean; error?: string } {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return {
       valid: false,
@@ -24,10 +25,10 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  if (file.size > MAX_FILE_SIZE) {
+  if (file.size > maxSize) {
     return {
       valid: false,
-      error: `File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+      error: `File too large. Maximum size: ${maxSize / 1024 / 1024}MB`,
     };
   }
 
@@ -40,10 +41,11 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 export async function uploadFile(
   bucket: string,
   path: string,
-  file: File
+  file: File,
+  maxSize: number = MAX_FILE_SIZE
 ): Promise<UploadResult> {
   try {
-    const validation = validateImageFile(file);
+    const validation = validateImageFile(file, maxSize);
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
@@ -101,6 +103,45 @@ export async function uploadClassImage(
 }
 
 /**
+ * Upload blog image (hero or content)
+ */
+export async function uploadBlogImage(
+  postId: string,
+  file: File,
+  imageType: "hero" | "content"
+): Promise<UploadResult> {
+  const timestamp = Date.now();
+  const extension = file.name.split(".").pop() || "jpg";
+  // Sanitize filename - remove special characters, keep only alphanumeric, dash, underscore
+  const sanitizedName = file.name
+    .replace(/\.[^/.]+$/, "") // Remove extension
+    .replace(/[^a-zA-Z0-9-_]/g, "-") // Replace special chars with dash
+    .substring(0, 50); // Limit length
+  const path = `blog/${postId}/${imageType}/${timestamp}-${sanitizedName}.${extension}`;
+  return uploadFile("blog", path, file);
+}
+
+/**
+ * Upload about page image (story section)
+ * Uses larger file size limit (15MB) for hero/large images
+ */
+export async function uploadAboutPageImage(
+  file: File,
+  imageType: "story" | "general" = "story"
+): Promise<UploadResult> {
+  const timestamp = Date.now();
+  const extension = file.name.split(".").pop() || "jpg";
+  // Sanitize filename - remove special characters, keep only alphanumeric, dash, underscore
+  const sanitizedName = file.name
+    .replace(/\.[^/.]+$/, "") // Remove extension
+    .replace(/[^a-zA-Z0-9-_]/g, "-") // Replace special chars with dash
+    .substring(0, 50); // Limit length
+  const path = `about-page/${imageType}/${timestamp}-${sanitizedName}.${extension}`;
+  // Use larger file size limit for about page images
+  return uploadFile("about-page", path, file, MAX_ABOUT_PAGE_FILE_SIZE);
+}
+
+/**
  * Delete file from Supabase Storage
  */
 export async function deleteFile(bucket: string, path: string): Promise<boolean> {
@@ -112,6 +153,9 @@ export async function deleteFile(bucket: string, path: string): Promise<boolean>
     return false;
   }
 }
+
+
+
 
 
 

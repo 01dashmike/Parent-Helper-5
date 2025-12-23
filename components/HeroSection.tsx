@@ -5,6 +5,7 @@ import { logExperimentAssignment } from "@/lib/analytics";
 import LocalPhoto from "@/components/LocalPhoto";
 import SearchFields from "@/components/SearchFields";
 import WeatherCard from "@/components/WeatherCard";
+import ComingSoonBanner from "@/components/ComingSoonBanner";
 import { MotionH1 } from "@/components/motion/MotionH1";
 import { MotionP } from "@/components/motion/MotionP";
 import { MotionDiv } from "@/components/motion/MotionDiv";
@@ -71,6 +72,8 @@ export default function HeroSection({ heroCopy, initialLocation }: HeroSectionPr
           {subheadline}
         </MotionP>
       )}
+
+      <ComingSoonBanner />
 
       <MotionDiv
         className="mt-4 flex w-full justify-center px-4 md:mt-6"

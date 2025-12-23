@@ -27,30 +27,29 @@ const WELLNESS_ENABLED =
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "Explore classes", href: "/search" },
-  {
-    label: "Resources",
-    href: "/resources",
-    dropdown: [
-      { label: "Blog", href: "/blog" },
-      { label: "Parent Guides", href: "/parent-guides" },
-      { label: "FAQs", href: "/faqs" },
-    ],
-  },
+  { label: "Blogs", href: "/blog" },
   ...(WELLNESS_ENABLED
     ? [
       {
         label: "Health & Wellness",
         href: "/wellness",
         dropdown: [
-          { label: "Mum", href: "/wellness/mum" },
-          { label: "Dad", href: "/wellness/dad" },
-          { label: "Family", href: "/wellness/family" },
-          { label: "Grandparents", href: "/wellness/grandparents" },
+          { label: "Meal Planner", href: "/wellness/mum/diet" },
+          { label: "Pregnancy & Baby Nutrition", href: "/health-wellness/nutrition" },
+          { label: "Exercise Plans", href: "/wellness/mum/exercise" },
+          { label: "Supplement Guide", href: "/wellness/mum/supplements" },
+          { label: "Product Safety Checker", href: "/wellness/mum/product-check" },
         ],
       },
     ]
     : []),
-  { label: "About Us", href: "/about" },
+  {
+    label: "About Us",
+    href: "/about",
+    dropdown: [
+      { label: "FAQs", href: "/faqs" },
+    ],
+  },
   { label: "Newsletter", href: "#newsletter", newsletter: true },
   { label: "Contact", href: "/contact" },
 ];
@@ -201,7 +200,7 @@ export default function Header() {
                   width={80}
                   height={80}
                   priority
-                  className="h-12 w-auto motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-in-out motion-reduce:transition-none md:h-14"
+                  className="h-16 w-auto motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-in-out motion-reduce:transition-none md:h-20"
                 />
               );
             })()}
