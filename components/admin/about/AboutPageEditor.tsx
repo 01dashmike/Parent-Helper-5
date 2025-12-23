@@ -17,6 +17,7 @@ interface AboutPageContent {
   story_title: string;
   story_content: string;
   story_image_url: string | null;
+  story_image_url_2: string | null;
   mission_title: string;
   mission_content: string;
   features_title: string;
@@ -53,6 +54,8 @@ export default function AboutPageEditor({ initialContent }: Props) {
   const [storyTitle, setStoryTitle] = useState(initialContent.story_title);
   const [storyContent, setStoryContent] = useState(initialContent.story_content);
   const [storyImageUrl, setStoryImageUrl] = useState(initialContent.story_image_url || "");
+  const [storyImageUrl2, setStoryImageUrl2] = useState(initialContent.story_image_url_2 || "");
+  const [isUploading2, setIsUploading2] = useState(false);
   const [missionTitle, setMissionTitle] = useState(initialContent.mission_title);
   const [missionContent, setMissionContent] = useState(initialContent.mission_content);
   const [featuresTitle, setFeaturesTitle] = useState(initialContent.features_title);
@@ -68,11 +71,15 @@ export default function AboutPageEditor({ initialContent }: Props) {
   const [ctaTitle, setCtaTitle] = useState(initialContent.cta_title || "");
   const [ctaContent, setCtaContent] = useState(initialContent.cta_content || "");
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageNumber: 1 | 2 = 1) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
+    if (imageNumber === 1) {
+      setIsUploading(true);
+    } else {
+      setIsUploading2(true);
+    }
     setError(null);
 
     try {
@@ -91,12 +98,20 @@ export default function AboutPageEditor({ initialContent }: Props) {
       }
 
       const data = await response.json();
-      setStoryImageUrl(data.url);
+      if (imageNumber === 1) {
+        setStoryImageUrl(data.url);
+      } else {
+        setStoryImageUrl2(data.url);
+      }
     } catch (err) {
       console.error("Error uploading image:", err);
       setError(err instanceof Error ? err.message : "Failed to upload image");
     } finally {
-      setIsUploading(false);
+      if (imageNumber === 1) {
+        setIsUploading(false);
+      } else {
+        setIsUploading2(false);
+      }
     }
   };
 
@@ -106,26 +121,30 @@ export default function AboutPageEditor({ initialContent }: Props) {
     setSuccess(false);
 
     try {
+      // Helper to convert empty strings to null for optional fields
+      const toNullIfEmpty = (value: string) => (value.trim() === "" ? null : value);
+      
       const updates = {
         hero_title: heroTitle,
         hero_description: heroDescription,
         story_title: storyTitle,
         story_content: storyContent,
-        story_image_url: storyImageUrl,
+        story_image_url: storyImageUrl || null,
+        story_image_url_2: toNullIfEmpty(storyImageUrl2),
         mission_title: missionTitle,
         mission_content: missionContent,
         features_title: featuresTitle,
-        features_subtitle: featuresSubtitle,
+        features_subtitle: toNullIfEmpty(featuresSubtitle),
         features: features,
         values_title: valuesTitle,
-        values_subtitle: valuesSubtitle,
+        values_subtitle: toNullIfEmpty(valuesSubtitle),
         values: values,
         impact_title: impactTitle,
-        impact_content: impactContent,
+        impact_content: toNullIfEmpty(impactContent),
         impact_stats: impactStats,
-        cta_label: ctaLabel,
-        cta_title: ctaTitle,
-        cta_content: ctaContent,
+        cta_label: toNullIfEmpty(ctaLabel),
+        cta_title: toNullIfEmpty(ctaTitle),
+        cta_content: toNullIfEmpty(ctaContent),
       };
 
       const response = await fetch("/api/admin/about", {
@@ -136,7 +155,11 @@ export default function AboutPageEditor({ initialContent }: Props) {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Save failed");
+        // Include details if available (for development debugging)
+        const errorMessage = data.details 
+          ? `${data.error || "Save failed"}: ${data.details}`
+          : data.error || "Save failed";
+        throw new Error(errorMessage);
       }
 
       setSuccess(true);
@@ -218,7 +241,7 @@ export default function AboutPageEditor({ initialContent }: Props) {
           <Button
             onClick={handleSave}
             disabled={isSaving || isPending}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-sage text-white hover:bg-sage/90"
           >
             {isSaving ? (
               <LoadingSpinner size="sm" />
@@ -281,35 +304,72 @@ export default function AboutPageEditor({ initialContent }: Props) {
             />
             <p className="mt-1 text-xs text-charcoal/60">Use double line breaks to separate paragraphs</p>
           </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-charcoal">Image</label>
-            {storyImageUrl && (
-              <div className="mb-3 relative h-40 w-full overflow-hidden rounded-lg">
-                <Image
-                  src={storyImageUrl}
-                  alt="Story section image"
-                  fill
-                  className="object-cover"
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Image 1 */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-charcoal">Image 1 (Top)</label>
+              {storyImageUrl && (
+                <div className="mb-3 relative aspect-square w-full max-w-md overflow-hidden rounded-lg">
+                  <Image
+                    src={storyImageUrl}
+                    alt="Story section image 1"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={(e) => handleImageUpload(e, 1)}
+                  disabled={isUploading}
+                  className="flex-1"
                 />
+                {isUploading && <LoadingSpinner size="sm" />}
               </div>
-            )}
-            <div className="flex items-center gap-3">
+              <p className="mt-1 text-xs text-charcoal/60">Or enter a URL below</p>
               <Input
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                onChange={handleImageUpload}
-                disabled={isUploading}
-                className="flex-1"
+                value={storyImageUrl}
+                onChange={(e) => setStoryImageUrl(e.target.value)}
+                placeholder="/images/categories/family-hero.png"
+                className="mt-2"
               />
-              {isUploading && <LoadingSpinner size="sm" />}
             </div>
-            <p className="mt-1 text-xs text-charcoal/60">Or enter a URL below</p>
-            <Input
-              value={storyImageUrl}
-              onChange={(e) => setStoryImageUrl(e.target.value)}
-              placeholder="/images/family-hero.png"
-              className="mt-2"
-            />
+
+            {/* Image 2 */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-charcoal">Image 2 (Bottom) - Optional</label>
+              {storyImageUrl2 && (
+                <div className="mb-3 relative aspect-square w-full max-w-md overflow-hidden rounded-lg">
+                  <Image
+                    src={storyImageUrl2}
+                    alt="Story section image 2"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={(e) => handleImageUpload(e, 2)}
+                  disabled={isUploading2}
+                  className="flex-1"
+                />
+                {isUploading2 && <LoadingSpinner size="sm" />}
+              </div>
+              <p className="mt-1 text-xs text-charcoal/60">Or enter a URL below (leave empty to show only one image)</p>
+              <Input
+                value={storyImageUrl2}
+                onChange={(e) => setStoryImageUrl2(e.target.value)}
+                placeholder="Optional second image URL"
+                className="mt-2"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -475,7 +535,7 @@ export default function AboutPageEditor({ initialContent }: Props) {
                       <Input
                         value={value.icon}
                         onChange={(e) => updateValue(index, "icon", e.target.value)}
-                        placeholder="👨‍👩‍👧‍👦"
+                        placeholder="Icon"
                         className="text-2xl"
                       />
                     </div>
@@ -609,7 +669,7 @@ export default function AboutPageEditor({ initialContent }: Props) {
         <Button
           onClick={handleSave}
           disabled={isSaving || isPending}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-sage text-white hover:bg-sage/90"
           size="lg"
         >
           {isSaving ? (
@@ -623,3 +683,4 @@ export default function AboutPageEditor({ initialContent }: Props) {
     </div>
   );
 }
+

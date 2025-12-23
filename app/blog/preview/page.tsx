@@ -29,14 +29,24 @@ export default function BlogPreviewPage() {
   const [post, setPost] = useState<PreviewPost | null>(null);
 
   useEffect(() => {
+    // Helper to safely get URL param without double-decoding
+    // useSearchParams().get() already returns decoded values, so we never call decodeURIComponent()
+    // IMPORTANT: Never call decodeURIComponent() on the result as it would cause:
+    // - Double-decoding (useSearchParams already decodes once)
+    // - URIError when content contains % sequences that aren't valid URL encoding
+    // - Corrupted content when the query string is already decoded
+    const getParam = (key: string): string | null => {
+      return searchParams?.get(key) ?? null;
+    };
+
     // Try to get post data from URL params
-    const title = searchParams.get("title");
-    const excerpt = searchParams.get("excerpt");
-    const category = searchParams.get("category");
-    const hero_image = searchParams.get("hero_image");
-    const body_markdown = searchParams.get("body_markdown");
-    const reading_time_minutes = searchParams.get("reading_time_minutes");
-    const locality = searchParams.get("locality");
+    const title = getParam("title");
+    const excerpt = getParam("excerpt");
+    const category = getParam("category");
+    const hero_image = getParam("hero_image");
+    const body_markdown = getParam("body_markdown");
+    const reading_time_minutes = getParam("reading_time_minutes");
+    const locality = getParam("locality");
 
     // Try to get from sessionStorage (for complex data)
     const storedPost = sessionStorage.getItem("blog_preview_data");
@@ -51,13 +61,15 @@ export default function BlogPreviewPage() {
     }
 
     // Fallback to URL params
+    // Note: useSearchParams().get() already returns decoded values, so no need to decode again
+    // DO NOT call decodeURIComponent() on these values as it would cause double-decoding
     if (title || body_markdown) {
       setPost({
         title: title || "Preview",
         excerpt: excerpt || undefined,
         category: category || "Parenting Advice",
         hero_image: hero_image || undefined,
-        body_markdown: body_markdown ? decodeURIComponent(body_markdown) : undefined,
+        body_markdown: body_markdown || undefined,
         reading_time_minutes: reading_time_minutes ? parseInt(reading_time_minutes) : undefined,
         locality: locality || undefined,
         sources: [],
@@ -215,7 +227,7 @@ export default function BlogPreviewPage() {
                 </p>
               )}
               <ul className="space-y-3">
-                {post.sources.map((source: any, index: number) => {
+                {(post.sources ?? []).map((source: any, index: number) => {
                   const sourceUrl = typeof source === "string" ? source : source.url;
                   const sourceTitle = typeof source === "string" ? source : (source.title ?? source.url ?? "Source");
                   return (

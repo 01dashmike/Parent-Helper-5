@@ -92,6 +92,115 @@ CONSIDERATIONS:
 export function buildMealPlanPrompt(inputs: MealPlanInputs): string {
   const audienceContext = AUDIENCE_CONTEXT[inputs.audience];
   
+  // Build goal-specific sections
+  let goalSpecificContext = "";
+  let nutritionOutputRequirements = "";
+  
+  // Muscle Gain specific context
+  if (inputs.goalSpecificData?.muscleGain) {
+    const mg = inputs.goalSpecificData.muscleGain;
+    const proteinMultiplier = mg.proteinTarget === "high" ? 1.8 : 2.2;
+    const dailyProteinTarget = Math.round(mg.currentWeight * proteinMultiplier);
+    
+    goalSpecificContext += `
+MUSCLE GAIN DETAILS:
+- Current weight: ${mg.currentWeight}kg
+- Target weight: ${mg.targetWeight ? `${mg.targetWeight}kg` : "Not specified"}
+- Biological sex: ${mg.biologicalSex}
+- Activity level: ${mg.activityLevel}
+- Protein target: ${mg.proteinTarget} (${proteinMultiplier}g per kg body weight)
+- Daily protein goal: approximately ${dailyProteinTarget}g
+
+MUSCLE GAIN MEAL REQUIREMENTS:
+- Each meal should be HIGH PROTEIN focused
+- Include protein amounts in nutritionInfo for every meal
+- Aim for 25-40g protein per main meal
+- Include protein-rich snacks (20-30g protein each)
+- Favour lean meats, fish, eggs, Greek yoghurt, legumes, cottage cheese
+- Include post-workout meal suggestions
+`;
+  }
+  
+  // Weight Loss specific context
+  if (inputs.goalSpecificData?.weightLoss) {
+    const wl = inputs.goalSpecificData.weightLoss;
+    // Calculate BMR using Mifflin-St Jeor equation
+    let bmr: number;
+    if (wl.biologicalSex === "male") {
+      bmr = (10 * wl.currentWeight) + (6.25 * wl.height) - (5 * wl.age) + 5;
+    } else {
+      bmr = (10 * wl.currentWeight) + (6.25 * wl.height) - (5 * wl.age) - 161;
+    }
+    
+    // Apply activity multiplier
+    const activityMultipliers: Record<string, number> = {
+      "sedentary": 1.2,
+      "lightly-active": 1.375,
+      "moderately-active": 1.55,
+      "very-active": 1.725,
+    };
+    const tdee = Math.round(bmr * (activityMultipliers[wl.activityLevel] || 1.55));
+    
+    // Calculate deficit based on target weekly loss
+    const deficitPerDay: Record<string, number> = {
+      "0.25kg": 275,
+      "0.5kg": 550,
+      "0.75kg": 825,
+      "1kg": 1100,
+    };
+    const dailyCalorieTarget = Math.max(1200, tdee - (deficitPerDay[wl.targetWeeklyLoss] || 550));
+    
+    goalSpecificContext += `
+WEIGHT LOSS DETAILS:
+- Current weight: ${wl.currentWeight}kg
+- Age: ${wl.age} years
+- Height: ${wl.height}cm
+- Biological sex: ${wl.biologicalSex}
+- Activity level: ${wl.activityLevel}
+- Target weekly loss: ${wl.targetWeeklyLoss}
+- Estimated TDEE: ${tdee} calories
+- DAILY CALORIE TARGET: ${dailyCalorieTarget} calories
+
+WEIGHT LOSS MEAL REQUIREMENTS:
+- STRICTLY adhere to approximately ${dailyCalorieTarget} calories per day
+- Include calorie counts in nutritionInfo for EVERY meal and snack
+- Aim for calorie distribution: Breakfast 300-400cal, Lunch 400-500cal, Dinner 400-500cal, Snacks 150-200cal
+- Focus on high-volume, low-calorie foods (vegetables, lean proteins)
+- Include plenty of fibre for satiety
+- Avoid calorie-dense oils and sauces
+`;
+  }
+  
+  // Heart Health / Cholesterol specific context
+  const hasHeartGoal = inputs.goals.includes("heart-health") || inputs.goals.includes("cholesterol-control");
+  if (hasHeartGoal) {
+    const hh = inputs.goalSpecificData?.heartHealth;
+    
+    goalSpecificContext += `
+HEART HEALTH / CHOLESTEROL DETAILS:
+${hh?.currentCholesterol ? `- Current cholesterol: ${hh.currentCholesterol}` : "- Cholesterol level: Not specified"}
+- Family history of heart disease: ${hh?.familyHistoryHeartDisease ? "Yes" : "No"}
+
+HEART HEALTH MEAL REQUIREMENTS:
+- Limit saturated fat to <20g per day total
+- Include saturatedFat in nutritionInfo for EVERY meal (in grams)
+- Include cholesterol in nutritionInfo for EVERY meal (in mg)
+- Add heartHealthScore (1-10) to EVERY meal and snack
+- Favour oily fish (salmon, mackerel), nuts, olive oil, oats
+- Avoid red meat, full-fat dairy, fried foods
+- Include soluble fibre (oats, beans, lentils)
+- Minimise processed foods and sodium
+`;
+
+    // Update nutrition output requirements for heart health
+    nutritionOutputRequirements = `
+HEART HEALTH NUTRITION REQUIREMENTS:
+- Include saturatedFat and cholesterol in nutritionInfo for every meal
+- Add heartHealthScore (1-10) to every recipe
+- Score Guide: 9-10=Excellent, 7-8=Very Good, 5-6=Acceptable, 3-4=Occasional, 1-2=Avoid
+`;
+  }
+  
   const prompt = `${BRAND_CONTEXT}
 ${audienceContext}
 
@@ -107,6 +216,7 @@ USER PREFERENCES:
 - Health conditions: ${inputs.healthConditions?.join(", ") || "None"}
 - Budget preference: ${inputs.budgetPreference}
 ${inputs.familySize ? `- Family size: ${inputs.familySize.adults} adults, ${inputs.familySize.childrenAges.babies} babies (0-1yr), ${inputs.familySize.childrenAges.toddlers} toddlers (1-3yr), ${inputs.familySize.childrenAges.preschool} preschool (3-5yr), ${inputs.familySize.childrenAges.schoolAge} school-age (5+yr)` : ""}
+${goalSpecificContext}
 
 REQUIREMENTS:
 1. Create a complete 7-day meal plan (Monday-Sunday)
@@ -122,8 +232,10 @@ REQUIREMENTS:
 7. Consider the audience's specific needs
 8. If family size is provided, adjust recipe quantities and serving sizes accordingly
 9. Use UK English spelling throughout (e.g., "organised" not "organized", "favourites" not "favorites")
+10. ${inputs.goalSpecificData?.muscleGain ? "Include protein content (in grams) in nutritionInfo for EVERY meal" : ""}
+11. ${inputs.goalSpecificData?.weightLoss ? "Include calorie count in nutritionInfo for EVERY meal and snack" : ""}
 
-OUTPUT FORMAT (JSON):
+OUTPUT FORMAT (valid JSON only, no markdown):
 {
   "weekPlan": [
     {
@@ -134,33 +246,38 @@ OUTPUT FORMAT (JSON):
         "method": ["step 1", "step 2"],
         "prepTime": "10 mins",
         "cookTime": "15 mins",
-        "servings": 4
+        "servings": 4,
+        "nutritionInfo": {
+          "calories": "350 kcal",
+          "protein": "25g",
+          "carbs": "40g",
+          "fat": "12g"
+        }
       },
-      "lunch": { ... },
-      "dinner": { ... },
+      "lunch": { "name": "...", "ingredients": [...], "method": [...], "prepTime": "...", "cookTime": "...", "servings": 4, "nutritionInfo": {...} },
+      "dinner": { "name": "...", "ingredients": [...], "method": [...], "prepTime": "...", "cookTime": "...", "servings": 4, "nutritionInfo": {...} },
       "snacks": ["Snack option 1", "Snack option 2"]
     }
   ],
   "shoppingList": [
-    {
-      "category": "Fresh Produce",
-      "items": ["item 1", "item 2"]
-    }
+    { "category": "Fresh Produce", "items": ["item 1", "item 2"] }
   ],
-  "estimatedCost": {
-    "min": 45,
-    "max": 65,
-    "currency": "GBP"
-  },
+  "estimatedCost": { "min": 45, "max": 65, "currency": "GBP" },
   "tips": ["Quick prep tip", "Storage tip"]
 }
+
+${hasHeartGoal ? `FOR HEART HEALTH: Add "saturatedFat" and "cholesterol" to each nutritionInfo, and add "heartHealthScore" (1-10) to each recipe.` : ""}
+${nutritionOutputRequirements}
 
 IMPORTANT:
 - Make meals kid-friendly when relevant
 - Include make-ahead options
 - Suggest batch cooking where possible
 - Keep it realistic and achievable
-- Provide variety throughout the week`;
+- Provide variety throughout the week
+${inputs.goalSpecificData?.muscleGain ? "- PRIORITISE HIGH PROTEIN in every meal for muscle gain" : ""}
+${inputs.goalSpecificData?.weightLoss ? "- STRICTLY ADHERE to the calorie targets for weight loss" : ""}
+${hasHeartGoal ? "- ALWAYS include saturatedFat, cholesterol, and heartHealthScore for heart health goals" : ""}`;
 
   return prompt;
 }
@@ -216,9 +333,48 @@ IMPORTANT:
 // Exercise Planner Prompts
 // ============================================================================
 
-export function buildExercisePlanPrompt(inputs: ExercisePlanInputs): string {
+/**
+ * Get the recommended exercise counts based on session duration
+ */
+function getExerciseCountsForDuration(time: string): { warmup: string; main: string; cooldown: string } {
+  switch (time) {
+    case "15min":
+      return { warmup: "2-3", main: "3-4", cooldown: "1-2" };
+    case "30min":
+      return { warmup: "3-4", main: "5-6", cooldown: "2-3" };
+    case "45min":
+      return { warmup: "4-5", main: "7-8", cooldown: "3-4" };
+    case "1hr":
+      return { warmup: "5-6", main: "10-12", cooldown: "4-5" };
+    default:
+      return { warmup: "3-4", main: "5-6", cooldown: "2-3" };
+  }
+}
+
+/**
+ * Build exercise plan prompt with optional Gym-Fit exercise constraints.
+ * When availableExercises is provided, the AI must select only from that list.
+ */
+export function buildExercisePlanPrompt(
+  inputs: ExercisePlanInputs,
+  availableExercises?: string
+): string {
   const audienceContext = AUDIENCE_CONTEXT[inputs.audience];
+  const exerciseCounts = getExerciseCountsForDuration(inputs.timePerSession);
   
+  // Build exercise constraint section if available
+  const exerciseConstraint = availableExercises
+    ? `
+EXERCISE LIBRARY:
+You MUST select exercises from the following list only. Use the EXACT names as shown.
+If you cannot find a suitable exercise for a body part, pick the closest match from the list.
+
+${availableExercises}
+
+IMPORTANT: The exercise names you output MUST match the names above exactly.
+`
+    : "";
+
   const prompt = `${BRAND_CONTEXT}
 ${audienceContext}
 
@@ -233,12 +389,19 @@ USER DETAILS:
 - Days per week: ${inputs.daysPerWeek}
 - Injuries/limitations: ${inputs.injuries.join(", ") || "None"}
 - Additional notes: ${inputs.limitations?.join(", ") || "None"}
+${exerciseConstraint}
+EXERCISE COUNTS (CRITICAL - for ${inputs.timePerSession} session):
+- Warmup: Include ${exerciseCounts.warmup} different exercises
+- Main Workout: Include ${exerciseCounts.main} different exercises (each with multiple sets)
+- Cooldown: Include ${exerciseCounts.cooldown} different exercises/stretches
+
+You MUST include enough exercises to fill the full ${inputs.timePerSession} session. Do NOT provide just 1-2 exercises.
 
 REQUIREMENTS:
 1. Create a ${inputs.daysPerWeek}-day workout plan
-2. Each session should fit within ${inputs.timePerSession}
-3. Include warmup, main workout, and cooldown
-4. Provide clear exercise descriptions with form tips
+2. Each session MUST fill the full ${inputs.timePerSession} with the exercise counts specified above
+3. Include warmup, main workout, and cooldown sections with the correct number of exercises
+4. ${availableExercises ? "Use ONLY exercises from the EXERCISE LIBRARY above with exact names" : "Provide clear exercise descriptions with form tips"}
 5. Offer modifications (easier/harder versions)
 6. Focus on safety and gradual progression
 7. Make it family-friendly where relevant
@@ -251,7 +414,7 @@ OUTPUT FORMAT (JSON):
       "focus": "Upper body strength",
       "warmup": [
         {
-          "name": "Arm circles",
+          "name": "Arm Circles",
           "duration": "30 seconds",
           "description": "Stand with arms extended, make small circles",
           "formTips": ["Keep shoulders relaxed", "Gradually increase circle size"]
@@ -259,14 +422,14 @@ OUTPUT FORMAT (JSON):
       ],
       "mainWorkout": [
         {
-          "name": "Push-ups",
+          "name": "Push Up",
           "sets": 3,
           "reps": "8-12",
           "description": "...",
           "formTips": ["Keep core tight", "Full range of motion"],
           "modifications": {
-            "easier": "Knee push-ups",
-            "harder": "Diamond push-ups"
+            "easier": "Knee Push Up",
+            "harder": "Diamond Push Up"
           }
         }
       ],

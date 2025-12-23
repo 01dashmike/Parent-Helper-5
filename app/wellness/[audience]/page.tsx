@@ -48,7 +48,7 @@ const audienceData: Record<
     subtitle:
       "Gentle, age-appropriate wellness guidance for grandparents caring for grandchildren.",
     description:
-      "Get meal ideas suitable for all ages, gentle exercise routines, and product safety information to keep your grandchildren safe and healthy.",
+      "Get meal ideas suitable for all ages, exercise routines, and product safety information to keep your grandchildren safe and healthy.",
   },
 };
 
@@ -94,7 +94,7 @@ export default async function AudienceWellnessPage({
 
   const tools = [
     {
-      title: "🥗 Meal Planner",
+      title: "Meal Planner",
       description:
         "Get a personalised 7-day meal plan with recipes, shopping lists, and cost estimates.",
       href: `/wellness/${audience}/diet`,
@@ -106,7 +106,7 @@ export default async function AudienceWellnessPage({
       ],
     },
     {
-      title: "💪 Exercise Planner",
+      title: "Exercise Planner",
       description:
         "Custom workout routines based on your fitness level, equipment, and available time.",
       href: `/wellness/${audience}/exercise`,
@@ -132,13 +132,13 @@ export default async function AudienceWellnessPage({
     {
       title: "🔍 Product Safety Checker",
       description:
-        "Scan barcodes or search products to see ingredient analysis and healthier alternatives.",
+        "Scan barcodes or search products to check toxicity levels, eco credentials, and ingredient safety for your family.",
       href: `/wellness/${audience}/product-check`,
       features: [
         "Barcode scanning",
-        "Ingredient breakdown",
-        "Safety scores and explanations",
-        "Alternative product suggestions",
+        "Toxicity and safety analysis",
+        "Eco credentials and sustainability ratings",
+        "Ingredient breakdown and health scores",
       ],
     },
   ];
@@ -164,24 +164,24 @@ export default async function AudienceWellnessPage({
           <Link
             key={tool.href}
             href={tool.href}
-            className="group block rounded-2xl bg-white p-6 shadow-soft transition-all hover:shadow-soft-lg"
+            className="group block rounded-2xl bg-sage-dark p-6 shadow-soft transition-all duration-300 hover:shadow-soft-lg hover:scale-[1.02] hover:bg-sage-darker"
           >
-            <h3 className="mb-3 text-xl font-semibold text-charcoal group-hover:text-sage">
+            <h3 className="mb-3 text-xl font-semibold text-white group-hover:text-white/95 transition-colors">
               {tool.title}
             </h3>
-            <p className="mb-4 text-charcoal/70">{tool.description}</p>
+            <p className="mb-4 text-white/90">{tool.description}</p>
             <ul className="space-y-2">
               {tool.features.map((feature) => (
                 <li
                   key={feature}
-                  className="flex items-start gap-2 text-sm text-charcoal/80"
+                  className="flex items-start gap-2 text-sm text-white/85"
                 >
-                  <span className="text-sage">✓</span>
+                  <span className="text-white font-semibold">✓</span>
                   <span>{feature}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-sage group-hover:gap-3 transition-all">
+            <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-white group-hover:gap-3 transition-all">
               Get Started
               <span>→</span>
             </div>
@@ -192,7 +192,7 @@ export default async function AudienceWellnessPage({
       {/* Disclaimer */}
       <div className="rounded-2xl border border-terracotta/30 bg-terracotta/5 p-6">
         <h3 className="mb-2 font-semibold text-charcoal">
-          ⚕️ Health Information Disclaimer
+          Health Information Disclaimer
         </h3>
         <p className="text-sm leading-relaxed text-charcoal/80">
           These tools provide general wellness information and are not a
@@ -204,3 +204,4 @@ export default async function AudienceWellnessPage({
     </div>
   );
 }
+

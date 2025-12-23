@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { generateSupplementSuggestions } from "@/lib/wellness/actions";
 import type {
   Audience,
@@ -278,17 +279,25 @@ export default function SupplementWizard({
         )}
 
         <div className="rounded-lg bg-terracotta/10 p-4 text-sm text-charcoal/90">
-          <strong>⚕️ Reminder:</strong> Consult your GP before starting any new supplements
+          <strong>Reminder:</strong> Consult your GP before starting any new supplements
         </div>
 
         <button
           type="submit"
           disabled={loading || (formData.goals?.length || 0) === 0}
-          className="w-full rounded-full bg-sage py-3 px-6 font-semibold text-white transition-all hover:bg-sage/90 disabled:opacity-50"
+          className="w-full rounded-full bg-sage py-3 px-6 font-semibold text-white transition-all hover:bg-sage/90 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-{loading ? "Generating suggestions..." : "💊 Get Supplement Suggestions"}
+          {loading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Generating suggestions...
+            </>
+          ) : (
+            "💊 Get Supplement Suggestions"
+          )}
         </button>
       </form>
     </div>
   );
 }
+

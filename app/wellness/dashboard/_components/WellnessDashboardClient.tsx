@@ -21,10 +21,10 @@ export default function WellnessDashboardClient({
 
   const getPlanTypeLabel = (type: string) => {
     const labels = {
-      meal: "🥗 Meal Plan",
-      exercise: "💪 Exercise Plan",
-      supplement: "💊 Supplement Guide",
-      product: "🔍 Product Check",
+      meal: "Meal Plan",
+      exercise: "Exercise Plan",
+      supplement: "Supplement Guide",
+      product: "Product Check",
     };
     return labels[type as keyof typeof labels] || type;
   };
@@ -78,10 +78,10 @@ export default function WellnessDashboardClient({
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Meal Plan", icon: "🥗", href: "/wellness/mum/diet" },
-            { label: "Exercise Plan", icon: "💪", href: "/wellness/mum/exercise" },
-            { label: "Supplement Guide", icon: "💊", href: "/wellness/mum/supplements" },
-            { label: "Browse All", icon: "🌟", href: "/wellness" },
+            { label: "Meal Plan", icon: "", href: "/wellness/mum/diet" },
+            { label: "Exercise Plan", icon: "", href: "/wellness/mum/exercise" },
+            { label: "Supplement Guide", icon: "", href: "/wellness/mum/supplements" },
+            { label: "Browse All", icon: "", href: "/wellness" },
           ].map((action) => (
             <button
               key={action.label}

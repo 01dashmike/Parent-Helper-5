@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { generateExercisePlan } from "@/lib/wellness/actions";
-import { Info } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
 import type {
   Audience,
   ExercisePlan,
@@ -301,9 +301,16 @@ export default function ExerciseWizard({
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-full bg-sage py-3 px-6 font-semibold text-white transition-all hover:bg-sage/90 disabled:opacity-50"
+          className="w-full rounded-full bg-sage py-3 px-6 font-semibold text-white transition-all hover:bg-sage/90 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-{loading ? "Creating your workout plan..." : "💪 Generate Exercise Plan"}
+          {loading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Creating your workout plan...
+            </>
+          ) : (
+            "Generate Exercise Plan"
+          )}
         </button>
 
         <p className="text-center text-xs text-charcoal/60">
@@ -313,3 +320,4 @@ export default function ExerciseWizard({
     </div>
   );
 }
+

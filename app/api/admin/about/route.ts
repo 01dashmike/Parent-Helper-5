@@ -38,24 +38,62 @@ function createAuthenticatedClient() {
 async function validateAdmin() {
   const supabase = createAuthenticatedClient();
   
+  // Get authenticated user
   const { data: { user }, error: getUserError } = await supabase.auth.getUser();
   
-  if (user) {
-    return { user, supabase };
+  let authenticatedUser = user;
+  
+  if (!authenticatedUser) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    authenticatedUser = session?.user ?? null;
+    
+    if (!authenticatedUser) {
+      console.error("Auth validation failed:", {
+        getUserError: getUserError?.message,
+        sessionError: sessionError?.message,
+      });
+      throw new Error("Unauthorised");
+    }
   }
-  
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-  if (session?.user) {
-    return { user: session.user, supabase };
+
+  // Dev override: allow DEV_ADMIN_EMAIL in development (still requires email match)
+  if (process.env.NODE_ENV === "development" && process.env.DEV_ADMIN_EMAIL) {
+    if (authenticatedUser.email === process.env.DEV_ADMIN_EMAIL) {
+      return { user: authenticatedUser, supabase };
+    }
   }
-  
-  console.error("Auth validation failed:", {
-    getUserError: getUserError?.message,
-    sessionError: sessionError?.message,
-  });
-  
-  throw new Error("Unauthorised");
+
+  // Check user role in users table using service role client
+  // This MUST pass before allowing any admin operations
+  const serverSupabase = getSupabaseServer();
+  if (!serverSupabase) {
+    throw new Error("Supabase server not configured");
+  }
+
+  const { data: userData, error: userError } = await serverSupabase
+    .from("users")
+    .select("role")
+    .eq("id", authenticatedUser.id)
+    .single();
+
+  if (userError || !userData) {
+    // Log without exposing user ID in production
+    if (process.env.NODE_ENV === "development") {
+      console.error("[validateAdmin] User not found in users table");
+    }
+    throw new Error("Unauthorised");
+  }
+
+  // CRITICAL: Verify user has admin role - reject all non-admin users
+  if (userData.role !== "admin") {
+    // Log without exposing user ID or role in production
+    if (process.env.NODE_ENV === "development") {
+      console.error("[validateAdmin] User does not have admin role");
+    }
+    throw new Error("Unauthorised");
+  }
+
+  return { user: authenticatedUser, supabase };
 }
 
 /**
@@ -63,21 +101,24 @@ async function validateAdmin() {
  * Fetch about page content
  */
 export async function GET(req: Request) {
-  // Validate user is authenticated
+  // Validate user is authenticated AND has admin role
   try {
     await validateAdmin();
   } catch (error) {
-    console.error("Admin route auth error:", error);
+    // Don't log auth errors in production to prevent enumeration
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GET /api/admin/about] Auth error:", error);
+    }
     return NextResponse.json({ 
       error: "Forbidden", 
-      message: error instanceof Error ? error.message : "Authentication required" 
+      message: "Authentication required" 
     }, { status: 403 });
   }
 
   // Use service role client for database operations
   const supabase = getSupabaseServer();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+    return NextResponse.json({ error: "Service unavailable" }, { status: 500 });
   }
 
   try {
@@ -88,15 +129,15 @@ export async function GET(req: Request) {
       .single();
 
     if (error) {
-      console.error("Error fetching about page content:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("[GET /api/admin/about] Database error");
+      return NextResponse.json({ error: "Failed to fetch content" }, { status: 500 });
     }
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Error in GET /api/admin/about:", error);
+    console.error("[GET /api/admin/about] Unexpected error");
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to fetch content" },
+      { error: "Failed to fetch content" },
       { status: 500 }
     );
   }
@@ -107,21 +148,24 @@ export async function GET(req: Request) {
  * Update about page content
  */
 export async function POST(req: Request) {
-  // Validate user is authenticated
+  // Validate user is authenticated AND has admin role
   try {
     await validateAdmin();
   } catch (error) {
-    console.error("Admin route auth error:", error);
+    // Don't log auth errors in production to prevent enumeration
+    if (process.env.NODE_ENV === "development") {
+      console.error("[POST /api/admin/about] Auth error:", error);
+    }
     return NextResponse.json({ 
       error: "Forbidden", 
-      message: error instanceof Error ? error.message : "Authentication required" 
+      message: "Authentication required" 
     }, { status: 403 });
   }
 
   // Use service role client for database operations
   const supabase = getSupabaseServer();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+    return NextResponse.json({ error: "Service unavailable" }, { status: 500 });
   }
 
   try {
@@ -132,20 +176,56 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing updates" }, { status: 400 });
     }
 
-    // Update the about page content (id=1 is the singleton row)
-    const { data, error } = await supabase
+    // Filter out story_image_url_2 if column doesn't exist (migration may not have run)
+    // Check if the error mentions this column and retry without it
+    const updatesToApply = { ...updates };
+    
+    // First attempt: try with all updates
+    let { data, error } = await supabase
       .from("about_page_content")
       .update({
-        ...updates,
+        ...updatesToApply,
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1)
       .select()
       .single();
 
+    // If error mentions story_image_url_2 column not found, retry without it
+    if (error && error.message?.includes("story_image_url_2") && error.message?.includes("schema cache")) {
+      // Remove story_image_url_2 from updates and retry
+      const { story_image_url_2, ...updatesWithoutSecondImage } = updatesToApply;
+      
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[POST /api/admin/about] story_image_url_2 column not found, updating without it");
+      }
+      
+      const retryResult = await supabase
+        .from("about_page_content")
+        .update({
+          ...updatesWithoutSecondImage,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", 1)
+        .select()
+        .single();
+      
+      data = retryResult.data;
+      error = retryResult.error;
+    }
+
     if (error) {
-      console.error("Error updating about page content:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // Show detailed error in development for debugging
+      if (process.env.NODE_ENV === "development") {
+        console.error("[POST /api/admin/about] Database error:", error);
+        return NextResponse.json({ 
+          error: "Failed to update content", 
+          details: error.message,
+          code: error.code 
+        }, { status: 500 });
+      }
+      console.error("[POST /api/admin/about] Database error");
+      return NextResponse.json({ error: "Failed to update content" }, { status: 500 });
     }
 
     // Revalidate the about page
@@ -153,9 +233,20 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, data });
   } catch (error) {
-    console.error("Error in POST /api/admin/about:", error);
+    // Show detailed error in development for debugging
+    if (process.env.NODE_ENV === "development") {
+      console.error("[POST /api/admin/about] Unexpected error:", error);
+      return NextResponse.json(
+        { 
+          error: "Failed to update content",
+          details: error instanceof Error ? error.message : String(error)
+        },
+        { status: 500 }
+      );
+    }
+    console.error("[POST /api/admin/about] Unexpected error");
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to update content" },
+      { error: "Failed to update content" },
       { status: 500 }
     );
   }

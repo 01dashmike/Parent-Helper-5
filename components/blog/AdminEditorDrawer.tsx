@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FormProvider } from "react-hook-form";
-import { Sparkles, Eye, Edit, Wand2, Search, ImageIcon, ExternalLink, Upload } from "lucide-react";
+import { Sparkles, Eye, Edit, Wand2, Search, ImageIcon, ExternalLink, Upload, Calendar, X } from "lucide-react";
 import Image from "next/image";
 import { slugify } from "@/lib/slug";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,6 +37,8 @@ type BlogPost = {
   seo_title?: string | null;
   seo_description?: string | null;
   body_markdown?: string | null;
+  scheduled_for?: string | null;
+  status?: string | null;
 };
 
 type BlogPostUpdate = {
@@ -56,8 +58,10 @@ interface AdminEditorDrawerProps {
   open: boolean;
   post: BlogPost | null;
   onClose: () => void;
-  onSave: (updates: BlogPostUpdate) => Promise<void>;
+  onSave: (updates: BlogPostUpdate & { scheduled_for?: string | null }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onPublish?: (id: string) => Promise<void>;
+  onSchedule?: (id: string, scheduledFor: string) => Promise<void>;
   onPostGenerated?: (post: BlogPost) => void;
 }
 
@@ -76,7 +80,7 @@ const blogPostFormSchema = z.object({
 
 type BlogPostFormData = z.infer<typeof blogPostFormSchema>;
 
-export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelete, onPostGenerated }: AdminEditorDrawerProps) {
+export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelete, onPublish, onSchedule, onPostGenerated }: AdminEditorDrawerProps) {
   const form = useForm<BlogPostFormData>({
     resolver: zodResolver(blogPostFormSchema),
     defaultValues: {
@@ -96,6 +100,11 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
   const [markdownPreview, setMarkdownPreview] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("09:00");
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiEditing, setAiEditing] = useState(false);
   const [findingImage, setFindingImage] = useState(false);
@@ -107,6 +116,50 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [showImageManager, setShowImageManager] = useState(false);
   const heroImageFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePublish = async () => {
+    console.log("[handlePublish] Called, post:", post?.id, "onPublish:", !!onPublish);
+    if (!post || !onPublish) {
+      console.log("[handlePublish] Early return - missing post or onPublish");
+      return;
+    }
+    setPublishing(true);
+    setAiError(null);
+    setAnnouncement('Publishing...');
+    try {
+      console.log("[handlePublish] Calling onPublish...");
+      await onPublish(post.id);
+      console.log("[handlePublish] Success!");
+      setAnnouncement('Published successfully!');
+      onClose();
+    } catch (error) {
+      console.error("[handlePublish] Error:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to publish post");
+      setAnnouncement('Error publishing');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!post || !onSchedule || !scheduleDate) return;
+    setScheduling(true);
+    setAiError(null);
+    setAnnouncement('Scheduling...');
+    try {
+      const scheduledFor = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+      await onSchedule(post.id, scheduledFor);
+      setAnnouncement('Scheduled successfully!');
+      setShowScheduleModal(false);
+      onClose();
+    } catch (error) {
+      console.error("Error scheduling:", error);
+      setAiError(error instanceof Error ? error.message : "Failed to schedule post");
+      setAnnouncement('Error scheduling');
+    } finally {
+      setScheduling(false);
+    }
+  };
 
   // Reset form when post changes
   useEffect(() => {
@@ -879,22 +932,110 @@ export default function AdminEditorDrawer({ open, post, onClose, onSave, onDelet
                 type="button"
                 className="text-small text-terracotta hover:underline"
                 onClick={() => post && onDelete(post.id)}
-                disabled={loading || aiGenerating}
+                disabled={loading || aiGenerating || publishing || scheduling}
               >
                 Delete
               </button>
             )}
             {!post && <div />}
-            <Button
-              type="submit"
-              loading={loading}
-              loadingLabel="Saving changes"
-              disabled={loading || aiGenerating || !post}
-              aria-label={loading ? "Saving changes" : post ? "Save changes" : "Generate a post with AI first"}
-            >
-              {loading ? "Saving..." : post ? "Save changes" : "Generate a post with AI first"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="submit"
+                loading={loading}
+                loadingLabel="Saving changes"
+                disabled={loading || aiGenerating || publishing || scheduling || !post}
+                aria-label={loading ? "Saving changes" : post ? "Save changes" : "Generate a post with AI first"}
+              >
+                {loading ? "Saving..." : post ? "Save" : "Generate a post with AI first"}
+              </Button>
+              {post && onSchedule && post.status !== "published" && (
+                <Button
+                  type="button"
+                  onClick={() => setShowScheduleModal(true)}
+                  disabled={loading || aiGenerating || publishing || scheduling}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  aria-label="Schedule this post"
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Schedule
+                </Button>
+              )}
+              {post && onPublish && post.status !== "published" && (
+                <Button
+                  type="button"
+                  onClick={handlePublish}
+                  loading={publishing}
+                  loadingLabel="Publishing"
+                  disabled={loading || aiGenerating || publishing || scheduling}
+                  className="bg-emerald-700 hover:bg-emerald-800"
+                  aria-label="Publish this post now"
+                >
+                  {publishing ? "Publishing..." : "Publish Now"}
+                </Button>
+              )}
+            </div>
               </div>
+
+          {/* Schedule Modal */}
+          {showScheduleModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+              <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-charcoal">Schedule Publication</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowScheduleModal(false)}
+                    className="rounded-full p-1 text-slateSoft transition hover:bg-sage/10 hover:text-charcoal"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <p className="mb-4 text-small text-slateSoft">
+                  Choose when this post should be automatically published.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-small font-medium text-charcoal">Date</label>
+                    <input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full rounded-lg border border-sage/30 px-3 py-2 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-small font-medium text-charcoal">Time</label>
+                    <input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="w-full rounded-lg border border-sage/30 px-3 py-2 text-charcoal focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowScheduleModal(false)}
+                    className="rounded-full border border-sage/30 bg-white px-4 py-2 text-small font-medium text-charcoal transition hover:bg-sage/10"
+                  >
+                    Cancel
+                  </button>
+                  <Button
+                    type="button"
+                    onClick={handleSchedule}
+                    loading={scheduling}
+                    loadingLabel="Scheduling"
+                    disabled={!scheduleDate || scheduling}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {scheduling ? "Scheduling..." : "Schedule Post"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
             </form>
           </FormProvider>
         </aside>

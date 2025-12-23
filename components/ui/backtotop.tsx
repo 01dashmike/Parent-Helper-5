@@ -45,7 +45,7 @@ export function BackToTop() {
       onClick={scrollToTop}
       onKeyDown={handleKeyDown}
       className={cn(
-        "fixed bottom-6 right-6 z-40",
+        "fixed bottom-6 left-6 z-40",
         "inline-flex h-12 w-12 items-center justify-center rounded-card px-4 py-2 text-small font-medium",
         "bg-sage text-white shadow-lg",
         "transition-all duration-200",

@@ -1,47 +1,25 @@
-import Image from "next/image";
-import { safeImage } from "@/lib/images";
-
 type WellnessHeroProps = {
     title: string;
     subtitle: string;
-    image?: string;
-    imageAlt?: string;
 };
 
 export default function WellnessHero({
     title,
     subtitle,
-    image,
-    imageAlt,
 }: WellnessHeroProps) {
-    const { src, alt } = safeImage({
-        src: image,
-        alt: imageAlt || title,
-    });
-
     return (
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sage/10 via-cream to-sage/5">
-            <div className="section relative z-10 py-12 md:py-16">
+        <section className="relative overflow-hidden rounded-hero bg-gradient-to-br from-primary via-accent to-secondary p-10 shadow-glow sm:p-14">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_55%)]" />
+            <div className="relative z-10">
                 <div className="mx-auto max-w-3xl text-center">
-                    <h1 className="text-display-1 font-bold tracking-tight text-charcoal">
+                    <h1 className="text-display-1 font-bold tracking-tight text-emerald-900">
                         {title}
                     </h1>
-                    <p className="mt-4 text-body text-slateSoft md:text-title">{subtitle}</p>
+                    <p className="mt-4 text-body text-emerald-800 md:text-title">{subtitle}</p>
                 </div>
             </div>
-            {image && (
-                <div className="absolute inset-0 opacity-10">
-                    <Image
-                        src={src}
-                        alt={alt}
-                        fill
-                        className="object-cover object-center"
-                        sizes="100vw"
-                        priority={false}
-                    />
-                </div>
-            )}
         </section>
     );
 }
+
 

@@ -51,6 +51,39 @@ export interface FamilySize {
   };
 }
 
+// Goal-specific data types for personalized meal planning
+export type ProteinTarget = "high" | "very-high";
+export type WeeklyWeightLossTarget = "0.25kg" | "0.5kg" | "0.75kg" | "1kg";
+export type BiologicalSexForCalc = "male" | "female";
+
+export interface MuscleGainData {
+  currentWeight: number; // kg
+  targetWeight?: number; // kg (optional)
+  activityLevel: ActivityLevel;
+  proteinTarget: ProteinTarget;
+  biologicalSex: BiologicalSexForCalc;
+}
+
+export interface WeightLossData {
+  currentWeight: number; // kg
+  age: number; // years
+  height: number; // cm
+  activityLevel: ActivityLevel;
+  targetWeeklyLoss: WeeklyWeightLossTarget;
+  biologicalSex: BiologicalSexForCalc;
+}
+
+export interface HeartHealthData {
+  currentCholesterol?: string; // optional, e.g., "5.2 mmol/L"
+  familyHistoryHeartDisease: boolean;
+}
+
+export interface GoalSpecificData {
+  muscleGain?: MuscleGainData;
+  weightLoss?: WeightLossData;
+  heartHealth?: HeartHealthData;
+}
+
 export interface MealPlanInputs {
   audience: Audience;
   likes: string[];
@@ -62,6 +95,7 @@ export interface MealPlanInputs {
   healthConditions?: string[];
   budgetPreference: BudgetPreference;
   familySize?: FamilySize;
+  goalSpecificData?: GoalSpecificData;
 }
 
 export interface Recipe {
@@ -76,7 +110,21 @@ export interface Recipe {
     protein?: string;
     carbs?: string;
     fat?: string;
+    saturatedFat?: string;
+    cholesterol?: string;
   };
+  heartHealthScore?: number; // 1-10 scale, only present for heart health/cholesterol goals
+}
+
+export interface SnackInfo {
+  name: string;
+  nutritionInfo?: {
+    calories?: string;
+    protein?: string;
+    saturatedFat?: string;
+    cholesterol?: string;
+  };
+  heartHealthScore?: number; // 1-10 scale
 }
 
 export interface DayMealPlan {
@@ -84,7 +132,7 @@ export interface DayMealPlan {
   breakfast: Recipe;
   lunch: Recipe;
   dinner: Recipe;
-  snacks: string[];
+  snacks: string[] | SnackInfo[]; // Can be simple strings or detailed snack info
 }
 
 export interface ShoppingListCategory {
@@ -102,6 +150,49 @@ export interface MealPlan {
   };
   nutritionSummary?: string;
   tips?: string[];
+}
+
+// ============================================================================
+// Nutrition Calculator Types
+// ============================================================================
+
+export type ActivityLevel = "sedentary" | "lightly-active" | "moderately-active" | "very-active";
+
+export type PersonType = "adult-male" | "adult-female" | "baby" | "toddler" | "preschool" | "school-age";
+
+export interface MacroBreakdown {
+  protein: number; // grams
+  carbs: number; // grams
+  fat: number; // grams
+  proteinPercent: number;
+  carbsPercent: number;
+  fatPercent: number;
+}
+
+export interface PersonNutrition {
+  label: string; // e.g., "Adult 1", "Toddler 1"
+  personType: PersonType;
+  dailyCalories: number;
+  macros: MacroBreakdown;
+  mealCalories: {
+    breakfast: number;
+    lunch: number;
+    dinner: number;
+    snacks: number;
+  };
+}
+
+export interface NutritionBreakdown {
+  people: PersonNutrition[];
+  totalDailyCalories: number;
+  totalMacros: MacroBreakdown;
+  disclaimer: string;
+}
+
+export interface NutritionInputs {
+  familySize: FamilySize;
+  activityLevel?: ActivityLevel;
+  goals: DietGoal[];
 }
 
 export interface SnackAlternative {
@@ -168,6 +259,17 @@ export interface Exercise {
     harder?: string;
   };
   equipment?: string[];
+  // Gym-Fit API enrichment (optional)
+  gymFitId?: string;
+  imageUrl?: string;
+  gymFitInstructions?: string[];
+  targetMuscles?: string[];
+  variations?: Array<{
+    id: string;
+    name: string;
+    bodyPart: string;
+    image: string;
+  }>;
 }
 
 export interface WorkoutSession {
@@ -383,3 +485,95 @@ export interface MedicalDisclaimerProps {
   variant?: "banner" | "inline" | "modal";
   customMessage?: string;
 }
+
+// ============================================================================
+// Pregnancy & Baby Nutrition Types
+// ============================================================================
+
+export type NutritionStage = "pregnancy" | "breastfeeding" | "bottle-feeding" | "weaning";
+
+export interface NutritionStageContent {
+  id: number;
+  stage: NutritionStage;
+  title: string;
+  intro_text: string;
+  key_guidance: string[];
+  cheats_and_tips: string[];
+  linked_blog_tags: string[];
+  safety_disclaimers: string[];
+  seo_title?: string | null;
+  seo_description?: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NutritionFood {
+  id: number;
+  name: string;
+  stage_tags: NutritionStage[];
+  why_it_helps: string;
+  allergens?: string | null;
+  nutrition_star_rating: 1 | 2 | 3 | 4 | 5;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NutritionEquipment {
+  id: number;
+  name: string;
+  stage_tags: NutritionStage[];
+  description: string;
+  buying_guidance: string;
+  affiliate_url?: string | null;
+  image_url?: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NutritionPageData {
+  stage: NutritionStageContent;
+  foods: NutritionFood[];
+  equipment: NutritionEquipment[];
+  relatedBlogs: BlogPostSummary[];
+}
+
+export interface BlogPostSummary {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  hero_image?: string | null;
+  category?: string | null;
+  created_at: string;
+}
+
+// Nutrition stage metadata for UI
+export const NUTRITION_STAGE_META: Record<NutritionStage, { label: string; icon: string; description: string }> = {
+  pregnancy: {
+    label: "Pregnancy",
+    icon: "🤰",
+    description: "Nutrition guidance for a healthy pregnancy",
+  },
+  breastfeeding: {
+    label: "Breastfeeding",
+    icon: "🤱",
+    description: "What to eat while breastfeeding",
+  },
+  "bottle-feeding": {
+    label: "Bottle Feeding",
+    icon: "🍼",
+    description: "Formula feeding guidance and safety",
+  },
+  weaning: {
+    label: "Weaning",
+    icon: "🥄",
+    description: "First foods and weaning tips",
+  },
+};
+

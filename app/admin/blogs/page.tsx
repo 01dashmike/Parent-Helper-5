@@ -9,13 +9,27 @@ async function getPosts() {
   if (!hasSupabaseServerEnv()) return [];
   const supabase = getSupabaseServer();
   if (!supabase) return [];
-  const { data } = await supabase
+  // Try with scheduled_for first, fall back without it if column doesn't exist yet
+  const { data, error } = await supabase
     .from("blog_posts_ai")
     .select(
-      "id,title,slug,status,category,tags,excerpt,locality,created_at,hero_image,seo_title,seo_description,postcode_prefix,body_markdown"
+      "id,title,slug,status,category,tags,excerpt,locality,created_at,hero_image,seo_title,seo_description,postcode_prefix,body_markdown,scheduled_for"
     )
     .order("created_at", { ascending: false })
     .limit(100);
+  
+  // If scheduled_for column doesn't exist yet, retry without it
+  if (error?.message?.includes("scheduled_for")) {
+    const { data: fallbackData } = await supabase
+      .from("blog_posts_ai")
+      .select(
+        "id,title,slug,status,category,tags,excerpt,locality,created_at,hero_image,seo_title,seo_description,postcode_prefix,body_markdown"
+      )
+      .order("created_at", { ascending: false })
+      .limit(100);
+    return fallbackData ?? [];
+  }
+  
   return data ?? [];
 }
 

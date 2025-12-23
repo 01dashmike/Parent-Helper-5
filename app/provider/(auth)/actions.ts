@@ -14,9 +14,9 @@ import type { AuthActionState } from "./state";
  * Gets the current origin from headers or environment variable.
  * This works for localhost, production, and Cursor browser preview.
  */
-function getOrigin(): string {
+async function getOrigin(): Promise<string> {
     try {
-        const headersList = headers();
+        const headersList = await headers();
         const host = headersList.get("host");
         const protocol = headersList.get("x-forwarded-proto") || 
                         (process.env.NODE_ENV === "production" ? "https" : "http");
@@ -70,16 +70,16 @@ export async function requestOtpAction(
         const supabase = createSupabaseServerActionClient();
 
         // Get dynamic origin to support browser preview and different environments
-        const origin = getOrigin();
-        const redirectUrl = `${origin}/provider/login`;
+        const origin = await getOrigin();
+        // Use auth callback route to properly handle magic link token exchange
+        const redirectUrl = `${origin}/provider/callback`;
 
         const { data: otpData, error } = await supabase.auth.signInWithOtp({
             email,
             options: {
                 shouldCreateUser: true,
-                // For OTP flow, emailRedirectTo is used for magic links if user clicks email link
-                // For OTP, users enter the code manually, so this is a fallback
-                // Use dynamic origin to support browser preview
+                // emailRedirectTo is used for magic links when user clicks email link
+                // The callback route will exchange the token for a session and redirect to /provider
                 emailRedirectTo: redirectUrl,
             },
         });

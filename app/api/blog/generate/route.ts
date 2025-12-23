@@ -4,9 +4,10 @@ export const runtime = "nodejs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabase.server";
 import { slugify } from "@/lib/slug";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getTopicSuggestions } from "@/lib/insights";
 import { searchUnsplashImage, generateImageQuery, processMarkdownImages, addImagesToHeadings } from "@/lib/blog-images";
+import { expensiveApiLimiter, applyRateLimit } from "@/lib/ratelimit";
 
 type Topic = {
   id: number;
@@ -273,7 +274,13 @@ function normaliseSources(value: unknown) {
     .filter(Boolean);
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Apply rate limiting (expensive API - OpenAI calls)
+  const rateLimitError = await applyRateLimit(req, expensiveApiLimiter);
+  if (rateLimitError) {
+    return rateLimitError;
+  }
+
   const { 
     topicId, 
     trendSource, 

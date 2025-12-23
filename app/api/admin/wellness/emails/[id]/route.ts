@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/admin/auth-improved";
 
 // Use service role for admin operations
 const supabase = createClient(
@@ -23,14 +24,20 @@ const emailTemplateUpdateSchema = z.object({
  * GET /api/admin/wellness/emails/[id]
  * 
  * Get a single accountability email template
+ * Requires admin authentication
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require admin authentication
+  const authError = await requireAdmin(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     const { id } = await params;
-    // TODO: Add admin auth check
     
     const { data, error } = await supabase
       .from("wellness_accountability_emails")
@@ -59,14 +66,20 @@ export async function GET(
  * PATCH /api/admin/wellness/emails/[id]
  * 
  * Update an accountability email template
+ * Requires admin authentication
  */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require admin authentication
+  const authError = await requireAdmin(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     const { id } = await params;
-    // TODO: Add admin auth check
     
     const body = await request.json();
     const validation = emailTemplateUpdateSchema.safeParse(body);
@@ -114,14 +127,20 @@ export async function PATCH(
  * DELETE /api/admin/wellness/emails/[id]
  * 
  * Delete an accountability email template
+ * Requires admin authentication
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require admin authentication
+  const authError = await requireAdmin(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
     const { id } = await params;
-    // TODO: Add admin auth check
     
     const { error } = await supabase
       .from("wellness_accountability_emails")

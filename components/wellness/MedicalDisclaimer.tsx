@@ -14,7 +14,7 @@ export default function MedicalDisclaimer({
   if (variant === "inline") {
     return (
       <div className="rounded-lg bg-terracotta/10 p-4 text-sm leading-relaxed text-charcoal/90">
-        <span className="mr-1 font-medium">⚕️ Medical Disclaimer:</span>
+        <span className="mr-1 font-medium">Medical Disclaimer:</span>
         {message}
       </div>
     );
@@ -24,7 +24,6 @@ export default function MedicalDisclaimer({
     return (
       <div className="rounded-xl border-2 border-terracotta/40 bg-white p-6 shadow-lg">
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-2xl">⚕️</span>
           <h3 className="text-lg font-semibold text-charcoal">
             Important Medical Information
           </h3>
@@ -38,7 +37,6 @@ export default function MedicalDisclaimer({
   return (
     <div className="rounded-2xl border-2 border-terracotta/40 bg-terracotta/10 p-6">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-2xl">⚕️</span>
         <h3 className="text-lg font-semibold text-charcoal">
           Important: Medical Disclaimer
         </h3>
@@ -47,3 +45,4 @@ export default function MedicalDisclaimer({
     </div>
   );
 }
+

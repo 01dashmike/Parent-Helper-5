@@ -15,7 +15,7 @@ Founded in [FOUNDING_YEAR] by [FAMILY_MEMBER_NAMES], Parent Helper started as a 
 What began as a solution for our family quickly grew into something bigger. We saw how many other parents were facing the same challenges, and we wanted to create a platform that would make it easier for families everywhere to discover, compare, and book classes that would bring joy and enrichment to their children''s lives.
 
 Today, Parent Helper is a trusted resource for thousands of families across the UK, helping them find everything from sensory play sessions to music classes, from outdoor adventures to creative workshops. But at our core, we''re still that same family-founded business, committed to making parenting just a little bit easier, one class at a time.',
-  story_image_url TEXT DEFAULT '/images/family-hero.png',
+  story_image_url TEXT DEFAULT '/images/categories/family-hero.png',
   
   -- Mission Section
   mission_title TEXT NOT NULL DEFAULT 'Our Mission',

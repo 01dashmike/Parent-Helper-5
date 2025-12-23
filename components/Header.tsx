@@ -34,11 +34,11 @@ const NAV_ITEMS: NavItem[] = [
         label: "Health & Wellness",
         href: "/wellness",
         dropdown: [
-          { label: "Mum", href: "/wellness/mum" },
-          { label: "Dad", href: "/wellness/dad" },
-          { label: "Couples", href: "/wellness/couples" },
-          { label: "Family", href: "/wellness/family" },
-          { label: "Grandparents", href: "/wellness/grandparents" },
+          { label: "Meal Planner", href: "/wellness/mum/diet" },
+          { label: "Pregnancy & Baby Nutrition", href: "/health-wellness/nutrition" },
+          { label: "Exercise Plans", href: "/wellness/mum/exercise" },
+          { label: "Supplement Guide", href: "/wellness/mum/supplements" },
+          { label: "Product Safety Checker", href: "/wellness/mum/product-check" },
         ],
       },
     ]

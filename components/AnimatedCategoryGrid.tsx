@@ -7,42 +7,42 @@ const CATEGORIES = [
     title: "Sensory & Messy Play",
     description:
       "Textured explorations, gentle lights, and music for curious little hands.",
-    icon: "🌈",
+    icon: "",
     tags: ["Multi-sensory", "0-18 months"],
   },
   {
     title: "Music & Rhythm",
     description:
       "Sing-alongs, percussion circles, and rhythm adventures to spark confidence.",
-    icon: "🎶",
+    icon: "",
     tags: ["Baby choirs", "Toddler bands"],
   },
   {
     title: "Movement & Yoga",
     description:
       "Stretch, balance, and giggle through family yoga and mini dance classes.",
-    icon: "🧘‍♀️",
+    icon: "",
     tags: ["Mindful movement", "Parent-child"],
   },
   {
     title: "Outdoor Explorers",
     description:
       "Forest school sessions and buggy meetups to celebrate the changing seasons.",
-    icon: "🌿",
+    icon: "",
     tags: ["Nature trails", "Fresh air"],
   },
   {
     title: "Creative Studios",
     description:
       "Art, drama, and storytelling guided by inspiring local facilitators.",
-    icon: "🎭",
+    icon: "",
     tags: ["Confidence building", "Small groups"],
   },
   {
     title: "Community Support",
     description:
       "Warm hubs with peer conversations, feeding support, and expert advice.",
-    icon: "🤝",
+    icon: "",
     tags: ["Drop-in", "Supportive"],
   },
 ];
@@ -73,7 +73,6 @@ export default function AnimatedCategoryGrid() {
             viewport={{ once: true, amount: 0.2 }}
           >
             <div className="flex items-center gap-3">
-              <span className="text-display-2">{category.icon}</span>
               <h3 className="text-title text-slateSoft">
                 {category.title}
               </h3>

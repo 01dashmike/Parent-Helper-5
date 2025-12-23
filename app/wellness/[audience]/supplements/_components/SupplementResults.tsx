@@ -89,7 +89,7 @@ export default function SupplementResults({
             onClick={handlePrint}
             className="rounded-full bg-sage/10 px-4 py-2 text-sm font-medium text-sage hover:bg-sage/20"
           >
-            🖨️ Print
+            Print
           </button>
           <button
             onClick={onStartOver}
@@ -203,7 +203,7 @@ export default function SupplementResults({
               {suggestion.warnings.length > 0 && (
                 <div className="rounded-lg border border-terracotta/30 bg-terracotta/5 p-4">
                   <h5 className="mb-2 text-sm font-medium text-charcoal">
-                    ⚠️ Important Warnings:
+                    Important Warnings:
                   </h5>
                   <ul className="space-y-1 text-sm text-charcoal/80">
                     {suggestion.warnings.map((warning, j) => (

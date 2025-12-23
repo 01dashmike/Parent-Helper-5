@@ -16,61 +16,6 @@ export const metadata: Metadata = {
     "Learn about Parent Helper, a family-founded platform dedicated to helping families across the nation discover amazing classes and resources for their little ones.",
 };
 
-// Default fallback values
-const DEFAULT_VALUES = [
-  {
-    title: "Family First",
-    description:
-      "We understand the challenges parents face because we're parents too. Every decision we make is guided by what's best for families.",
-    icon: "👨‍👩‍👧‍👦",
-  },
-  {
-    title: "Community Connection",
-    description:
-      "We believe in the power of local communities. We're here to help families connect with amazing local providers and build lasting relationships.",
-    icon: "🤝",
-  },
-  {
-    title: "Trust & Quality",
-    description:
-      "We carefully curate our listings to ensure families can trust the quality of classes and services they discover through our platform.",
-    icon: "✨",
-  },
-  {
-    title: "Accessibility",
-    description:
-      "Every family deserves access to great classes and resources. We work to make finding and booking classes as easy and accessible as possible.",
-    icon: "♿",
-  },
-];
-
-const DEFAULT_FEATURES = [
-  {
-    title: "Discover Classes",
-    description:
-      "Search through thousands of carefully curated baby and toddler classes across the UK. Find the perfect activity for your little one.",
-    icon: "🔍",
-  },
-  {
-    title: "Easy Booking",
-    description:
-      "Book classes directly through our platform. Simple, secure, and designed with busy parents in mind.",
-    icon: "📅",
-  },
-  {
-    title: "Helpful Resources",
-    description:
-      "Access guides, tips, and expert advice to support your parenting journey every step of the way.",
-    icon: "📚",
-  },
-  {
-    title: "Local Insights",
-    description:
-      "Get recommendations tailored to your area, with real reviews and insights from other local families.",
-    icon: "📍",
-  },
-];
-
 const DEFAULT_IMPACT_STATS = [
   { value: "5,000+", label: "Classes Listed" },
   { value: "UK-Wide", label: "Coverage" },
@@ -109,15 +54,8 @@ export default async function AboutPage() {
   const heroDescription = content?.hero_description || "A family-founded platform dedicated to helping families across the nation discover amazing classes, resources, and community connections for their little ones.";
   const storyTitle = content?.story_title || "Our Story";
   const storyContent = content?.story_content || "Parent Helper was born from a simple, heartfelt need: finding great classes for our own children shouldn't be so difficult...";
-  const storyImageUrl = content?.story_image_url || "/images/family-hero.png";
-  const missionTitle = content?.mission_title || "Our Mission";
-  const missionContent = content?.mission_content || "To support families across the nation by making it easier than ever to discover, compare, and book amazing classes and resources for their children...";
-  const featuresTitle = content?.features_title || "What We Do";
-  const featuresSubtitle = content?.features_subtitle || "We're here to make finding and booking classes simple, so you can focus on what matters most—spending quality time with your little ones.";
-  const features = content?.features || DEFAULT_FEATURES;
-  const valuesTitle = content?.values_title || "Our Values";
-  const valuesSubtitle = content?.values_subtitle || "These core principles guide everything we do at Parent Helper.";
-  const values = content?.values || DEFAULT_VALUES;
+  const storyImageUrl = content?.story_image_url || "/images/categories/family-hero.png";
+  const storyImageUrl2 = content?.story_image_url_2 || null;
   const impactTitle = content?.impact_title || "Making a Difference";
   const impactContent = content?.impact_content || "We're proud to be part of a community that values quality time with children and supports local businesses...";
   const impactStats = content?.impact_stats || DEFAULT_IMPACT_STATS;
@@ -167,89 +105,40 @@ export default async function AboutPage() {
                 ))}
               </div>
             </div>
-            <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-sage/10 md:h-80">
-              <Image
-                src={safeImage({ 
-                  src: storyImageUrl, 
-                  alt: "Family enjoying time together" 
-                }).src}
-                alt={safeImage({ 
-                  src: storyImageUrl, 
-                  alt: "Family enjoying time together" 
-                }).alt}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+            <div className="flex flex-col gap-4">
+              <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-sage/10">
+                <Image
+                  src={safeImage({ 
+                    src: storyImageUrl, 
+                    alt: "Family enjoying time together" 
+                  }).src}
+                  alt={safeImage({ 
+                    src: storyImageUrl, 
+                    alt: "Family enjoying time together" 
+                  }).alt}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+              {storyImageUrl2 && (
+                <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-sage/10">
+                  <Image
+                    src={safeImage({ 
+                      src: storyImageUrl2, 
+                      alt: "Our story continues" 
+                    }).src}
+                    alt={safeImage({ 
+                      src: storyImageUrl2, 
+                      alt: "Our story continues" 
+                    }).alt}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      </MotionSection>
-
-      {/* Mission Section */}
-      <MotionSection className="section my-16">
-        <div className="mx-auto max-w-4xl rounded-2xl border border-sage/30 bg-muted/80 px-8 py-12 shadow-soft">
-          <h2 className="mb-6 text-center text-3xl font-bold text-charcoal sm:text-4xl">
-            {missionTitle}
-          </h2>
-          <p className="mx-auto max-w-3xl text-center text-lg leading-relaxed text-charcoal/80 sm:text-xl">
-            {missionContent}
-          </p>
-        </div>
-      </MotionSection>
-
-      {/* What We Do Section */}
-      <MotionSection className="section my-16">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-4 text-center text-3xl font-bold text-charcoal sm:text-4xl">
-            {featuresTitle}
-          </h2>
-          <p className="mx-auto mb-12 max-w-2xl text-center text-charcoal/70">
-            {featuresSubtitle}
-          </p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => (
-              <div
-                key={`${feature.title}-${index}`}
-                className="ph-card rounded-2xl shadow-soft hover-glow"
-              >
-                <div className="mb-4 text-4xl">{feature.icon}</div>
-                <h3 className="mb-2 text-xl font-semibold text-charcoal">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-charcoal/70">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </MotionSection>
-
-      {/* Our Values Section */}
-      <MotionSection className="section my-16">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-4 text-center text-3xl font-bold text-charcoal sm:text-4xl">
-            {valuesTitle}
-          </h2>
-          <p className="mx-auto mb-12 max-w-2xl text-center text-charcoal/70">
-            {valuesSubtitle}
-          </p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {values.map((value, index) => (
-              <div
-                key={`${value.title}-${index}`}
-                className="ph-card rounded-2xl border-l-4 border-sage shadow-soft hover-glow"
-              >
-                <div className="mb-4 text-4xl">{value.icon}</div>
-                <h3 className="mb-2 text-xl font-semibold text-charcoal">
-                  {value.title}
-                </h3>
-                <p className="text-sm text-charcoal/70">
-                  {value.description}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </MotionSection>

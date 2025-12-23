@@ -1,11 +1,14 @@
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+// Allow larger body size for file uploads (up to 20MB)
+export const maxDuration = 60; // 60 seconds timeout for large uploads
 
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabaseBrowserUrl, getSupabaseBrowserKey } from "@/lib/env";
 import { cookies } from "next/headers";
 import { uploadAboutPageImage } from "@/lib/supabase/storage";
+import { getSupabaseServer } from "@/lib/supabase.server";
 
 function createAuthenticatedClient() {
   const url = getSupabaseBrowserUrl();
@@ -37,24 +40,56 @@ function createAuthenticatedClient() {
 async function validateAdmin() {
   const supabase = createAuthenticatedClient();
   
+  // Get authenticated user
   const { data: { user }, error: getUserError } = await supabase.auth.getUser();
   
-  if (user) {
-    return { user, supabase };
+  let authenticatedUser = user;
+  
+  if (!authenticatedUser) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    authenticatedUser = session?.user ?? null;
+    
+    if (!authenticatedUser) {
+      console.error("Auth validation failed:", {
+        getUserError: getUserError?.message,
+        sessionError: sessionError?.message,
+      });
+      throw new Error("Unauthorised");
+    }
   }
-  
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-  if (session?.user) {
-    return { user: session.user, supabase };
+
+  // Dev override: allow DEV_ADMIN_EMAIL in development (still requires email match)
+  if (process.env.NODE_ENV === "development" && process.env.DEV_ADMIN_EMAIL) {
+    if (authenticatedUser.email === process.env.DEV_ADMIN_EMAIL) {
+      return { user: authenticatedUser, supabase };
+    }
   }
-  
-  console.error("Auth validation failed:", {
-    getUserError: getUserError?.message,
-    sessionError: sessionError?.message,
-  });
-  
-  throw new Error("Unauthorised");
+
+  // Check user role in users table using service role client
+  // This MUST pass before allowing any admin operations
+  const serverSupabase = getSupabaseServer();
+  if (!serverSupabase) {
+    throw new Error("Supabase server not configured");
+  }
+
+  const { data: userData, error: userError } = await serverSupabase
+    .from("users")
+    .select("role")
+    .eq("id", authenticatedUser.id)
+    .single();
+
+  if (userError || !userData) {
+    console.error("User not found in users table:", authenticatedUser.id);
+    throw new Error("Unauthorised");
+  }
+
+  // CRITICAL: Verify user has admin role - reject all non-admin users
+  if (userData.role !== "admin") {
+    console.error("User is not admin, role:", userData.role, "userId:", authenticatedUser.id);
+    throw new Error("Unauthorised");
+  }
+
+  return { user: authenticatedUser, supabase };
 }
 
 /**
@@ -62,7 +97,7 @@ async function validateAdmin() {
  * Upload an image for the about page
  */
 export async function POST(req: Request) {
-  // Validate user is authenticated
+  // Validate user is authenticated AND has admin role
   try {
     await validateAdmin();
   } catch (error) {

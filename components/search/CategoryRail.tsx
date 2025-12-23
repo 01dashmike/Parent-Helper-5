@@ -8,15 +8,15 @@ import { Button } from "@/components/ui/button";
 import { FilterToggleButton } from "./Filters/FilterToggleButton";
 
 const CATS = [
-  { key: "Sensory", label: "Sensory", icon: "🧸" },
-  { key: "Music", label: "Music", icon: "🎵" },
-  { key: "Dance", label: "Dance", icon: "💃" },
-  { key: "Yoga", label: "Yoga", icon: "🧘" },
-  { key: "STEM", label: "STEM", icon: "🔬" },
-  { key: "Outdoors", label: "Outdoors", icon: "🌲" },
-  { key: "Arts", label: "Arts", icon: "🎨" },
-  { key: "Storytime", label: "Story", icon: "📚" },
-  { key: "Sports", label: "Sports", icon: "⚽" },
+  { key: "Sensory", label: "Sensory", icon: "" },
+  { key: "Music", label: "Music", icon: "" },
+  { key: "Dance", label: "Dance", icon: "" },
+  { key: "Yoga", label: "Yoga", icon: "" },
+  { key: "STEM", label: "STEM", icon: "" },
+  { key: "Outdoors", label: "Outdoors", icon: "" },
+  { key: "Arts", label: "Arts", icon: "" },
+  { key: "Storytime", label: "Story", icon: "" },
+  { key: "Sports", label: "Sports", icon: "" },
 ] as const;
 
 const CategoryRail = memo(function CategoryRail(): React.ReactNode {

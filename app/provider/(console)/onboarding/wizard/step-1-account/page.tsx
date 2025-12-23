@@ -1,7 +1,7 @@
 import { createSupabaseServerComponentClient } from "@/lib/supabase";
 import { getStepData } from "@/lib/provider/onboarding";
 import { Step1AccountClient } from "./Step1AccountClient";
-import { WIZARD_STEPS } from "../actions";
+import { WIZARD_STEPS } from "../schema";
 import { checkStepAccess } from "../utils/redirectGuard";
 
 export const dynamic = "force-dynamic";

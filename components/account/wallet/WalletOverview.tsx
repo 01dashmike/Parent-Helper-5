@@ -81,7 +81,7 @@ export default function WalletOverview({
               </p>
               {expiringAmount > 0 && (
                 <p className="text-sm text-amber-600 mt-2">
-                  ⚠️ {expiringAmount} credits expiring in the next 30 days
+                  Warning: {expiringAmount} credits expiring in the next 30 days
                 </p>
               )}
             </div>

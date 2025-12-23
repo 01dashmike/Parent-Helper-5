@@ -4,15 +4,21 @@ import { useState } from "react";
 import MealPlannerWizard from "./MealPlannerWizard";
 import SnackGenerator from "./SnackGenerator";
 import MealPlanResults from "./MealPlanResults";
-import type { Audience, MealPlan, SnackGeneratorResult } from "@/lib/wellness/types";
+import type { Audience, MealPlan, SnackGeneratorResult, FamilySize, DietGoal } from "@/lib/wellness/types";
 
 interface MealPlannerClientProps {
   audience: Audience;
 }
 
+interface MealPlanData {
+  plan: MealPlan;
+  familySize?: FamilySize;
+  goals: DietGoal[];
+}
+
 export default function MealPlannerClient({ audience }: MealPlannerClientProps) {
   const [activeTab, setActiveTab] = useState<"meal-plan" | "snacks">("meal-plan");
-  const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
+  const [mealPlanData, setMealPlanData] = useState<MealPlanData | null>(null);
   const [snackResult, setSnackResult] = useState<SnackGeneratorResult | null>(null);
 
   return (
@@ -27,7 +33,7 @@ export default function MealPlannerClient({ audience }: MealPlannerClientProps) 
               : "bg-white text-charcoal hover:bg-sage/10"
           }`}
         >
-          🥗 Meal Planner
+          Meal Planner
         </button>
         <button
           onClick={() => setActiveTab("snacks")}
@@ -44,16 +50,18 @@ export default function MealPlannerClient({ audience }: MealPlannerClientProps) 
       {/* Content */}
       {activeTab === "meal-plan" && (
         <div>
-          {!mealPlan ? (
+          {!mealPlanData ? (
             <MealPlannerWizard
               audience={audience}
-              onComplete={(plan) => setMealPlan(plan)}
+              onComplete={(plan, familySize, goals) => setMealPlanData({ plan, familySize, goals })}
             />
           ) : (
             <MealPlanResults
-              mealPlan={mealPlan}
+              mealPlan={mealPlanData.plan}
               audience={audience}
-              onStartOver={() => setMealPlan(null)}
+              familySize={mealPlanData.familySize}
+              goals={mealPlanData.goals}
+              onStartOver={() => setMealPlanData(null)}
             />
           )}
         </div>
@@ -69,3 +77,4 @@ export default function MealPlannerClient({ audience }: MealPlannerClientProps) 
     </div>
   );
 }
+

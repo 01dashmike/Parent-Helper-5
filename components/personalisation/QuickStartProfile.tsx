@@ -156,7 +156,7 @@ export default function QuickStartProfile({ userId, onClose }: Props) {
               onClick={onClose}
               className="text-slateSoft transition-standard hover:text-charcoal"
             >
-              ✕
+              ×
             </button>
           )}
         </div>

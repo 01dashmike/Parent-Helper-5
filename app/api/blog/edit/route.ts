@@ -6,6 +6,20 @@ import { NextResponse } from "next/server";
 import { processMarkdownImages, addImagesToHeadings } from "@/lib/blog-images";
 
 /**
+ * Detects if user instructions mention images
+ * Used to conditionally process images only when requested
+ */
+function instructionsMentionImages(instructions: string): boolean {
+  const imageKeywords = [
+    'image', 'photo', 'picture', 'img', 'visual', 'illustration',
+    'add image', 'change image', 'replace image', 'remove image',
+    'new image', 'update image', 'fix image', 'broken image'
+  ];
+  const lower = instructions.toLowerCase();
+  return imageKeywords.some(keyword => lower.includes(keyword));
+}
+
+/**
  * AI-powered blog editing endpoint
  * Accepts free-text instructions to modify blog content, formatting, etc.
  */
@@ -62,30 +76,31 @@ export async function POST(req: Request) {
         messages: [
           {
             role: "system",
-            content: `You are an expert blog editor for Parent Helper, a UK parenting platform. Your brand uses warm, supportive tones with sage green (#9CAF88), terracotta (#C97C5C), and cream (#F5F3F0) colors. The voice is that of a well-educated British parent - supportive, practical, never condescending. Always maintain the brand's warm, encouraging tone.
+            content: `You are a CONSERVATIVE blog editor for Parent Helper, a UK parenting platform. Your PRIMARY goal is to make ONLY the specific changes requested - nothing more.
 
-STYLE REFERENCES TO EMULATE:
-- Greatist: Modern, conversational, scannable formatting with catchy subheadings
-- Wellness Mama: Practical DIY tips with personal, authentic voice
-- Fatherly: Magazine-quality, smart, balances practical advice with storytelling
+CRITICAL EDITING RULES:
+1. MINIMAL CHANGES ONLY: Make ONLY the changes explicitly requested in the instructions. Do not rewrite, restructure, or "improve" anything else.
+2. PRESERVE EVERYTHING ELSE: Keep all existing content, structure, formatting, and images exactly as they are unless specifically asked to change them.
+3. PRESERVE IMAGES: Do NOT modify, add, or remove any image markdown tags (![alt](url)) unless the instructions explicitly request image changes.
+4. SMALL EDITS = SMALL CHANGES: If asked to "fix a typo" or "change one word", change ONLY that and return everything else unchanged.
+5. DO NOT ADD CONTENT: Unless explicitly asked to add something, do not add new sections, paragraphs, callouts, or images.
 
-CRITICAL FORMATTING REQUIREMENTS:
-1. HEADINGS: H2 headings MUST be conversational questions or statements, NOT generic labels.
-   - GOOD: "What to Expect in the First Week", "How to Create a Sleep-Friendly Environment"
-   - BAD: "Introduction", "Overview", "Conclusion"
-2. PARAGRAPHS: Keep to 2-3 sentences maximum. Break up long blocks.
-3. CALLOUT BOXES: Use blockquotes (>) for key tips: > **Tip:** [advice]
-4. PULL QUOTES: Use blockquotes: > "[quote]" - [source]. IMPORTANT: Always include source attribution for quotes, especially for developmental milestones or medical advice.
-5. LISTS: Use numbered lists for steps, bullets for tips/checklists
-6. STRUCTURE: Hook intro → 4-6 H2 sections → Actionable closing checklist
+BRAND VOICE (apply only to new/changed content):
+- Warm, supportive tone of a well-educated British parent
+- Practical, never condescending
+- UK parenting context
 
-Apply these principles: hook readers immediately, use conversational subheadings, break up text with lists and callouts, include practical takeaways, cite experts accessibly, end with actionable next steps.`,
+FORMATTING (apply only when creating NEW content or when explicitly asked to reformat):
+- H2 headings should be conversational questions/statements
+- Short paragraphs (2-3 sentences)
+- Blockquotes for tips: > **Tip:** [advice]
+- Source attribution for medical/developmental advice`,
           },
           {
             role: "user",
-            content: `Edit the following blog post according to these instructions: "${instructions}"
+            content: `INSTRUCTIONS: "${instructions}"
 
-Current blog post:
+CURRENT BLOG POST:
 Title: ${post.title || "Untitled"}
 Category: ${post.category || "Parenting Advice"}
 Tags: ${Array.isArray(post.tags) ? post.tags.join(", ") : ""}
@@ -93,27 +108,25 @@ Tags: ${Array.isArray(post.tags) ? post.tags.join(", ") : ""}
 Content (Markdown):
 ${post.body_markdown || ""}
 
-Return strictly valid JSON matching:
+---
+
+CRITICAL: Make ONLY the changes described in the instructions above. Do NOT:
+- Rewrite or restructure content that wasn't mentioned
+- Add new sections, images, or callouts unless explicitly asked
+- Change images or image URLs unless explicitly asked
+- "Improve" or "enhance" anything beyond what was requested
+
+Return strictly valid JSON:
 {
-  "body_markdown": "edited markdown content",
-  "title": "edited title if changed, otherwise original",
-  "excerpt": "edited excerpt if changed, otherwise original"
+  "body_markdown": "the content with ONLY the requested changes applied",
+  "title": "${post.title || "Untitled"}",
+  "excerpt": "${post.excerpt || ""}"
 }
 
-Apply the instructions while maintaining:
-- The warm, supportive Parent Helper brand voice
-- UK parenting context and references
-- Proper markdown formatting with conversational H2 headings
-- Short paragraphs (2-3 sentences max)
-- Use of callout boxes (blockquotes) for key tips
-- Lists (numbered for steps, bullets for tips)
-- Source attribution for developmental milestones and age-related guidance (e.g., "According to the NHS..." or "NHS recommends...")
-- All existing structure unless specifically asked to change it
-
-When editing, ensure the content follows the formatting requirements: conversational headings, short paragraphs, callout boxes, and lists. When discussing developmental milestones or medical advice, always cite authoritative sources.`,
+IMPORTANT: For title and excerpt, return the ORIGINAL values shown above unless the instructions specifically ask to change them.`,
           },
         ],
-        temperature: 0.7,
+        temperature: 0.3,
         max_tokens: 4000,
       }),
     });
@@ -131,8 +144,9 @@ When editing, ensure the content follows the formatting requirements: conversati
 
     const edited = JSON.parse(content);
 
-    // Process images in edited markdown to replace placeholders with real Unsplash images
-    if (edited.body_markdown) {
+    // Only process images if the user explicitly requested image changes
+    // This prevents unwanted image additions/changes during text-only edits
+    if (edited.body_markdown && instructionsMentionImages(instructions)) {
       edited.body_markdown = await processMarkdownImages(edited.body_markdown);
       // Automatically add images for headings that don't have them
       edited.body_markdown = await addImagesToHeadings(edited.body_markdown);

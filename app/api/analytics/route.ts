@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/admin/auth-improved";
+import { publicApiLimiter, applyRateLimit } from "@/lib/ratelimit";
 
 // Use service role key for server-side operations
 // This bypasses RLS for trusted server-side inserts
@@ -19,6 +21,10 @@ const VALID_EVENT_TYPES = [
   "blog_published_from_trend",
 ];
 
+// Security limits
+const MAX_EVENTS_PER_REQUEST = 100;
+const MAX_PAYLOAD_SIZE_PER_EVENT = 10000; // 10KB per event
+
 /**
  * POST /api/analytics
  * 
@@ -31,6 +37,12 @@ const VALID_EVENT_TYPES = [
  * - No cookies used
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitError = await applyRateLimit(request, publicApiLimiter);
+  if (rateLimitError) {
+    return rateLimitError;
+  }
+
   try {
     const body = await request.json();
     const { events } = body;
@@ -39,6 +51,14 @@ export async function POST(request: NextRequest) {
     if (!events || !Array.isArray(events) || events.length === 0) {
       return NextResponse.json(
         { error: "Invalid events array" },
+        { status: 400 }
+      );
+    }
+
+    // Security: Limit number of events per request
+    if (events.length > MAX_EVENTS_PER_REQUEST) {
+      return NextResponse.json(
+        { error: `Too many events. Maximum ${MAX_EVENTS_PER_REQUEST} per request` },
         { status: 400 }
       );
     }
@@ -54,6 +74,10 @@ export async function POST(request: NextRequest) {
 
         // Check session ID exists
         if (!event.payload.sessionId) return false;
+
+        // Security: Check payload size
+        const payloadSize = JSON.stringify(event.payload).length;
+        if (payloadSize > MAX_PAYLOAD_SIZE_PER_EVENT) return false;
 
         return true;
       })
@@ -104,13 +128,16 @@ export async function POST(request: NextRequest) {
  * GET /api/analytics
  * 
  * For admin dashboard - returns aggregated analytics
- * TODO: Add authentication check
+ * Requires admin authentication
  */
 export async function GET(request: NextRequest) {
-  try {
-    // TODO: Add authentication check here
-    // For now, return basic stats
+  // Require admin authentication
+  const authError = await requireAdmin(request);
+  if (authError) {
+    return authError;
+  }
 
+  try {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get("days") || "30");
 

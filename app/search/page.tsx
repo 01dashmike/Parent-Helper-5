@@ -4,6 +4,7 @@ import CategoryRail from "@/components/search/CategoryRail";
 import QuickFilters from "@/components/search/QuickFilters";
 import ResultsSplit from "@/components/search/ResultsSplit";
 import SearchBarSticky from "@/components/search/SearchBarSticky";
+import ComingSoonBanner from "@/components/ComingSoonBanner";
 // SearchResultsSchema component removed - structured data handled elsewhere
 
 export const dynamic = "force-dynamic";
@@ -90,6 +91,11 @@ export default function SearchPage() {
   return (
     <div className="bg-cream text-charcoal min-h-screen">
       {/* JSON-LD Structured Data - handled in component */}
+      
+      {/* Coming soon banner */}
+      <div className="pt-24 md:pt-32 pb-4">
+        <ComingSoonBanner />
+      </div>
       
       {/* Sticky search bar - critical for LCP */}
       <Suspense fallback={<div className="h-20 border-b border-sage/20 bg-cream animate-pulse" />}>

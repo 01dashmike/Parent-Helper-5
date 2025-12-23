@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin, getAdminUserId } from "@/lib/admin/auth-improved";
 
 // Use service role for admin operations
 const supabase = createClient(
@@ -23,11 +24,16 @@ const emailTemplateSchema = z.object({
  * GET /api/admin/wellness/emails
  * 
  * Get all accountability email templates
+ * Requires admin authentication
  */
 export async function GET(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdmin(request);
+  if (authError) {
+    return authError;
+  }
+
   try {
-    // TODO: Add admin auth check
-    
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get("active") === "true";
 
@@ -64,11 +70,17 @@ export async function GET(request: NextRequest) {
  * POST /api/admin/wellness/emails
  * 
  * Create a new accountability email template
+ * Requires admin authentication
  */
 export async function POST(request: NextRequest) {
+  // Require admin authentication and get user ID
+  const authError = await requireAdmin(request);
+  if (authError) {
+    return authError;
+  }
+  const adminUserId = await getAdminUserId(request);
+
   try {
-    // TODO: Add admin auth check
-    
     const body = await request.json();
     const validation = emailTemplateSchema.safeParse(body);
 
@@ -85,7 +97,7 @@ export async function POST(request: NextRequest) {
       .from("wellness_accountability_emails")
       .insert({
         ...data,
-        created_by: "admin", // TODO: Get actual admin user
+        created_by: adminUserId || "admin",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

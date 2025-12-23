@@ -16,9 +16,9 @@ export type WellnessAuthState = {
 /**
  * Gets the current origin from headers or environment variable
  */
-function getOrigin(): string {
+async function getOrigin(): Promise<string> {
   try {
-    const headersList = headers();
+    const headersList = await headers();
     const host = headersList.get("host");
     const protocol = headersList.get("x-forwarded-proto") || 
                     (process.env.NODE_ENV === "production" ? "https" : "http");
@@ -67,13 +67,16 @@ export async function requestWellnessOtpAction(
     console.log("[requestWellnessOtpAction] Requesting OTP for email:", email);
     const supabase = createSupabaseServerActionClient();
 
-    const origin = getOrigin();
-    const redirectUrl = `${origin}/wellness/login`;
+    const origin = await getOrigin();
+    // Use auth callback route to properly handle magic link token exchange
+    const redirectUrl = `${origin}/wellness/callback`;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
+        // emailRedirectTo is used for magic links when user clicks email link
+        // The callback route will exchange the token for a session and redirect to /wellness
         emailRedirectTo: redirectUrl,
       },
     });

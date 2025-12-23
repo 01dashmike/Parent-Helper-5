@@ -116,7 +116,7 @@ export default function NewsletterModal() {
       title="Join the Parent Helper Family"
       description="Weekly inspiration, gentle reminders, and curated activities for your family inbox."
       size="lg"
-      overlayClassName="z-[120]"
+      overlayClassName="z-[120] !items-start !pt-16"
     >
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

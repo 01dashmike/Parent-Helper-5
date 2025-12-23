@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { generateSnackAlternatives } from "@/lib/wellness/actions";
 import type { Audience, SnackGeneratorResult } from "@/lib/wellness/types";
 
@@ -148,9 +149,16 @@ export default function SnackGenerator({
         <button
           type="submit"
           disabled={loading || !snacksInput.trim()}
-          className="w-full rounded-full bg-sage py-3 px-6 font-semibold text-white transition-all hover:bg-sage/90 disabled:opacity-50"
+          className="w-full rounded-full bg-sage py-3 px-6 font-semibold text-white transition-all hover:bg-sage/90 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {loading ? "Finding alternatives..." : "🍪 Get Healthier Options"}
+          {loading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Finding alternatives...
+            </>
+          ) : (
+            "🍪 Get Healthier Options"
+          )}
         </button>
 
         <p className="mt-4 text-center text-xs text-charcoal/60">

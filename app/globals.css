@@ -83,7 +83,7 @@ body {
   .ph-hero {
     @apply relative overflow-hidden py-16 text-charcoal md:py-24 flex items-center;
     background: linear-gradient(180deg, #F5F3F0 0%, #EAE6E2 100%),
-      url("/images/family-hero.png");
+      url("/images/categories/family-hero.png");
     background-size: cover;
     background-position: bottom center;
     background-repeat: no-repeat;

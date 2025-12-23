@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils";
 import type { Audience } from "@/lib/wellness/types";
 
 const audiences: { value: Audience; label: string; emoji: string }[] = [
-  { value: "mum", label: "Mum", emoji: "👩" },
-  { value: "dad", label: "Dad", emoji: "👨" },
-  { value: "couples", label: "Couples", emoji: "💑" },
-  { value: "family", label: "Family", emoji: "👨‍👩‍👧‍👦" },
-  { value: "grandparents", label: "Grandparents", emoji: "👴👵" },
+  { value: "mum", label: "Mum", emoji: "" },
+  { value: "dad", label: "Dad", emoji: "" },
+  { value: "couples", label: "Couples", emoji: "" },
+  { value: "family", label: "Family", emoji: "" },
+  { value: "grandparents", label: "Grandparents", emoji: "" },
 ];
 
 interface AudienceSelectorProps {
@@ -53,3 +53,4 @@ export default function AudienceSelector({
     </div>
   );
 }
+
